@@ -306,6 +306,8 @@ textarea{width:100%;resize:vertical;min-height:56px}
 .exopt input{margin:0}
 .notice{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;color:var(--muted)}
 .ro .mini.add,.ro .ownly{display:none}
+.ro .job,.ro .pg .cell-job{cursor:default}
+.ro .job:hover{background:var(--surface)}
 @media (max-width:520px){.job{grid-template-columns:70px 1fr;gap:10px;padding-inline:12px}.dlabel{min-width:0}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -966,7 +968,7 @@ document.addEventListener('click', async e => {
   if (t.dataset.view) { S.view = t.dataset.view; try { localStorage.setItem('view', S.view); } catch (_) {} render(); return; }
   const a = t.dataset.act;
   if (a === 'new') openEditor(null, t.dataset.date);
-  else if (a === 'edit') { const j = S.jobs.get(t.dataset.id); if (j) openEditor(j); }
+  else if (a === 'edit') { if (S.canWrite === false) return; const j = S.jobs.get(t.dataset.id); if (j) openEditor(j); } // 沒有編輯權限的人點場次不跳視窗
   else if (a === 'close') { closeEditor(); L = null; }
   else if (a === 'pick') { const f = t.dataset.kind === 'p' ? 'people' : 'vehicles'; const n = t.dataset.name; F[f] = F[f].includes(n) ? F[f].filter(x => x !== n) : [...F[f], n]; renderPicks(); }
   else if (a === 'save') saveJob();
