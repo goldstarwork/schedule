@@ -932,7 +932,7 @@ function openLeave(date, kind = 'leave') {
   const label = kind === 'office' ? '在公司' : '休假';
   L = { date, kind, leave: [...(kind === 'office' ? officeOn(date) : leaveOn(date))] };
   const regular = S.config.staff.filter(p => (p.group || '正職') === '正職').map(p => p.name);
-  const names = kind === 'office' ? regular : S.config.staff.map(p => p.name);
+  const names = regular; // 休假和公司都只從正職挑選（以前選過的支援人員仍會列出，方便取消）
   const sh = $('#sheet');
   const draw = () => {
     const assigned = new Set(jobsOn(date).flatMap(j => j.unattended ? [] : (j.people || [])));
