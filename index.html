@@ -1,0 +1,1570 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>工務派車排班</title>
+<script src="config.js"></script>
+<script src="https://res.cdn.office.net/teams-js/2.58.0/js/MicrosoftTeams.min.js" integrity="sha384-sMo/EOqQPa1OCup2/VBRum7oFeOS22kvs8WGDc45xK53tUVZzFR5WwFYDUYN1LO4" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@3/lib/msal-browser.min.js"></script>
+<script>if(!window.msal)document.write('<script src="https://unpkg.com/@azure/msal-browser@3/lib/msal-browser.min.js"><\/script>')</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: sticky control bar, then a month of day blocks; each job is one row — time rail on the left, crew + vehicles on the right */
+:root{
+  --bg:#eef1ef; --surface:#ffffff; --surface-2:#f6f8f7; --ink:#1b2220; --muted:#5f6a66; --line:#d9dfdc;
+  --accent:#1d55b8; --accent-ink:#ffffff; --accent-soft:#e3ecfb;
+  --warn:#9a5b00; --warn-bg:#fff1d6; --bad:#b92f25; --bad-bg:#fde6e3; --today:#1d55b8;
+  --font-body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  --font-num:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121615; --surface:#1a1f1e; --surface-2:#202625; --ink:#e6ebe9; --muted:#97a29e; --line:#2d3533;
+  --accent:#7ea6ff; --accent-ink:#0c1630; --accent-soft:#1d2a47;
+  --warn:#f2b552; --warn-bg:#3a2b10; --bad:#ff8f84; --bad-bg:#3e1c19; --today:#7ea6ff; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121615; --surface:#1a1f1e; --surface-2:#202625; --ink:#e6ebe9; --muted:#97a29e; --line:#2d3533;
+  --accent:#7ea6ff; --accent-ink:#0c1630; --accent-soft:#1d2a47;
+  --warn:#f2b552; --warn-bg:#3a2b10; --bad:#ff8f84; --bad-bg:#3e1c19; --today:#7ea6ff; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.5}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:980px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+header.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
+.bar-in{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;padding-block:10px}
+.brand{font-weight:700;font-size:17px;letter-spacing:.02em;margin-right:auto}
+.tabs{display:flex;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:2px}
+.tabs button{border:0;background:none;padding:5px 12px;border-radius:6px;color:var(--muted);font-weight:500}
+.tabs button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgb(0 0 0 / .12)}
+.sub{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding-block:0 10px}
+.mnav{display:flex;align-items:center;gap:4px}
+.mnav b{font-family:var(--font-num);font-size:15px;min-width:92px;text-align:center}
+.icon-btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;width:32px;height:32px;display:grid;place-items:center;font-size:16px;line-height:1}
+.ghost{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:5px 10px;font-size:14px}
+select.ghost{padding-right:6px}
+.status{font-size:13px;color:var(--muted);margin-left:auto}
+.status.err{color:var(--bad)}
+
+main{padding-block:14px 80px;zoom:var(--zoom,1)}
+.viewctl{display:flex;align-items:center;gap:10px}
+.zoomctl{display:flex;align-items:center;gap:6px}
+.zoomctl input[type=range]{width:120px;accent-color:var(--accent);cursor:pointer}
+.zl{font-size:11px;color:var(--muted);font-weight:700;line-height:1}
+.zl.big{font-size:17px}
+.zv{display:inline-flex;align-items:center;gap:1px;border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:2px 6px 2px 2px;font-family:var(--font-num);font-size:13px;color:var(--muted);cursor:text}
+.zv:focus-within{border-color:var(--accent)}
+.zv input[type=text]{border:0;border-radius:0;background:none;width:2.2em;min-width:0;text-align:right;font-family:var(--font-num);font-size:13px;color:var(--ink);padding:1px 0;outline:none}
+#fullw[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+body.full .wrap{max-width:none}
+@media (max-width:1000px){.wideonly{display:none}}
+@media (max-width:480px){.zoomctl input[type=range]{width:90px}}
+.day{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);margin-bottom:10px;overflow:hidden}
+.day.empty{background:transparent;border-style:dashed}
+.day.today{border-color:var(--today);box-shadow:0 0 0 1px var(--today)}
+.dhead{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:10px 14px;background:var(--surface-2);border-bottom:1px solid var(--line)}
+.day.empty .dhead{background:transparent;border-bottom:0;padding-block:6px}
+.dlabel{display:flex;align-items:baseline;gap:8px;min-width:96px}
+.dlabel .dd{font-family:var(--font-num);font-weight:600;font-size:16px}
+.dlabel .wd{color:var(--muted);font-size:14px}
+.dlabel .wd.we{color:var(--bad)}
+.tag-today{font-size:12px;background:var(--today);color:var(--accent-ink);border-radius:4px;padding:0 6px}
+.leave{display:flex;flex-wrap:wrap;align-items:center;gap:4px;font-size:13px;color:var(--muted)}
+.leave.office{color:var(--accent)}
+.leave.office .lv{border-color:color-mix(in srgb,var(--accent) 40%,var(--line));background:var(--accent-soft)}
+.pg .ofc{display:block;color:var(--accent);font-size:12px}
+.leave .lv{background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:0 8px;color:var(--ink)}
+.dact{margin-left:auto;display:flex;gap:6px}
+.mini{border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:2px 10px;font-size:13px;color:var(--muted)}
+.mini.add{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 40%,var(--line))}
+.issues{list-style:none;margin:0;padding:8px 14px;display:grid;gap:4px;border-bottom:1px solid var(--line);font-size:13px}
+.issues li{display:flex;gap:8px;align-items:flex-start}
+.issues .dot{flex:none;width:8px;height:8px;border-radius:50%;margin-top:6px}
+.issues .bad .dot{background:var(--bad)} .issues .bad{color:var(--bad)}
+.issues .check .dot{background:var(--warn)} .issues .check{color:var(--warn)}
+
+.job{display:grid;grid-template-columns:92px 1fr;gap:12px;padding:10px 14px;border-top:1px solid var(--line);cursor:pointer;background:var(--surface);transition:background .12s}
+.job:first-of-type{border-top:0}
+.issues + .job{border-top:0}
+.job:hover{background:var(--surface-2)}
+.job.dim{opacity:.38}
+.jt{font-family:var(--font-num);font-size:14px;font-weight:600;line-height:1.3}
+.jt small{display:block;font-family:var(--font-body);font-weight:400;font-size:12px;color:var(--muted)}
+.jt .none{color:var(--line);font-weight:500}
+.jm{min-width:0;display:grid;gap:5px}
+.jm h3{margin:0;font-size:15px;font-weight:700;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.num{font-family:var(--font-num);font-size:12px;color:var(--muted);font-weight:500}
+.chips{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.chips .k{font-size:12px;color:var(--muted);width:28px;flex:none}
+.chip{display:inline-flex;align-items:center;gap:3px;border-radius:6px;padding:1px 8px;font-size:14px;background:var(--accent-soft);color:var(--ink);border:1px solid transparent}
+.chip.v{background:var(--surface-2);border-color:var(--line)}
+.chip.x{background:transparent;border:1px dashed var(--line);color:var(--muted)}
+.chip.me{background:var(--accent);color:var(--accent-ink)}
+.chip.lead{color:var(--bad);font-weight:700}
+.chip.me.lead{color:var(--accent-ink)}
+.lpick[aria-pressed="true"]{background:var(--bad-bg);border-color:var(--bad);color:var(--bad)}
+.lpick[aria-pressed="true"] b{font-weight:700}
+.pg .cell-job.lead{color:var(--bad);font-weight:700}
+.chip.leave,.chip.clash{background:var(--bad-bg);color:var(--bad);border-color:var(--bad)}
+.chip.check{background:var(--warn-bg);color:var(--warn);border-color:color-mix(in srgb,var(--warn) 50%,transparent)}
+.chip sup{font-size:10px;font-family:var(--font-num)}
+.unatt{font-size:12px;border:1px solid var(--line);border-radius:4px;padding:0 6px;color:var(--muted);font-weight:400}
+.note{margin:0;font-size:13px;color:var(--muted)}
+.emptymsg{color:var(--muted);font-size:13px}
+
+/* person grid */
+.gridwrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+table.pg{border-collapse:separate;border-spacing:0;font-size:13px;min-width:100%}
+.pg th,.pg td{border-bottom:1px solid var(--line);border-right:1px solid var(--line);padding:4px 6px;vertical-align:top;min-width:64px}
+.pg thead th{position:sticky;top:0;background:var(--surface-2);font-weight:500;text-align:center;font-family:var(--font-num);white-space:nowrap}
+.pg thead th small{display:block;font-family:var(--font-body);color:var(--muted)}
+.pg th.name{position:sticky;left:0;z-index:1;background:var(--surface-2);text-align:left;min-width:64px;white-space:nowrap;font-family:var(--font-body)}
+.pg thead th.name{z-index:2}
+.pg .tcol{background:var(--accent-soft)}
+.pg .cell-job{display:block;background:var(--accent-soft);border-radius:4px;padding:0 4px;margin-bottom:2px;white-space:nowrap;cursor:pointer;border:0;width:100%;text-align:left;font-size:12px}
+.pg .cell-job.bad{background:var(--bad-bg);color:var(--bad)}
+.pg .cell-job.check{background:var(--warn-bg);color:var(--warn)}
+.pg .off{color:var(--muted);font-size:12px}
+.pg .cnt{font-family:var(--font-num);color:var(--muted);text-align:center}
+
+/* settings v2: 人員（寬）+ 車輛（窄）兩區；手機用上方切換 */
+.settabs{display:none;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:2px;margin-bottom:12px;width:max-content}
+.settabs button{border:0;background:none;padding:5px 18px;border-radius:6px;color:var(--muted);font-weight:500}
+.settabs button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgb(0 0 0 / .12)}
+.set2{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:14px;align-items:start}
+.ph{margin-bottom:12px}
+.ph p{margin:2px 0 0}
+.scols{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.scol{border:1px solid var(--line);border-radius:10px;padding:8px;background:var(--surface-2);min-width:0;transition:border-color .1s,background .1s}
+.scol.drop-col{border-color:var(--accent);background:var(--accent-soft)}
+.scol-h{display:flex;align-items:baseline;gap:8px;padding:2px 4px 8px}
+.scol-h b{font-size:14px}
+.scol-h span{font-size:12px;color:var(--muted);font-family:var(--font-num)}
+.scards{display:grid;gap:6px}
+.scard{position:relative;display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:6px 6px 6px 4px;min-height:40px}
+.scard.dragging{opacity:.35}
+.scard.drop-before{box-shadow:0 -3px 0 0 var(--accent)}
+.scard.drop-after{box-shadow:0 3px 0 0 var(--accent)}
+.scard.ghost{position:fixed;z-index:40;pointer-events:none;box-shadow:0 8px 24px rgb(0 0 0 / .18);border-color:var(--accent)}
+.scard.editing{padding:6px}
+.scard.editing input{flex:1;min-width:0;padding:4px 8px}
+.handle{cursor:grab;touch-action:none;color:var(--muted);font-size:13px;letter-spacing:-2px;padding:6px 4px;user-select:none}
+.handle:active{cursor:grabbing}
+.scard .sname{flex:1;min-width:0;font-weight:500;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.scard .scount{font-size:12px;color:var(--muted);font-family:var(--font-num)}
+.more{border:0;background:none;width:28px;height:28px;border-radius:6px;color:var(--muted);font-size:16px;line-height:1}
+.more:hover,.scard.open .more{background:var(--surface-2);color:var(--ink)}
+.smenu{position:absolute;right:4px;top:calc(100% + 4px);z-index:6;background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 24px rgb(0 0 0 / .14);padding:4px;display:grid;min-width:132px}
+.smenu button{border:0;background:none;text-align:left;padding:7px 10px;border-radius:6px;font-size:14px}
+.smenu button:hover{background:var(--surface-2)}
+.smenu .del{color:var(--bad)}
+.smenu .del.armed{background:var(--bad-bg);font-weight:500}
+.addchip{border:1px dashed color-mix(in srgb,var(--accent) 50%,var(--line));background:none;color:var(--accent);border-radius:8px;padding:6px 10px;font-size:14px;text-align:left}
+.addchip:hover{background:var(--accent-soft)}
+.addin{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.addin input{flex:1;min-width:6em;padding:5px 8px;border-color:var(--accent)}
+.clist{padding:10px 0;border-top:1px solid var(--line)}
+.clist:first-of-type{border-top:0;padding-top:0}
+.clist-h{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 8px;margin-bottom:8px}
+.clist-h b{font-size:14px}
+.clist-h span{font-size:12px;color:var(--muted)}
+.chipsrow{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chipsrow .addchip{padding:3px 12px}
+.chipsrow .addin{flex-basis:100%}
+.tchip{display:inline-flex;align-items:center;gap:2px;border:1px solid var(--line);border-radius:999px;padding:2px 3px 2px 10px;font-size:14px;background:var(--surface-2)}
+.tchip button{border:0;background:none;color:var(--muted);min-width:22px;height:22px;border-radius:999px;font-size:13px;padding:0 4px}
+.tchip button:hover{background:var(--bad-bg);color:var(--bad)}
+.tchip .tname{color:var(--ink);font-size:14px;padding:0 2px;min-width:0;height:auto;border-radius:4px;cursor:text}
+.tchip .tname:hover{background:none;color:var(--accent);text-decoration:underline dotted}
+.ledit{flex-basis:100%}
+.tchip.armed{border-color:var(--bad);background:var(--bad-bg)}
+.tchip.armed button{color:var(--bad);font-weight:500}
+@media (max-width:760px){
+  .settabs{display:flex}
+  .set2{grid-template-columns:1fr}
+  .set2.show-people .veh,.set2.show-veh .ppl{display:none}
+}
+@media (max-width:420px){.scols{grid-template-columns:1fr}}
+
+/* settings */
+.set{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;min-width:0}
+.panel h2{margin:0 0 4px;font-size:16px}
+.panel p{margin:0 0 10px;color:var(--muted);font-size:13px}
+.plist{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.pitem{display:inline-flex;align-items:center;gap:2px;border:1px solid var(--line);border-radius:999px;padding:2px 4px 2px 10px;font-size:14px;background:var(--surface-2)}
+.pitem button{border:0;background:none;color:var(--muted);width:22px;height:22px;border-radius:50%}
+.pitem button:hover{background:var(--bad-bg);color:var(--bad)}
+.slist{display:grid;border-top:1px solid var(--line)}
+.srow{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:8px 0;border-bottom:1px solid var(--line)}
+.srow.editing input{flex:1;min-width:120px}
+.sname{font-weight:500;font-size:15px;min-width:56px}
+.scount{font-size:12px;color:var(--muted);font-family:var(--font-num)}
+.sbtns{display:flex;flex-wrap:wrap;gap:4px;margin-left:auto}
+.icon-btn.sm{width:28px;height:28px;font-size:14px}
+.icon-btn:disabled{opacity:.3;cursor:default}
+.mini.del{color:var(--bad)}
+.mini.armed{background:var(--bad-bg);border-color:var(--bad)}
+.grp{font-size:12px;color:var(--muted);margin:8px 0 4px;letter-spacing:.06em}
+.addrow{display:flex;gap:6px;flex-wrap:wrap}
+.addrow input{flex:1;min-width:100px}
+input[type=text],input[type=tel],input[type=date],input[type=time],textarea,select.inp{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 10px;min-width:0}
+textarea{width:100%;resize:vertical;min-height:56px}
+.btn{border:0;border-radius:8px;padding:8px 16px;font-weight:500;background:var(--accent);color:var(--accent-ink)}
+.btn.sec{background:var(--surface-2);color:var(--ink);border:1px solid var(--line)}
+.btn.danger{background:var(--bad-bg);color:var(--bad);border:1px solid color-mix(in srgb,var(--bad) 40%,transparent)}
+.btn:disabled{opacity:.5;cursor:default}
+
+/* sheet */
+.sheet{position:fixed;inset:0;z-index:20;background:rgb(10 14 13 / .45);display:flex;align-items:flex-end;justify-content:center}
+@media (min-width:720px){.sheet{align-items:center}}
+.card{background:var(--surface);width:min(640px,100%);max-height:92%;overflow:auto;border-radius:14px 14px 0 0;padding:16px max(16px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));display:grid;gap:14px}
+@media (min-width:720px){.card{border-radius:14px}}
+.card h2{margin:0;font-size:17px;display:flex;align-items:center;gap:8px}
+.card h2 .x{margin-left:auto}
+.fgrid{display:grid;gap:10px;grid-template-columns:1fr 1fr}
+.fgrid .full{grid-column:1/-1}
+.field{display:grid;gap:4px;min-width:0}
+.field>span{font-size:12px;color:var(--muted);letter-spacing:.04em}
+.field input{width:100%}
+.drange{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.drange input{width:auto;flex:1;min-width:140px;max-width:200px}
+.drange>span:not(.hint){color:var(--muted);font-size:14px}
+.tline{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.tline .to{color:var(--muted);font-size:14px}
+.tp{position:relative;display:inline-flex;align-items:center;gap:0;border:1px solid var(--line);border-radius:12px;background:var(--surface-2);padding:0 2px 0 6px;transition:border-color .12s}
+.tp::before{content:"";position:absolute;left:6px;right:30px;top:50%;height:36px;transform:translateY(-50%);border-radius:8px;background:var(--surface);border:1px solid var(--line);pointer-events:none}
+.tp.set{border-color:var(--accent)}
+.tp.set::before{background:var(--accent-soft);border-color:color-mix(in srgb,var(--accent) 35%,transparent)}
+.tp:focus-within{border-color:var(--accent)}
+.wheel{position:relative;height:108px;width:2.8em;overflow-y:auto;scroll-snap-type:y mandatory;padding-block:36px;scrollbar-width:none;overscroll-behavior:contain;-webkit-mask-image:linear-gradient(transparent,#000 30%,#000 70%,transparent);mask-image:linear-gradient(transparent,#000 30%,#000 70%,transparent);cursor:ns-resize;outline:none}
+.wheel::-webkit-scrollbar{display:none}
+.wheel:focus-visible{background:color-mix(in srgb,var(--accent) 10%,transparent);border-radius:8px}
+.wi{height:36px;display:grid;place-items:center;scroll-snap-align:center;font-family:var(--font-num);font-size:16px;color:var(--muted);user-select:none;transition:font-size .1s,color .1s}
+.wi.sel{color:var(--ink);font-size:22px;font-weight:600}
+.tp b{position:relative;font-family:var(--font-num);font-size:20px;color:var(--muted)}
+.fhead{display:flex;align-items:center;gap:14px}
+.fhead>span{font-size:12px;color:var(--muted);letter-spacing:.04em}
+.unbox{font-size:13px;color:var(--muted);gap:4px;white-space:nowrap;writing-mode:horizontal-tb}
+.unbox input{margin:0}
+.leadbox{margin-top:10px;padding:8px 10px 10px;border:1px dashed color-mix(in srgb,var(--bad) 45%,var(--line));border-radius:8px}
+.leadbox .grp{margin-top:0;color:var(--bad)}
+.lead-h small{margin-left:8px;color:var(--muted);letter-spacing:0;font-size:12px}
+#pick-p2 .grp:first-child{margin-top:12px}
+.tp-x{position:relative;border:0;background:none;color:var(--muted);width:26px;height:26px;border-radius:50%;font-size:15px}
+.tp-x:hover{background:var(--surface);color:var(--bad)}
+.tp:not(.set) .tp-x{visibility:hidden}
+.pick.addp{border-style:dashed;color:var(--accent);justify-content:center}
+.newsup{display:inline-flex;align-items:center;gap:4px}
+.newsup input{width:7em;padding:5px 8px;border-color:var(--accent)}
+.btn.sm{padding:5px 10px;font-size:13px}
+.ext-list{display:grid;gap:6px}
+.ext-row{display:grid;gap:6px;padding:6px 8px;border:1px solid var(--bad);background:var(--bad-bg);border-radius:8px}
+.ext-row.ok{border-color:var(--line);background:var(--surface-2)}
+.ext-sub{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.ext-sub input[type=text],.ext-sub input[type=tel],.ext-sub select{flex:0 1 7.5em;min-width:5.5em;padding:3px 8px;font-size:13px;height:30px;border:1px solid var(--line);background:var(--surface);border-radius:7px}
+.ext-sub select.empty{color:var(--muted)}
+.ext-sub input.newopt{border-color:var(--accent)}
+.ext-sub .chk{font-size:13px;gap:4px;margin-left:auto}
+.ext-sub .chk input{margin:0}
+.exd{font-size:12px;opacity:.8;margin-left:4px}
+.ext-row .chk{white-space:nowrap}
+.ext-add{justify-self:start;margin-top:2px}
+.chip.ext-ok{color:var(--ink)}
+.picks{display:flex;flex-wrap:wrap;gap:6px}
+.pick{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:4px 10px;display:inline-flex;flex-direction:column;align-items:flex-start;line-height:1.25;min-width:52px;text-align:left}
+.pick b{font-weight:500;font-size:15px}
+.pick i{font-style:normal;font-size:11px;color:var(--muted);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pick[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.pick[aria-pressed="true"] i{color:inherit;opacity:.85}
+.pick.off{opacity:.55}
+.pick[aria-pressed="true"].leave,.pick[aria-pressed="true"].clash{background:var(--bad-bg);border-color:var(--bad);color:var(--bad)}
+.pick[aria-pressed="true"].check{background:var(--warn-bg);border-color:var(--warn);color:var(--warn)}
+.chk{display:inline-flex;gap:6px;align-items:center;font-size:14px}
+.acts{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.acts .sp{flex:1}
+.delq{font-size:14px;color:var(--bad);flex-basis:100%}
+@media (min-width:600px){.delq{flex-basis:auto}}
+.hint{font-size:12px;color:var(--muted)}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:8px;font-size:14px;z-index:30;display:flex;align-items:center;gap:14px;max-width:calc(100% - 32px)}
+.toast .undo{border:0;background:none;color:var(--bg);font-weight:700;text-decoration:underline;padding:2px 4px;white-space:nowrap}
+.trlist{display:grid;border-top:1px solid var(--line)}
+.tritem{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;padding:10px 0;border-bottom:1px solid var(--line)}
+.trmain{flex:1;min-width:0;display:flex;flex-direction:column}
+.trmain span,.trwhen{font-size:12px;color:var(--muted);font-family:var(--font-num)}
+.notice{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;color:var(--muted)}
+.ro .mini.add,.ro .ownly{display:none}
+@media (max-width:520px){.job{grid-template-columns:70px 1fr;gap:10px;padding-inline:12px}.dlabel{min-width:0}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<header class="bar">
+  <div class="wrap">
+    <div class="bar-in">
+      <div class="brand">工務排班</div>
+      <div class="tabs" role="group" aria-label="檢視">
+        <button id="tab-day" data-view="day" aria-pressed="true">依日期</button>
+        <button id="tab-person" data-view="person" aria-pressed="false">依人員</button>
+        <button id="tab-set" data-view="set" aria-pressed="false">人員管理</button>
+      </div>
+      <div class="viewctl">
+        <div class="zoomctl" role="group" aria-label="顯示大小">
+          <span class="zl" aria-hidden="true">A</span>
+          <input type="range" id="zoom" min="10" max="200" step="5" value="100" aria-label="顯示大小（百分比）">
+          <span class="zl big" aria-hidden="true">A</span>
+          <label class="zv"><input type="text" inputmode="numeric" id="zoomval" value="100" maxlength="3" aria-label="顯示大小百分比，可輸入 10 到 200">%</label>
+        </div>
+        <button type="button" class="ghost wideonly" id="fullw" aria-pressed="false">全寬</button>
+      </div>
+    </div>
+    <div class="sub">
+      <div class="mnav">
+        <button class="icon-btn" id="mprev" aria-label="上個月">‹</button>
+        <b id="mlabel"></b>
+        <button class="icon-btn" id="mnext" aria-label="下個月">›</button>
+      </div>
+      <button class="ghost" id="gotoday">今天</button>
+      <select class="ghost" id="focus" aria-label="只看某人"><option value="">全部人員</option></select>
+      <button class="ghost" id="trashbtn" data-act="trash" hidden>最近刪除</button>
+      <span class="status" id="status">連線中…</span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap" id="main"></main>
+<div class="sheet" id="sheet" hidden></div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const WD = '日一二三四五六';
+const pad = n => String(n).padStart(2, '0');
+const ds = (y, m, d) => `${y}-${pad(m + 1)}-${pad(d)}`;
+const parseD = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+const addDays = (s, n) => { const d = parseD(s); d.setDate(d.getDate() + n); return ds(d.getFullYear(), d.getMonth(), d.getDate()); };
+const todayStr = () => { const d = new Date(); return ds(d.getFullYear(), d.getMonth(), d.getDate()); };
+const toMin = t => { if (!t) return null; const [h, m] = t.split(':').map(Number); return isNaN(h) ? null : h * 60 + (m || 0); };
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const $ = s => document.querySelector(s);
+const md = s => { const d = parseD(s); return `${d.getMonth() + 1}/${d.getDate()}`; };
+
+const S = {
+  db: null, canWrite: true, jobs: new Map(), days: new Map(), trash: new Map(),
+  config: { staff: [], vehicles: [], extCompanies: [], carTypes: [] }, view: 'day',
+  month: (() => { const d = new Date(); return { y: d.getFullYear(), m: d.getMonth() }; })(),
+  focus: '', loaded: { jobs: false, days: false, config: false }, scrolled: false
+};
+try { S.focus = localStorage.getItem('focus') || ''; const v = localStorage.getItem('view'); if (v) S.view = v; } catch (e) {}
+
+/* ---------- data helpers ---------- */
+const jobsOn = date => [...S.jobs.values()].filter(j => j.date === date).sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || String(a.start || '99').localeCompare(String(b.start || '99')));
+const leaveOn = date => new Set(S.days.get(date)?.leave || []);
+const officeOn = date => new Set(S.days.get(date)?.office || []);
+const allNames = () => {
+  const s = new Set(S.config.staff.map(p => p.name));
+  for (const j of S.jobs.values()) (j.people || []).forEach(p => s.add(p));
+  return [...s];
+};
+function pairStatus(a, b) {
+  const as = toMin(a.start), ae = toMin(a.end), bs = toMin(b.start), be = toMin(b.end);
+  if (as != null && ae != null && bs != null && be != null) return (as < be && bs < ae) ? 'clash' : 'ok';
+  return 'check';
+}
+const RANK = { ok: 1, check: 2, clash: 3, leave: 4 };
+function analyze(date) {
+  const list = jobsOn(date).filter(j => !j.unattended);
+  const leave = leaveOn(date);
+  const flags = new Map(); const issues = [];
+  const mark = (jid, key, st) => { if (!flags.has(jid)) flags.set(jid, {}); const f = flags.get(jid); if (!f[key] || RANK[st] > RANK[f[key]]) f[key] = st; };
+  const scan = (field, kind) => {
+    const m = new Map();
+    list.forEach(j => (j[field] || []).forEach(n => { if (!m.has(n)) m.set(n, []); m.get(n).push(j); }));
+    for (const [n, js] of m) {
+      const key = kind + ':' + n;
+      if (kind === 'p' && leave.has(n)) {
+        issues.push({ lv: 'bad', t: `${n} 這天休假，但排在「${js.map(j => j.title).join('、')}」` });
+        js.forEach(j => mark(j.id, key, 'leave'));
+      }
+      for (let i = 0; i < js.length; i++) for (let k = i + 1; k < js.length; k++) {
+        const st = pairStatus(js[i], js[k]);
+        mark(js[i].id, key, st); mark(js[k].id, key, st);
+        const what = kind === 'p' ? n : `車輛 ${n}`;
+        if (st === 'clash') issues.push({ lv: 'bad', t: `${what}：「${js[i].title}」和「${js[k].title}」時間重疊` });
+        if (st === 'check') issues.push({ lv: 'check', t: `${what} 同天兩場（${js[i].title}、${js[k].title}），補上起訖時間就能自動確認` });
+      }
+    }
+  };
+  scan('people', 'p'); scan('vehicles', 'v');
+  [...officeOn(date)].filter(n => leave.has(n)).forEach(n => issues.push({ lv: 'bad', t: `${n} 這天同時排在公司和休假` }));
+  jobsOn(date).forEach(j => (j.ext || []).filter(e => !e.ok && extFilled(e)).forEach(e => issues.push({ lv: 'bad', t: `「${j.title}」外調車輛「${extLabel(e)}」還沒確認` })));
+  return { flags, issues };
+}
+function timeHTML(j) {
+  const t = j.start ? (j.end ? `${j.start}–${j.end}` : j.start) : '';
+  if (!t && !j.timeNote) return '<div class="jt"><span class="none">—</span></div>';
+  return `<div class="jt">${esc(t)}${j.timeNote ? `<small>${esc(j.timeNote)}</small>` : ''}</div>`;
+}
+
+/* ---------- render ---------- */
+function render() {
+  document.querySelectorAll('.tabs button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.view === S.view)));
+  $('#mlabel').textContent = `${S.month.y}年${S.month.m + 1}月`;
+  const fs = $('#focus'); const names = S.config.staff.filter(p => (p.group || '正職') === '正職').map(p => p.name);
+  if (S.focus && S.config.staff.length && !names.includes(S.focus)) S.focus = '';
+  fs.innerHTML = '<option value="">全部人員</option>' + names.map(n => `<option ${n === S.focus ? 'selected' : ''}>${esc(n)}</option>`).join('');
+  document.body.classList.toggle('ro', S.canWrite === false);
+  const main = $('#main');
+  if (!S.db) { main.innerHTML = `<div class="notice">${S.dbMsg || '正在連線排班資料…'}</div>`; return; }
+  if (S.view === 'person') main.innerHTML = renderPerson();
+  else if (S.view === 'set') main.innerHTML = renderSettings();
+  else main.innerHTML = renderDays();
+  if (S.view === 'day' && !S.scrolled && S.loaded.jobs) {
+    S.scrolled = true;
+    const t = document.querySelector('.day.today');
+    if (t) { const top = t.getBoundingClientRect().top + scrollY - $('header.bar').offsetHeight - 10; scrollTo(0, top); }
+  }
+}
+function monthDates() {
+  const { y, m } = S.month; const n = new Date(y, m + 1, 0).getDate();
+  return Array.from({ length: n }, (_, i) => ds(y, m, i + 1));
+}
+function renderDays() {
+  const today = todayStr();
+  let out = '';
+  if (S.loaded.jobs && !monthDates().some(d => jobsOn(d).length)) out += `<p class="emptymsg">這個月還沒有場次。按日期旁的「＋ 場次」開始排。</p>`;
+  for (const date of monthDates()) {
+    const list = jobsOn(date); const leave = [...leaveOn(date)]; const office = [...officeOn(date)];
+    const d = parseD(date); const w = d.getDay();
+    const { flags, issues } = analyze(date);
+    const empty = !list.length && !leave.length && !office.length;
+    out += `<section class="day ${empty ? 'empty' : ''} ${date === today ? 'today' : ''}" data-date="${date}">
+      <div class="dhead">
+        <div class="dlabel"><span class="dd">${md(date)}</span><span class="wd ${w === 0 || w === 6 ? 'we' : ''}">週${WD[w]}</span>${date === today ? '<span class="tag-today">今天</span>' : ''}</div>
+        ${office.length ? `<div class="leave office">公司 ${office.map(n => `<span class="lv">${esc(n)}</span>`).join('')}</div>` : ''}
+        ${leave.length ? `<div class="leave">休假 ${leave.map(n => `<span class="lv">${esc(n)}</span>`).join('')}</div>` : ''}
+        ${empty ? '<span class="emptymsg">無排程</span>' : ''}
+        <div class="dact">
+          <button class="mini ownly" data-act="office" data-date="${date}">公司</button>
+          <button class="mini ownly" data-act="leave" data-date="${date}">休假</button>
+          <button class="mini add" data-act="new" data-date="${date}">＋ 場次</button>
+        </div>
+      </div>
+      ${issues.length ? `<ul class="issues">${issues.map(i => `<li class="${i.lv}"><span class="dot"></span><span>${esc(i.t)}</span></li>`).join('')}</ul>` : ''}
+      ${list.map((j, idx) => jobRow(j, idx, flags.get(j.id) || {})).join('')}
+    </section>`;
+  }
+  return out;
+}
+function jobRow(j, idx, f) {
+  const has = S.focus && ((j.people || []).includes(S.focus));
+  const dim = S.focus && !has ? 'dim' : '';
+  const leads = new Set(j.leaders || []);
+  const pChip = n => { const st = f['p:' + n]; const me = n === S.focus ? 'me' : ''; const ld = leads.has(n) ? 'lead' : ''; return `<span class="chip ${st && st !== 'ok' ? st : ''} ${me} ${ld}" ${ld ? 'title="帶班"' : ''}>${esc(n)}${st === 'ok' ? '<sup>2</sup>' : ''}</span>`; };
+  const vChip = n => { const st = f['v:' + n]; return `<span class="chip v ${st && st !== 'ok' ? st : ''}">${esc(n)}</span>`; };
+  const ppl = [...(j.people || [])].sort((a, b) => leads.has(b) - leads.has(a));
+  const sup = new Set(S.config.staff.filter(p => p.group === '支援').map(p => p.name));
+  const pReg = ppl.filter(n => !sup.has(n)).map(pChip).join('');
+  const pSup = ppl.filter(n => sup.has(n)).map(pChip).join('');
+  const veh = (j.vehicles || []).map(vChip).join('');
+  const ext = (j.ext || []).filter(extFilled).map(e => { const d = extDetail(e); const dt = d ? `<small class="exd">${esc(d)}</small>` : ''; return e.ok ? `<span class="chip v ext-ok">${esc(extLabel(e))}${dt} ✓</span>` : `<span class="chip leave">${esc(extLabel(e))}${dt}・未確認</span>`; }).join('');
+  return `<article class="job ${dim}" data-act="edit" data-id="${esc(j.id)}" tabindex="0">
+    ${timeHTML(j)}
+    <div class="jm">
+      <h3><span class="num">${idx + 1}</span>${esc(j.title || '（未命名）')}${j.unattended ? '<span class="unatt">不留守</span>' : ''}</h3>
+      ${pReg ? `<div class="chips"><span class="k">正職</span>${pReg}</div>` : ''}
+      ${pSup ? `<div class="chips"><span class="k">支援</span>${pSup}</div>` : ''}
+      ${veh ? `<div class="chips"><span class="k">車輛</span>${veh}</div>` : ''}
+      ${ext ? `<div class="chips"><span class="k">外調</span>${ext}</div>` : ''}
+      ${j.note ? `<p class="note">${esc(j.note)}</p>` : ''}
+    </div>
+  </article>`;
+}
+function renderPerson() {
+  const dates = monthDates(); const today = todayStr();
+  const ana = Object.fromEntries(dates.map(d => [d, analyze(d)]));
+  const names = allNames();
+  if (!names.length) return '<div class="notice">還沒有人員名單，到「人員管理」新增。</div>';
+  let h = '<div class="gridwrap"><table class="pg"><thead><tr><th class="name">人員</th><th>天數</th>';
+  for (const d of dates) { const w = parseD(d).getDay(); h += `<th class="${d === today ? 'tcol' : ''}">${md(d)}<small style="${w === 0 || w === 6 ? 'color:var(--bad)' : ''}">${WD[w]}</small></th>`; }
+  h += '</tr></thead><tbody>';
+  for (const n of names) {
+    let cnt = 0, cells = '';
+    for (const d of dates) {
+      const js = jobsOn(d).filter(j => (j.people || []).includes(n));
+      const off = leaveOn(d).has(n); const ofc = officeOn(d).has(n);
+      if (js.length || ofc) cnt++;
+      const fl = ana[d].flags;
+      cells += `<td class="${d === today ? 'tcol' : ''}">${off ? '<span class="off">休</span>' : ''}${ofc ? '<span class="ofc">公司</span>' : ''}${js.map(j => { const st = (fl.get(j.id) || {})['p:' + n]; const c = st === 'leave' || st === 'clash' ? 'bad' : st === 'check' ? 'check' : ''; const ld = (j.leaders || []).includes(n) ? 'lead' : ''; return `<button class="cell-job ${c} ${ld}" data-act="edit" data-id="${esc(j.id)}" title="${esc(j.title)}">${esc((j.start ? j.start + ' ' : '') + j.title)}</button>`; }).join('')}</td>`;
+    }
+    h += `<tr><th class="name">${esc(n)}</th><td class="cnt">${cnt}</td>${cells}</tr>`;
+  }
+  return h + '</tbody></table></div>';
+}
+function renderSettings() {
+  const tab = S.setTab || 'people';
+  const staffBy = g => S.config.staff.filter(p => (p.group || '正職') === g);
+  const col = g => { const list = staffBy(g); return `<div class="scol" data-group="${g}">
+      <div class="scol-h"><b>${g}</b><span>${list.length} 人</span></div>
+      <div class="scards">${list.map(staffCard).join('')}${addChip('staff', g, '＋ 新增' + g)}</div>
+    </div>`; };
+  return `<div class="settabs" role="group" aria-label="切換">
+      <button data-act="settab" data-tab="people" aria-pressed="${tab === 'people'}">人員</button>
+      <button data-act="settab" data-tab="veh" aria-pressed="${tab === 'veh'}">車輛</button>
+    </div>
+    <div class="set2 show-${tab}">
+      <section class="panel ppl">
+        <div class="ph"><h2>人員</h2><p>拖曳 ⋮⋮ 調整順序，拖到另一欄就是換組。排班時依這個順序列出。改名會一併更新已排的場次和休假。</p></div>
+        <div class="scols">${col('正職')}${col('支援')}</div>
+      </section>
+      <section class="panel veh">
+        <div class="ph"><h2>車輛</h2></div>
+        ${chipList('vehicles', '公司車輛', '排班時勾選的自家車輛')}
+        ${chipList('extCompanies', '外調公司', '外調車輛的公司選單')}
+        ${chipList('carTypes', '車種', '外調車輛的車種選單')}
+      </section>
+    </div>`;
+}
+function addChip(kind, key, label) {
+  if (S.canWrite === false) return '';
+  const on = S.adding && S.adding.kind === kind && S.adding.key === key;
+  if (on) return `<span class="addin"><input type="text" id="add-in" placeholder="輸入後按 Enter" aria-label="${esc(label)}"><button class="btn sm" data-act="addok">加入</button><button class="icon-btn sm" data-act="addx" aria-label="取消">×</button></span>`;
+  return `<button class="addchip" data-act="addstart" data-kind="${kind}" data-key="${esc(key)}">${esc(label)}</button>`;
+}
+function chipList(key, title, desc) {
+  const list = S.config[key] || [];
+  return `<div class="clist"><div class="clist-h"><b>${title}</b><span>${desc}</span></div>
+    <div class="chipsrow">${list.map(v => {
+      const armed = S.armed === key + ':' + v;
+      if (S.editing === key + ':' + v) return `<span class="addin ledit"><input type="text" id="ls-input" value="${esc(v)}" aria-label="修改 ${esc(v)}"><button class="btn sm" data-act="lssave" data-key="${key}" data-name="${esc(v)}">儲存</button><button class="icon-btn sm" data-act="lscancel" aria-label="取消">×</button></span>`;
+      if (S.canWrite === false) return `<span class="tchip">${esc(v)}</span>`;
+      return `<span class="tchip ${armed ? 'armed' : ''}"><button class="tname" data-act="lsedit" data-key="${key}" data-name="${esc(v)}" title="點一下修改">${esc(v)}</button><button data-act="rmlist" data-key="${key}" data-name="${esc(v)}" aria-label="移除 ${esc(v)}">${armed ? '刪除？' : '×'}</button></span>`;
+    }).join('')}${addChip('list', key, '＋')}</div></div>`;
+}
+function staffCount(name) {
+  const dates = new Set(monthDates());
+  const ds2 = new Set([...S.jobs.values()].filter(j => dates.has(j.date) && (j.people || []).includes(name)).map(j => j.date));
+  return ds2.size;
+}
+function staffCard(p) {
+  const nm = esc(p.name); const g = p.group || '正職';
+  if (S.renaming === p.name) return `<div class="scard editing">
+      <input type="text" id="ren-input" value="${nm}" aria-label="新名字">
+      <button class="btn sm" data-act="rensave" data-name="${nm}">儲存</button><button class="icon-btn sm" data-act="rencancel" aria-label="取消">×</button>
+    </div>`;
+  const open = S.menu === p.name; const armed = S.armed === 'staff:' + p.name;
+  return `<div class="scard ${open ? 'open' : ''}" data-name="${nm}">
+    ${S.canWrite === false ? '' : `<span class="handle" data-drag="${nm}" aria-hidden="true">⋮⋮</span>`}
+    <span class="sname">${nm}</span>
+    <span class="scount">${staffCount(p.name)}天</span>
+    ${S.canWrite === false ? '' : `<button class="more" data-act="menu" data-name="${nm}" aria-label="${nm} 的選項" aria-expanded="${open}">⋯</button>`}
+    ${open ? `<div class="smenu" role="menu">
+      <button data-act="renstart" data-name="${nm}">改名</button>
+      <button data-act="mvstaff" data-name="${nm}">改為${g === '正職' ? '支援' : '正職'}</button>
+      <button data-act="mvup" data-name="${nm}">往上移</button>
+      <button data-act="mvdown" data-name="${nm}">往下移</button>
+      <button class="del ${armed ? 'armed' : ''}" data-act="rmstaff" data-name="${nm}">${armed ? '確定刪除？' : '刪除'}</button>
+    </div>` : ''}
+  </div>`;
+}
+async function renameStaff(oldN, newN) {
+  if (!newN || newN === oldN) { S.renaming = null; render(); return; }
+  if (S.config.staff.some(p => p.name === newN)) { toast(`名單裡已經有「${newN}」`); return; }
+  const jobs = [...S.jobs.values()].filter(j => (j.people || []).includes(oldN));
+  const dayList = [...S.days.entries()].filter(([, d]) => (d.leave || []).includes(oldN) || (d.office || []).includes(oldN));
+  const ok = await write(async () => {
+    await S.db.doc('config/main').set({ ...S.config, staff: S.config.staff.map(p => p.name === oldN ? { ...p, name: newN } : p) });
+    for (const j of jobs) await S.db.doc('jobs/' + j.id).update({ people: j.people.map(x => x === oldN ? newN : x) });
+    for (const [id, d] of dayList) await S.db.doc('days/' + id).update({ leave: (d.leave || []).map(x => x === oldN ? newN : x), office: (d.office || []).map(x => x === oldN ? newN : x) });
+  }, `已改名為「${newN}」，更新 ${jobs.length} 個場次`);
+  if (ok) { S.renaming = null; if (S.focus === oldN) S.focus = newN; render(); }
+}
+function moveStaff(name, dir) {
+  const st = [...S.config.staff]; const p = st.find(x => x.name === name); const g = p.group || '正職';
+  const idxs = st.map((x, i) => (x.group || '正職') === g ? i : -1).filter(i => i >= 0);
+  const pos = idxs.indexOf(st.indexOf(p)); const to = idxs[pos + dir];
+  if (to == null) return;
+  const a = st.indexOf(p); [st[a], st[to]] = [st[to], st[a]];
+  saveConfig({ ...S.config, staff: st });
+}
+
+// 修改車輛／外調公司／車種名稱，已排的場次一起更新
+async function renameList(key, oldN, newN) {
+  if (!newN || newN === oldN) { S.editing = null; render(); return; }
+  const list = S.config[key] || [];
+  if (list.includes(newN)) { toast(`已經有「${newN}」`); return; }
+  const f = key === 'extCompanies' ? 'company' : key === 'carTypes' ? 'type' : null;
+  const jobs = [...S.jobs.values()].filter(j => key === 'vehicles' ? (j.vehicles || []).includes(oldN) : (j.ext || []).some(e => e[f] === oldN));
+  const ok = await write(async () => {
+    await S.db.doc('config/main').set({ ...S.config, [key]: list.map(x => x === oldN ? newN : x) });
+    for (const j of jobs) {
+      const upd = key === 'vehicles' ? { vehicles: j.vehicles.map(x => x === oldN ? newN : x) } : { ext: j.ext.map(e => e[f] === oldN ? { ...e, [f]: newN } : e) };
+      await S.db.doc('jobs/' + j.id).update(upd);
+    }
+  }, jobs.length ? `已改為「${newN}」，更新 ${jobs.length} 個場次` : `已改為「${newN}」`);
+  if (ok) { S.editing = null; render(); }
+}
+async function commitAdd() {
+  const n = ($('#add-in')?.value || '').trim(); const ad = S.adding;
+  if (!ad) return; if (!n) { $('#add-in')?.focus(); return; }
+  if (ad.kind === 'staff') {
+    if (S.config.staff.some(p => p.name === n)) { toast(`名單裡已經有「${n}」`); return; }
+    await saveConfig({ ...S.config, staff: [...S.config.staff, { name: n, group: ad.key }] });
+  } else {
+    const list = S.config[ad.key] || [];
+    if (list.includes(n)) { toast(`已經有「${n}」`); return; }
+    await saveConfig({ ...S.config, [ad.key]: [...list, n] });
+  }
+  // 留在輸入狀態，方便連續新增
+  render(); const i = $('#add-in'); if (i) { i.value = ''; i.focus(); }
+}
+
+/* 拖曳排序：按住 ⋮⋮ 拖，滑鼠和手指都可以 */
+let DR = null;
+document.addEventListener('pointerdown', e => {
+  const h = e.target.closest('.handle'); if (!h || S.canWrite === false) return;
+  e.preventDefault();
+  const card = h.closest('.scard'); const r = card.getBoundingClientRect();
+  const ghost = card.cloneNode(true); ghost.classList.add('ghost');
+  Object.assign(ghost.style, { width: r.width + 'px', left: r.left + 'px', top: r.top + 'px' });
+  document.body.appendChild(ghost); card.classList.add('dragging');
+  DR = { name: h.dataset.drag, ghost, dx: e.clientX - r.left, dy: e.clientY - r.top, card, target: null };
+});
+document.addEventListener('pointermove', e => {
+  if (!DR) return;
+  DR.ghost.style.left = (e.clientX - DR.dx) + 'px'; DR.ghost.style.top = (e.clientY - DR.dy) + 'px';
+  document.querySelectorAll('.drop-before,.drop-after,.drop-col').forEach(x => x.classList.remove('drop-before', 'drop-after', 'drop-col'));
+  DR.ghost.style.display = 'none'; const el = document.elementFromPoint(e.clientX, e.clientY); DR.ghost.style.display = '';
+  const card = el && el.closest('.scard:not(.dragging)'); const col = el && el.closest('.scol');
+  if (card && card.dataset.name) {
+    const r = card.getBoundingClientRect(); const before = e.clientY < r.top + r.height / 2;
+    card.classList.add(before ? 'drop-before' : 'drop-after');
+    DR.target = { group: card.closest('.scol').dataset.group, ref: card.dataset.name, before };
+  } else if (col) { col.classList.add('drop-col'); DR.target = { group: col.dataset.group, ref: null }; }
+  else DR.target = null;
+});
+function endDrag() {
+  if (!DR) return; const d = DR; DR = null;
+  d.ghost.remove(); d.card.classList.remove('dragging');
+  document.querySelectorAll('.drop-before,.drop-after,.drop-col').forEach(x => x.classList.remove('drop-before', 'drop-after', 'drop-col'));
+  if (!d.target) return;
+  const st = [...S.config.staff]; const i = st.findIndex(p => p.name === d.name); if (i < 0) return;
+  const p = { ...st[i], group: d.target.group }; st.splice(i, 1);
+  let at;
+  if (d.target.ref) { at = st.findIndex(x => x.name === d.target.ref); if (!d.target.before) at++; }
+  else { const last = st.map((x, k) => (x.group || '正職') === d.target.group ? k : -1).filter(k => k >= 0).pop(); at = last == null ? st.length : last + 1; }
+  st.splice(at, 0, p);
+  if (st.map(x => x.name + x.group).join() === S.config.staff.map(x => x.name + (x.group || '正職')).join()) return;
+  saveConfig({ ...S.config, staff: st });
+}
+document.addEventListener('pointerup', endDrag);
+document.addEventListener('pointercancel', () => { if (DR) { DR.target = null; endDrag(); } });
+
+/* ---------- editor ---------- */
+let F = null;
+function openEditor(job, date) {
+  F = job ? JSON.parse(JSON.stringify(job)) : { id: null, date, title: '', start: '', end: '', timeNote: '', people: [], vehicles: [], ext: [], note: '', unattended: false };
+  F.people = F.people || []; F.vehicles = F.vehicles || []; F.ext = F.ext || []; F.leaders = F.leaders || [];
+  const ro = S.canWrite === false;
+  const sh = $('#sheet');
+  sh.innerHTML = `<div class="card" role="dialog" aria-modal="true" aria-labelledby="ed-h">
+    <h2 id="ed-h">${job ? '編輯場次' : '新增場次'}<button class="icon-btn x" data-act="close" aria-label="關閉">×</button></h2>
+    <div class="fgrid">
+      <div class="field full"><span>${job ? '日期（填「到」會把這場複製到之後每一天）' : '日期（多天的案子選起訖，每天會各排一場）'}</span>
+        <div class="drange"><input type="date" id="f-date" value="${esc(F.date)}" aria-label="開始日期"><span>到</span><input type="date" id="f-date2" value="" min="${esc(F.date)}" aria-label="結束日期"><span class="hint" id="f-days"></span></div>
+      </div>
+      <label class="field full"><span>場次 / 內容</span><input type="text" id="f-title" value="${esc(F.title)}" placeholder="例：淡江校慶"></label>
+      <div class="field full"><span>時間（24 小時制，填起訖就能自動判斷一人兩場會不會撞）</span>
+        <div class="tline">${timePick('f-start', F.start, '開始')}<span class="to">到</span>${timePick('f-end', F.end, '結束')}</div>
+        <input type="text" id="f-tnote" value="${esc(F.timeNote)}" placeholder="時間說明：進場、疊車、撤場、公司集合…">
+      </div>
+    </div>
+    <div class="field"><div class="fhead"><span>人員</span><label class="chk unbox"><input type="checkbox" id="f-un" ${F.unattended ? 'checked' : ''}>不留守</label></div>
+      <div id="pick-p1"></div>
+      <div class="leadbox"><div class="grp lead-h">帶班人員<small>從已勾選的正職裡點選，可複選，排班表上顯示紅字</small></div><div id="pick-l"></div></div>
+      <div id="pick-p2"></div>
+    </div>
+    <div class="field"><span>車輛</span><div id="pick-v"></div></div>
+    <div class="field"><span>外調車輛（沒勾「已確認」的，排班表上會標紅）</span>
+      <div id="ext-list" class="ext-list"></div>
+      <button type="button" class="mini add ext-add ownly" data-act="extadd">＋ 新增外調車輛</button>
+    </div>
+    <label class="field"><span>備註</span><input type="text" id="f-note" value="${esc(F.note)}" placeholder="例：結束後前往Ultra、小安×4"></label>
+    <div class="acts">
+      ${ro ? '<span class="hint">你目前只有檢視權限。</span>' : `
+      ${job ? '<button class="btn danger" data-act="del" id="b-del">刪除</button>' : ''}
+      <span class="sp"></span>
+      ${job ? '<button class="btn sec" data-act="copynext">複製到隔天</button>' : ''}
+      <button class="btn" data-act="save" id="b-save">儲存</button>`}
+    </div>
+  </div>`;
+  sh.hidden = false;
+  initWheels(sh);
+  if (ro) sh.querySelectorAll('.wheel').forEach(w => w.style.pointerEvents = 'none');
+  renderExt();
+  renderPicks();
+  if (ro) sh.querySelectorAll('input,select').forEach(i => i.disabled = true);
+  setTimeout(() => (job ? null : $('#f-title'))?.focus(), 30);
+}
+function readForm() {
+  F.date = $('#f-date').value || F.date;
+  const d2 = $('#f-date2'); d2.min = F.date;
+  F.dateEnd = d2.value && d2.value > F.date ? d2.value : '';
+  F.title = $('#f-title').value.trim();
+  F.start = tpVal('f-start'); F.end = tpVal('f-end'); F.timeNote = $('#f-tnote').value.trim();
+  F.note = $('#f-note').value.trim();
+  F.unattended = $('#f-un').checked;
+  readExt();
+}
+/* 滾輪時間選擇：時、分兩欄，可用滑鼠滾輪、觸控滑動、點選或方向鍵 */
+const WI = 36;
+function timePick(id, val, label) {
+  const [h, m] = (val || '').split(':');
+  const hs = ['--', ...Array.from({ length: 24 }, (_, i) => pad(i))];
+  const ms = Array.from({ length: 12 }, (_, i) => pad(i * 5));
+  if (m && !ms.includes(m)) ms.push(m), ms.sort();
+  const col = (kind, list, cur, aria) => `<div class="wheel" data-tp="${kind}" data-v="${cur}" tabindex="0" role="listbox" aria-label="${label}${aria}">${list.map(x => `<div class="wi ${x === cur ? 'sel' : ''}" data-v="${x}" role="option">${x}</div>`).join('')}</div>`;
+  return `<div class="tp ${h ? 'set' : ''}" id="${id}" role="group" aria-label="${label}時間">
+    ${col('h', hs, h || '--', '（時）')}<b>:</b>${col('m', ms, m || '00', '（分）')}
+    <button type="button" class="tp-x" data-act="tpclear" data-id="${id}" aria-label="清除${label}時間">×</button>
+  </div>`;
+}
+function tpVal(id) {
+  const el = document.getElementById(id); const h = el.querySelector('[data-tp=h]').dataset.v;
+  return h && h !== '--' ? `${h}:${el.querySelector('[data-tp=m]').dataset.v || '00'}` : '';
+}
+function wheelTo(w, i, smooth) {
+  const n = w.children.length; i = Math.max(0, Math.min(n - 1, i));
+  w.scrollTo({ top: i * WI, behavior: smooth && !matchMedia('(prefers-reduced-motion: reduce)').matches ? 'smooth' : 'auto' });
+}
+function wheelCommit(w) {
+  const i = Math.max(0, Math.min(w.children.length - 1, Math.round(w.scrollTop / WI)));
+  [...w.children].forEach((c, k) => c.classList.toggle('sel', k === i));
+  const v = w.children[i].dataset.v;
+  if (v === w.dataset.v) return;
+  w.dataset.v = v;
+  const tp = w.closest('.tp'); tp.classList.toggle('set', tp.querySelector('[data-tp=h]').dataset.v !== '--');
+  renderPicks();
+}
+function initWheels(root) {
+  root.querySelectorAll('.wheel').forEach(w => {
+    const idx = () => [...w.children].findIndex(c => c.dataset.v === w.dataset.v);
+    w.scrollTop = Math.max(0, idx()) * WI;
+    let t, acc = 0;
+    w.addEventListener('scroll', () => {
+      const i = Math.round(w.scrollTop / WI);
+      [...w.children].forEach((c, k) => c.classList.toggle('sel', k === i));
+      clearTimeout(t); t = setTimeout(() => wheelCommit(w), 110);
+    });
+    w.addEventListener('wheel', e => {
+      e.preventDefault();
+      acc += e.deltaY; if (Math.abs(acc) < 20) return;
+      const step = Math.sign(acc); acc = 0;
+      wheelTo(w, Math.round(w.scrollTop / WI) + step, true);
+    }, { passive: false });
+    w.addEventListener('click', e => { const c = e.target.closest('.wi'); if (c) wheelTo(w, [...w.children].indexOf(c), true); });
+    w.addEventListener('keydown', e => {
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); wheelTo(w, Math.round(w.scrollTop / WI) + (e.key === 'ArrowDown' ? 1 : -1), true); }
+    });
+  });
+}
+function readExt() {
+  const rows = document.querySelectorAll('#ext-list .ext-row');
+  if (!rows.length && !document.getElementById('ext-list')) return;
+  const v = (r, k) => r.querySelector(`[data-f=${k}]`).value.trim();
+  F.ext = [...rows].map((r, i) => {
+    const sv = k => { const x = v(r, k); return x === '__new' ? '' : x; };
+    return { company: sv('company'), type: sv('type'), plate: v(r, 'plate'), driver: v(r, 'driver'), phone: v(r, 'phone'), ok: r.querySelector('input[type=checkbox]').checked, ...(F.ext[i]?.name ? { name: F.ext[i].name } : {}) };
+  });
+}
+function extSelect(key, f, val, i, label) {
+  const list = [...(S.config[key] || [])];
+  if (val && !list.includes(val)) list.push(val);
+  return `<select data-f="${f}" id="ext-${f}-${i}" class="${val ? '' : 'empty'}" aria-label="${label}">
+    <option value="">${label}</option>${list.map(x => `<option ${x === val ? 'selected' : ''}>${esc(x)}</option>`).join('')}
+    <option value="__new">＋ 新增${label}…</option></select>`;
+}
+function renderExt() {
+  const box = $('#ext-list');
+  box.innerHTML = F.ext.length ? F.ext.map((e, i) => `<div class="ext-row ${e.ok ? 'ok' : ''}">
+      ${e.name ? `<div class="hint">原本寫的：${esc(e.name)}</div>` : ''}
+      <div class="ext-sub">
+        ${extSelect('extCompanies', 'company', e.company, i, '公司')}
+        ${extSelect('carTypes', 'type', e.type, i, '車種')}
+        <input type="text" data-f="plate" id="ext-plate-${i}" value="${esc(e.plate)}" placeholder="車號" aria-label="車號">
+        <input type="text" data-f="driver" id="ext-driver-${i}" value="${esc(e.driver)}" placeholder="姓名" aria-label="姓名">
+        <input type="tel" data-f="phone" id="ext-phone-${i}" value="${esc(e.phone)}" placeholder="電話" aria-label="電話">
+        <label class="chk"><input type="checkbox" id="ext-c-${i}" ${e.ok ? 'checked' : ''}>已確認</label>
+        <button type="button" class="icon-btn sm ownly" data-act="extrm" data-i="${i}" aria-label="移除這筆外調車輛">×</button>
+      </div>
+    </div>`).join('') : '<div class="hint">沒有外調車輛</div>';
+}
+const extLabel = e => [e.company, e.type].filter(Boolean).join(' ') || e.plate || e.driver || e.phone || e.name || '外調車輛';
+const extDetail = e => [(e.company || e.type) ? e.plate : '', (e.company || e.type || e.plate) ? e.driver : '', (e.company || e.type || e.plate || e.driver) ? e.phone : ''].filter(Boolean).join(' ');
+const extFilled = e => e && (e.company || e.type || e.plate || e.driver || e.phone || e.name);
+// 排班時手動輸入的新公司、新車種，存檔時自動加進選單
+async function learnExt(ext) {
+  const add = (k, f) => { const cur = S.config[k] || []; const nw = [...new Set(ext.map(e => e[f]).filter(x => x && !cur.includes(x)))]; return nw.length ? [...cur, ...nw] : null; };
+  const co = add('extCompanies', 'company'), ty = add('carTypes', 'type');
+  if (co || ty) await saveConfig({ ...S.config, ...(co ? { extCompanies: co } : {}), ...(ty ? { carTypes: ty } : {}) });
+}
+function renderPicks() {
+  if (!F) return;
+  readForm();
+  const dates = rangeDates(F.date, F.dateEnd);
+  const multi = dates.length > 1;
+  $('#f-days').textContent = multi ? `共 ${dates.length} 天` : '';
+  const others = dates.flatMap(d => jobsOn(d).filter(j => j.id !== F.id && !j.unattended));
+  const pick = (kind, name) => {
+    const field = kind === 'p' ? 'people' : 'vehicles';
+    const on = F[field].includes(name);
+    const oth = others.filter(j => (j[field] || []).includes(name));
+    const offDays = kind === 'p' ? dates.filter(d => leaveOn(d).has(name)) : [];
+    const off = offDays.length > 0;
+    let st = '';
+    if (on && !F.unattended) {
+      if (off) st = 'leave';
+      else if (oth.some(o => pairStatus(F, o) === 'clash')) st = 'clash';
+      else if (oth.some(o => pairStatus(F, o) === 'check')) st = 'check';
+    }
+    const pre = d => multi ? md(d) + ' ' : '';
+    const ofcDays = kind === 'p' ? dates.filter(d => officeOn(d).has(name)) : [];
+    const hint = [...offDays.map(d => pre(d) + '休假'), ...ofcDays.map(d => pre(d) + '在公司'), ...oth.map(o => pre(o.date) + o.title + (o.start ? ' ' + o.start : ''))].join('、');
+    const busy = !on && (off || oth.length) ? 'off' : '';
+    return `<button type="button" class="pick ${st} ${busy}" data-act="pick" data-kind="${kind}" data-name="${esc(name)}" aria-pressed="${on}"><b>${esc(name)}</b>${hint ? `<i>${esc(hint)}</i>` : ''}</button>`;
+  };
+  const staff = S.config.staff;
+  const known = new Set(staff.map(p => p.name));
+  const extraP = F.people.filter(n => !known.has(n));
+  const grp = g => staff.filter(p => (p.group || '正職') === g).map(p => p.name);
+  const block = (g, list) => list.length ? `<div class="grp">${g}</div><div class="picks">${list.map(n => pick('p', n)).join('')}</div>` : '';
+  $('#pick-p1').innerHTML = block('正職', grp('正職')) || '<span class="hint">到「人員管理」新增人員名單。</span>';
+  const ni = $('#f-newsup'), nv = ni ? ni.value : '', nf = ni && document.activeElement === ni;
+  const addUI = S.canWrite === false ? '' : F.adding
+    ? `<span class="newsup"><input type="text" id="f-newsup" value="${esc(nv)}" placeholder="姓名" aria-label="新增支援人員姓名"><button type="button" class="btn sm" data-act="addsupok">加入</button><button type="button" class="icon-btn sm" data-act="addsupx" aria-label="取消">×</button></span>`
+    : `<button type="button" class="pick addp" data-act="addsup"><b>＋ 新增</b></button>`;
+  $('#pick-p2').innerHTML = `<div class="grp">支援</div><div class="picks">${grp('支援').map(n => pick('p', n)).join('')}${addUI}</div>` + block('其他', extraP);
+  if (nf && $('#f-newsup')) $('#f-newsup').focus();
+  const vk = new Set(S.config.vehicles);
+  const vl = [...S.config.vehicles, ...F.vehicles.filter(v => !vk.has(v))];
+  $('#pick-v').innerHTML = `<div class="picks">${vl.map(v => pick('v', v)).join('')}</div>`;
+  const regular = new Set(grp('正職'));
+  const cand = F.people.filter(n => regular.has(n) || F.leaders.includes(n));
+  F.leaders = F.leaders.filter(n => F.people.includes(n));
+  $('#pick-l').innerHTML = cand.length
+    ? `<div class="picks">${cand.map(n => `<button type="button" class="pick lpick" data-act="lead" data-name="${esc(n)}" aria-pressed="${F.leaders.includes(n)}"><b>${esc(n)}</b>${F.leaders.includes(n) ? '<i>帶班</i>' : ''}</button>`).join('')}</div>`
+    : '<span class="hint">先在上面勾選正職人員</span>';
+}
+// 排班時直接新增支援人員：加進名單（支援組）並幫他勾起來
+async function addSupport() {
+  const n = ($('#f-newsup')?.value || '').trim();
+  if (!n) { $('#f-newsup')?.focus(); return; }
+  if (!F.people.includes(n)) F.people = [...F.people, n];
+  F.adding = false;
+  if (!S.config.staff.some(p => p.name === n)) {
+    await saveConfig({ ...S.config, staff: [...S.config.staff, { name: n, group: '支援' }] });
+    toast(`已把「${n}」加進支援名單`);
+  }
+  if (F) renderPicks();
+}
+function closeEditor() { TR = false; $('#sheet').hidden = true; $('#sheet').innerHTML = ''; F = null; }
+function jobBody(f) {
+  return { date: f.date, order: f.order ?? Date.now(), title: f.title, start: f.start, end: f.end, timeNote: f.timeNote, people: f.people, leaders: (f.leaders || []).filter(n => f.people.includes(n)), vehicles: f.vehicles, ext: (f.ext || []).filter(extFilled), note: f.note, unattended: !!f.unattended };
+}
+async function write(fn, okMsg) {
+  try { await fn(); if (okMsg) toast(okMsg); return true; }
+  catch (e) {
+    if (e && e.code === 'invalid_argument') { S.canWrite = false; toast('沒有編輯權限，請找管理員把你加進「排班編輯」群組'); render(); }
+    else if (e && e.code === 'unavailable') toast('連線不穩，請再按一次');
+    else toast('儲存失敗：' + (e?.message || e));
+    return false;
+  }
+}
+async function saveJob() {
+  readForm();
+  if (!F.title) { $('#f-title').focus(); toast('請填場次名稱'); return; }
+  if (F.end && F.start && toMin(F.end) <= toMin(F.start)) { toast('結束時間要晚於開始時間'); return; }
+  const dates = rangeDates(F.date, F.dateEnd);
+  if (dates.length > 62) { toast('一次最多排 62 天'); return; }
+  $('#b-save').disabled = true;
+  const nextOrder = d => Math.max(0, ...jobsOn(d).map(j => j.order || 0)) + 1;
+  const ok = await write(async () => {
+    for (const [i, d] of dates.entries()) {
+      const isSelf = i === 0 && F.id;
+      const body = jobBody({ ...F, date: d, order: isSelf ? F.order : nextOrder(d) });
+      await (isSelf ? S.db.doc('jobs/' + F.id) : S.db.collection('jobs').doc()).set(body);
+    }
+  }, dates.length > 1 ? `已排入 ${md(dates[0])}–${md(dates.at(-1))} 共 ${dates.length} 天` : '已儲存');
+  if (ok) { const ext = F.ext; closeEditor(); learnExt(ext); } else if ($('#b-save')) $('#b-save').disabled = false;
+}
+// 同名場次、日期連續的一整段（例如 Ultra 11/9–11/14），中間斷掉就不算同一個案子
+function sameRun(job) {
+  const title = (job.title || '').trim(); if (!title) return [job];
+  const on = d => jobsOn(d).filter(j => (j.title || '').trim() === title);
+  const out = [...on(job.date)];
+  for (let d = addDays(job.date, -1), n = 0; n < 366; d = addDays(d, -1), n++) { const js = on(d); if (!js.length) break; out.push(...js); }
+  for (let d = addDays(job.date, 1), n = 0; n < 366; d = addDays(d, 1), n++) { const js = on(d); if (!js.length) break; out.push(...js); }
+  return out.length ? out : [job];
+}
+function rangeDates(a, b) {
+  const out = [a]; if (!b || b <= a) return out;
+  let d = a; while (d < b && out.length < 63) { d = addDays(d, 1); out.push(d); }
+  return out;
+}
+
+/* ---------- 休假 / 公司 editor ---------- */
+let L = null;
+function openLeave(date, kind = 'leave') {
+  const label = kind === 'office' ? '在公司' : '休假';
+  L = { date, kind, leave: [...(kind === 'office' ? officeOn(date) : leaveOn(date))] };
+  const regular = S.config.staff.filter(p => (p.group || '正職') === '正職').map(p => p.name);
+  const names = kind === 'office' ? regular : S.config.staff.map(p => p.name);
+  const sh = $('#sheet');
+  const draw = () => {
+    const assigned = new Set(jobsOn(date).flatMap(j => j.unattended ? [] : (j.people || [])));
+    const other = kind === 'office' ? leaveOn(date) : officeOn(date);
+    sh.querySelector('#lv-picks').innerHTML = [...new Set([...names, ...L.leave])].map(n => {
+      const on = L.leave.includes(n);
+      const hint = [assigned.has(n) ? '當天有排' : '', other.has(n) ? (kind === 'office' ? '休假' : '在公司') : ''].filter(Boolean).join('、');
+      const bad = on && (kind === 'leave' ? (assigned.has(n) || other.has(n)) : other.has(n));
+      return `<button type="button" class="pick ${bad ? 'leave' : ''}" data-act="lvpick" data-name="${esc(n)}" aria-pressed="${on}"><b>${esc(n)}</b>${hint ? `<i>${hint}</i>` : ''}</button>`;
+    }).join('') || '<span class="hint">到「人員管理」新增正職人員。</span>';
+  };
+  sh.innerHTML = `<div class="card" role="dialog" aria-modal="true" aria-labelledby="lv-h">
+    <h2 id="lv-h">${md(date)} 週${WD[parseD(date).getDay()]} ${label}<button class="icon-btn x" data-act="close" aria-label="關閉">×</button></h2>
+    ${kind === 'office' ? '<p class="hint" style="margin:0">勾選這天留在公司的正職。</p>' : ''}
+    <div class="picks" id="lv-picks"></div>
+    <div class="acts"><span class="sp"></span><button class="btn" data-act="lvsave" id="b-lv">儲存</button></div>
+  </div>`;
+  sh.hidden = false; L.draw = draw; draw();
+}
+
+/* ---------- config ---------- */
+async function saveConfig(next) {
+  const prev = S.config; S.config = next; render();
+  const ok = await write(() => S.db.doc('config/main').set(next));
+  if (!ok) { S.config = prev; render(); }
+}
+
+/* ---------- events ---------- */
+document.addEventListener('click', async e => {
+  if ((S.menu || S.armed) && !e.target.closest('.smenu,[data-act=menu],[data-act=rmlist]')) { S.menu = null; S.armed = null; if (S.view === 'set') render(); }
+  const t = e.target.closest('[data-act],[data-view]');
+  if (!t) { if (e.target.id === 'sheet') closeEditor(); return; }
+  if (t.dataset.view) { S.view = t.dataset.view; try { localStorage.setItem('view', S.view); } catch (_) {} render(); return; }
+  const a = t.dataset.act;
+  if (a === 'new') openEditor(null, t.dataset.date);
+  else if (a === 'edit') { const j = S.jobs.get(t.dataset.id); if (j) openEditor(j); }
+  else if (a === 'close') { closeEditor(); L = null; }
+  else if (a === 'pick') { const f = t.dataset.kind === 'p' ? 'people' : 'vehicles'; const n = t.dataset.name; F[f] = F[f].includes(n) ? F[f].filter(x => x !== n) : [...F[f], n]; renderPicks(); }
+  else if (a === 'save') saveJob();
+  else if (a === 'addsup') { F.adding = true; renderPicks(); $('#f-newsup')?.focus(); }
+  else if (a === 'addsupx') { F.adding = false; renderPicks(); }
+  else if (a === 'addsupok') addSupport();
+  else if (a === 'lead') { const n = t.dataset.name; F.leaders = F.leaders.includes(n) ? F.leaders.filter(x => x !== n) : [...F.leaders, n]; renderPicks(); }
+  else if (a === 'extadd') { readExt(); F.ext.push({ company: '', type: '', plate: '', driver: '', phone: '', ok: false }); renderExt(); $('#ext-company-' + (F.ext.length - 1))?.focus(); }
+  else if (a === 'extrm') { readExt(); F.ext.splice(+t.dataset.i, 1); renderExt(); }
+  else if (a === 'tpclear') { const el = document.getElementById(t.dataset.id); wheelTo(el.querySelector('[data-tp=h]'), 0, true); wheelTo(el.querySelector('[data-tp=m]'), 0, true); }
+  else if (a === 'copynext') {
+    readForm(); const body = jobBody({ ...F, date: addDays(F.date, 1) });
+    body.order = Math.max(0, ...jobsOn(body.date).map(j => j.order || 0)) + 1;
+    const ok = await write(() => S.db.collection('jobs').doc().set(body), `已複製到 ${md(body.date)}`);
+    if (ok) { closeEditor(); learnExt(body.ext); }
+  }
+  else if (a === 'del') {
+    const run = sameRun(S.jobs.get(F.id) || F);
+    const dates = [...new Set(run.map(j => j.date))].sort();
+    const acts = t.closest('.acts');
+    if (dates.length > 1) {
+      acts.innerHTML = `<span class="delq">「${esc(F.title)}」連續排了 ${dates.length} 天（${md(dates[0])}–${md(dates.at(-1))}）</span>
+        <span class="sp"></span>
+        <button class="btn sec" data-act="delcancel">取消</button>
+        <button class="btn sec" data-act="delone">只刪這天</button>
+        <button class="btn danger" data-act="delall">刪除全部 ${dates.length} 天</button>`;
+      return;
+    }
+    if (!t.dataset.armed) { t.dataset.armed = '1'; t.textContent = '確定刪除？'; return; }
+    const ok = await trashJobs([S.jobs.get(F.id)], `已刪除「${F.title}」`);
+    if (ok) closeEditor();
+  }
+  else if (a === 'trash') openTrash();
+  else if (a === 'trclose') { TR = false; closeEditor(); }
+  else if (a === 'trrestore') { t.disabled = true; restoreJobs(t.dataset.ids.split(',')); }
+  else if (a === 'delone') { const ok = await trashJobs([S.jobs.get(F.id)], `已刪除 ${md(F.date)}「${F.title}」`); if (ok) closeEditor(); }
+  else if (a === 'delall') {
+    const run = sameRun(S.jobs.get(F.id) || F); t.disabled = true;
+    const ok = await trashJobs(run, `已刪除「${F.title}」共 ${new Set(run.map(j => j.date)).size} 天`);
+    if (ok) closeEditor(); else t.disabled = false;
+  }
+  else if (a === 'delcancel') { const j = S.jobs.get(F.id); if (j) openEditor(j); }
+  else if (a === 'leave') openLeave(t.dataset.date, 'leave');
+  else if (a === 'office') openLeave(t.dataset.date, 'office');
+  else if (a === 'lvpick') { const n = t.dataset.name; L.leave = L.leave.includes(n) ? L.leave.filter(x => x !== n) : [...L.leave, n]; L.draw(); }
+  else if (a === 'lvsave') {
+    $('#b-lv').disabled = true; const d = L.date; const field = L.kind === 'office' ? 'office' : 'leave';
+    const cur = S.days.get(d) || {};
+    const ok = await write(() => S.db.doc('days/' + d).set({ leave: cur.leave || [], office: cur.office || [], [field]: L.leave }), field === 'office' ? '已更新在公司人員' : '已更新休假');
+    if (ok) { closeEditor(); L = null; } else $('#b-lv').disabled = false;
+  }
+  else if (a === 'settab') { S.setTab = t.dataset.tab; render(); }
+  else if (a === 'menu') { S.menu = S.menu === t.dataset.name ? null : t.dataset.name; S.armed = null; render(); }
+  else if (a === 'rmstaff') {
+    const n = t.dataset.name;
+    if (S.armed !== 'staff:' + n) { S.armed = 'staff:' + n; render(); return; }
+    S.armed = null; S.menu = null;
+    saveConfig({ ...S.config, staff: S.config.staff.filter(p => p.name !== n) });
+    toast(`已從名單移除「${n}」，已排的場次保留不變`);
+  }
+  else if (a === 'renstart') { S.renaming = t.dataset.name; S.menu = null; render(); const i = $('#ren-input'); if (i) { i.focus(); i.select(); } }
+  else if (a === 'rencancel') { S.renaming = null; render(); }
+  else if (a === 'rensave') renameStaff(t.dataset.name, $('#ren-input').value.trim());
+  else if (a === 'mvup') moveStaff(t.dataset.name, -1);
+  else if (a === 'mvdown') moveStaff(t.dataset.name, 1);
+  else if (a === 'mvstaff') { S.menu = null; saveConfig({ ...S.config, staff: S.config.staff.map(p => p.name === t.dataset.name ? { ...p, group: (p.group || '正職') === '正職' ? '支援' : '正職' } : p) }); }
+  else if (a === 'addstart') { S.adding = { kind: t.dataset.kind, key: t.dataset.key }; S.menu = null; render(); $('#add-in')?.focus(); }
+  else if (a === 'addx') { S.adding = null; render(); }
+  else if (a === 'addok') commitAdd();
+  else if (a === 'lsedit') { S.editing = t.dataset.key + ':' + t.dataset.name; S.armed = null; render(); const i = $('#ls-input'); if (i) { i.focus(); i.select(); } }
+  else if (a === 'lscancel') { S.editing = null; render(); }
+  else if (a === 'lssave') renameList(t.dataset.key, t.dataset.name, $('#ls-input').value.trim());
+  else if (a === 'rmlist') {
+    const k = t.dataset.key, n = t.dataset.name;
+    if (S.armed !== k + ':' + n) { S.armed = k + ':' + n; render(); return; }
+    S.armed = null; saveConfig({ ...S.config, [k]: (S.config[k] || []).filter(v => v !== n) });
+  }
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && !$('#sheet').hidden && e.target.id !== 'f-newsup') closeEditor();
+  if (e.key === 'Enter' && e.target.matches('.job')) e.target.click();
+  if (e.target.id === 'ls-input' && e.key === 'Enter') { e.preventDefault(); document.querySelector('[data-act=lssave]')?.click(); }
+  if (e.target.id === 'ls-input' && e.key === 'Escape') { S.editing = null; render(); }
+  if (e.target.id === 'add-in' && e.key === 'Enter') { e.preventDefault(); commitAdd(); }
+  if (e.target.id === 'add-in' && e.key === 'Escape') { S.adding = null; render(); }
+  if (e.key === 'Enter' && e.target.id === 'f-newsup') { e.preventDefault(); addSupport(); }
+  if (e.key === 'Escape' && e.target.id === 'f-newsup') { e.stopPropagation(); F.adding = false; renderPicks(); return; }
+  if (e.key === 'Enter' && e.target.id === 'ren-input') document.querySelector('[data-act=rensave]').click();
+  if (e.key === 'Escape' && e.target.id === 'ren-input') { S.renaming = null; render(); }
+});
+document.addEventListener('change', e => {
+  if (!F) return;
+  if (e.target.id === 'f-un' && e.target.checked) { F.people = []; F.leaders = []; }
+  if (['f-date', 'f-date2', 'f-un'].includes(e.target.id)) renderPicks();
+  if (e.target.matches('#ext-list select')) {
+    const s = e.target;
+    if (s.value === '__new') {
+      const inp = document.createElement('input');
+      inp.type = 'text'; inp.dataset.f = s.dataset.f; inp.id = s.id; inp.className = 'newopt';
+      inp.placeholder = s.dataset.f === 'company' ? '輸入公司名稱' : '輸入車種，例：3.5噸';
+      inp.setAttribute('aria-label', inp.placeholder);
+      s.replaceWith(inp); inp.focus();
+    } else s.classList.toggle('empty', !s.value);
+  }
+  if (e.target.matches('#ext-list input[type=checkbox]')) e.target.closest('.ext-row').classList.toggle('ok', e.target.checked);
+});
+$('#focus').addEventListener('change', e => { S.focus = e.target.value; try { localStorage.setItem('focus', S.focus); } catch (_) {} render(); });
+$('#mprev').onclick = () => { let { y, m } = S.month; m--; if (m < 0) { m = 11; y--; } S.month = { y, m }; render(); };
+$('#mnext').onclick = () => { let { y, m } = S.month; m++; if (m > 11) { m = 0; y++; } S.month = { y, m }; render(); };
+$('#gotoday').onclick = () => { const d = new Date(); S.month = { y: d.getFullYear(), m: d.getMonth() }; S.view = 'day'; S.scrolled = false; render(); };
+
+let toastT;
+function toast(msg, undo) {
+  const el = $('#toast'); el.innerHTML = '';
+  const sp = document.createElement('span'); sp.textContent = msg; el.appendChild(sp);
+  if (undo) { const b = document.createElement('button'); b.className = 'undo'; b.textContent = '復原'; b.onclick = () => { el.hidden = true; undo(); }; el.appendChild(b); }
+  el.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => el.hidden = true, undo ? 10000 : 2200);
+}
+
+/* ---------- 刪除先進「最近刪除」，30 天內都能復原 ---------- */
+async function trashJobs(jobs, msg) {
+  jobs = jobs.filter(Boolean); if (!jobs.length) return false;
+  const batch = Date.now().toString(36), now = Date.now();
+  const old = [...S.trash.values()].filter(t => now - (t.deletedAt || 0) > 30 * 864e5);
+  const ok = await write(async () => {
+    for (const j of jobs) {
+      const { id, ...data } = j;
+      await S.db.doc('trash/' + id).set({ job: data, deletedAt: now, batch });
+      await S.db.doc('jobs/' + id).delete();
+    }
+    for (const t of old) await S.db.doc('trash/' + t.id).delete();
+  });
+  if (ok) toast(msg, () => restoreJobs(jobs.map(j => j.id), jobs));
+  return ok;
+}
+async function restoreJobs(ids, captured) {
+  const cap = new Map((captured || []).map(j => { const { id, ...job } = j; return [id, { id, job }]; }));
+  const items = ids.map(id => S.trash.get(id) || cap.get(id)).filter(Boolean);
+  if (!items.length) { toast('找不到要復原的場次'); return; }
+  await write(async () => {
+    for (const t of items) { await S.db.doc('jobs/' + t.id).set(t.job); await S.db.doc('trash/' + t.id).delete(); }
+  }, items.length > 1 ? `已復原 ${items.length} 個場次` : `已復原「${items[0].job.title}」`);
+  if (TR) openTrash();
+}
+let TR = false;
+function openTrash() {
+  TR = true;
+  const list = [...S.trash.values()].sort((a, b) => b.deletedAt - a.deletedAt);
+  const batches = []; const seen = new Map();
+  list.forEach(t => { if (!seen.has(t.batch)) { seen.set(t.batch, []); batches.push(seen.get(t.batch)); } seen.get(t.batch).push(t); });
+  const when = ms => { const d = new Date(ms); return `${d.getMonth() + 1}/${d.getDate()} ${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+  const sh = $('#sheet');
+  sh.innerHTML = `<div class="card" role="dialog" aria-modal="true" aria-labelledby="tr-h">
+    <h2 id="tr-h">最近刪除<button class="icon-btn x" data-act="trclose" aria-label="關閉">×</button></h2>
+    <p class="hint" style="margin:0">刪除的場次會保留 30 天，按「復原」就會放回原本的日期。</p>
+    ${batches.length ? `<div class="trlist">${batches.map(b => {
+      const dates = [...new Set(b.map(t => t.job.date))].sort();
+      const range = dates.length > 1 ? `${md(dates[0])}–${md(dates.at(-1))}（${dates.length} 天）` : md(dates[0]);
+      return `<div class="tritem">
+        <div class="trmain"><b>${esc(b[0].job.title || '（未命名）')}</b><span>${range}</span></div>
+        <span class="trwhen">${when(b[0].deletedAt)} 刪除</span>
+        ${S.canWrite === false ? '' : `<button class="btn sm" data-act="trrestore" data-ids="${esc(b.map(t => t.id).join(','))}">復原</button>`}
+      </div>`; }).join('')}</div>` : '<p class="emptymsg">沒有刪除的場次。</p>'}
+  </div>`;
+  sh.hidden = false;
+}
+function setStatus(msg, err) { const s = $('#status'); s.textContent = msg; s.classList.toggle('err', !!err); }
+
+/* ---------- 顯示大小（拉桿 10–200%）與全寬，只記在這台裝置 ---------- */
+function applyZoom(v, save) {
+  v = Math.max(10, Math.min(200, Math.round(+v) || 100));
+  document.documentElement.style.setProperty('--zoom', v / 100);
+  $('#zoom').value = v; $('#zoomval').value = v;
+  if (save) try { localStorage.setItem('zoom', v); } catch (_) {}
+}
+function applyFull(on, save) {
+  document.body.classList.toggle('full', on); $('#fullw').setAttribute('aria-pressed', String(on));
+  if (save) try { localStorage.setItem('full', on ? '1' : ''); } catch (_) {}
+}
+$('#zoom').addEventListener('input', e => applyZoom(e.target.value, true));
+const zv = $('#zoomval');
+zv.addEventListener('focus', () => zv.select());
+zv.addEventListener('change', () => applyZoom(zv.value.replace(/[^\d]/g, ''), true));
+zv.addEventListener('keydown', e => {
+  if (e.key === 'Enter') { applyZoom(zv.value.replace(/[^\d]/g, ''), true); zv.blur(); }
+  if (e.key === 'Escape') { zv.value = $('#zoom').value; zv.blur(); }
+  if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); applyZoom(+$('#zoom').value + (e.key === 'ArrowUp' ? 5 : -5), true); zv.select(); }
+});
+$('#zoom').addEventListener('dblclick', () => applyZoom(100, true));
+$('#fullw').addEventListener('click', () => applyFull(!document.body.classList.contains('full'), true));
+try { applyZoom(localStorage.getItem('zoom') || 100); applyFull(localStorage.getItem('full') === '1'); } catch (_) { applyZoom(100); }
+
+/* ====================================================================
+   Microsoft 365 資料層
+   用公司帳號登入（在 Teams 裡自動登入），讀寫 SharePoint 上的 5 張清單。
+   上面的畫面程式完全沒改，只把資料來源換成這一層。
+   ==================================================================== */
+const SC = window.SCHEDULE_CONFIG || {};
+const DEMO = new URLSearchParams(location.search).has('demo');
+const LIST_NAMES = Object.assign({ staff: '人員', options: '車輛選項', jobs: '場次', ext: '外調車輛', days: '每日狀態', trash: '最近刪除' }, SC.lists || {});
+// 每個欄位：[內部名稱（匯入 Excel 時的英文標題）, 中文顯示名稱]。內部名稱找不到時，改用中文名稱對應。
+const FIELD_DEFS = {
+  staff: { name: ['Title', '姓名'], group: ['Group', '組別'], order: ['SortOrder', '排序'], active: ['Active', '啟用'] },
+  options: { name: ['Title', '名稱'], cat: ['Category', '類別'], order: ['SortOrder', '排序'] },
+  jobs: { title: ['Title', '場次名稱'], key: ['JobKey', '場次代碼'], date: ['JobDate', '日期'], start: ['StartTime', '開始時間'], end: ['EndTime', '結束時間'], timeNote: ['TimeNote', '時間說明'], people: ['Staff', '人員'], leaders: ['Leaders', '帶班'], vehicles: ['Vehicles', '車輛'], unattended: ['Unattended', '不留守'], note: ['Note', '備註'], order: ['SortOrder', '排序'] },
+  ext: { company: ['Title', '公司'], key: ['JobKey', '場次代碼'], date: ['JobDate', '日期'], type: ['CarType', '車種'], plate: ['Plate', '車號'], driver: ['Driver', '司機姓名'], phone: ['Phone', '電話'], ok: ['Confirmed', '已確認'] },
+  days: { key: ['Title', '日期代碼'], date: ['DayDate', '日期'], leave: ['Leave', '休假'], office: ['Office', '公司'] },
+  trash: { title: ['Title', '場次名稱'], data: ['Data', '資料'] }
+};
+const DATE_KEYS = { jobs: ['date'], ext: ['date'], days: ['date'] };
+// 是/否欄位：匯入時若被設成數字或文字（1/0、是/否），讀寫時自動轉換
+const BOOL_KEYS = { staff: ['active'], jobs: ['unattended'], ext: ['ok'] };
+const toBool = v => (v === null || v === undefined || v === '') ? undefined : v === true || v === 1 || /^(1|true|yes|y|是)$/i.test(String(v).trim());
+const OPTIONAL_FIELDS = { ext: ['phone'] }; // 清單沒有這欄也能用，只是不顯示
+const OPT_CATS = [['vehicles', '公司車輛'], ['extCompanies', '外調公司'], ['carTypes', '車種']];
+const splitNames = s => String(s ?? '').split(/[;；]/).map(x => x.trim()).filter(Boolean);
+const joinNames = a => (a || []).map(x => String(x).trim()).filter(Boolean).join(';');
+const newId = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2)).replace(/-/g, '').slice(0, 20);
+const userErr = (msg, extra) => Object.assign(new Error(msg), { userMsg: msg }, extra || {});
+const clone = o => JSON.parse(JSON.stringify(o));
+async function pool(tasks, n = 4) {
+  const out = []; let i = 0;
+  await Promise.all(Array.from({ length: Math.min(n, tasks.length) }, async () => { while (i < tasks.length) { const k = i++; out[k] = await tasks[k](); } }));
+  return out;
+}
+
+/* ---------- 登入：在 Teams 裡用 Teams 的帳號（NAA），在瀏覽器裡轉到微軟登入頁 ---------- */
+const SCOPES = ['User.Read', 'Sites.ReadWrite.All', 'GroupMember.Read.All'];
+let PCA = null, IN_TEAMS = false, TEAMS_HINT = '', TOKEN = { v: '', exp: 0, p: null };
+const redirectUri = () => SC.redirectUri || (location.origin + location.pathname.replace(/index\.html$/, ''));
+async function initAuth() {
+  if (!window.msal) throw userErr('登入元件載入失敗，請確認網路後重新整理頁面。');
+  const maybeTeams = window.parent !== window || /Teams/i.test(navigator.userAgent);
+  if (maybeTeams && window.microsoftTeams) {
+    try {
+      await Promise.race([microsoftTeams.app.initialize(), new Promise((_, no) => setTimeout(() => no(new Error('timeout')), 5000))]);
+      IN_TEAMS = true;
+      try { const c = await microsoftTeams.app.getContext(); TEAMS_HINT = c?.user?.loginHint || ''; } catch (_) {}
+    } catch (_) {}
+  }
+  PCA = await msal.createNestablePublicClientApplication({
+    auth: { clientId: SC.clientId, authority: 'https://login.microsoftonline.com/' + SC.tenantId, redirectUri: redirectUri(), supportsNestedAppAuth: true },
+    cache: { cacheLocation: 'localStorage' }
+  });
+  if (!IN_TEAMS) { const r = await PCA.handleRedirectPromise(); if (r && r.account) PCA.setActiveAccount(r.account); }
+  if (!PCA.getActiveAccount() && PCA.getAllAccounts().length) PCA.setActiveAccount(PCA.getAllAccounts()[0]);
+}
+function getToken() {
+  if (TOKEN.v && Date.now() < TOKEN.exp - 120e3) return Promise.resolve(TOKEN.v);
+  if (TOKEN.p) return TOKEN.p;
+  TOKEN.p = (async () => {
+    const account = PCA.getActiveAccount() || undefined;
+    let r = null;
+    try { if (account || IN_TEAMS) r = await PCA.acquireTokenSilent({ scopes: SCOPES, account }); } catch (_) {}
+    if (!r && IN_TEAMS) {
+      try { r = await PCA.ssoSilent({ scopes: SCOPES, loginHint: TEAMS_HINT || undefined }); } catch (_) {}
+      if (!r) r = await PCA.acquireTokenPopup({ scopes: SCOPES, loginHint: TEAMS_HINT || undefined });
+    }
+    if (!r) { await PCA.acquireTokenRedirect({ scopes: SCOPES }); await new Promise(() => {}); }
+    if (r.account) PCA.setActiveAccount(r.account);
+    TOKEN.v = r.accessToken; TOKEN.exp = r.expiresOn ? +new Date(r.expiresOn) : Date.now() + 30 * 60e3;
+    return TOKEN.v;
+  })().finally(() => { TOKEN.p = null; });
+  return TOKEN.p;
+}
+
+/* ---------- SharePoint 清單（Microsoft Graph） ---------- */
+function graphBackend() {
+  const G = 'https://graph.microsoft.com/v1.0';
+  let site = null; const ids = {}, cols = {}, kinds = {};
+  async function call(method, url, body, tries = 0) {
+    let r;
+    try {
+      r = await fetch(url.startsWith('http') ? url : G + url, { method, headers: { Authorization: 'Bearer ' + await getToken(), 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
+    } catch (e) { if (e && e.userMsg) throw e; throw Object.assign(new Error('網路連線失敗'), { code: 'unavailable' }); }
+    if ((r.status === 429 || r.status === 503 || r.status === 504) && tries < 4) {
+      const s = Math.min(+(r.headers.get('Retry-After') || 2) || 2, 30);
+      await new Promise(z => setTimeout(z, s * 1000));
+      return call(method, url, body, tries + 1);
+    }
+    if (!r.ok) {
+      let m = ''; try { m = (await r.json()).error?.message || ''; } catch (_) {}
+      throw Object.assign(new Error(m || ('HTTP ' + r.status)), { status: r.status, code: r.status === 403 || r.status === 401 ? 'invalid_argument' : r.status >= 500 ? 'unavailable' : 'error' });
+    }
+    return r.status === 204 ? null : r.json();
+  }
+  async function all(url) { const out = []; while (url) { const j = await call('GET', url); out.push(...(j.value || [])); url = j['@odata.nextLink']; } return out; }
+  // 日期一律用公司時區（預設台北）換算：讀取時把 UTC 時間轉成台北日期，寫入時存台北當天的午夜
+  const TZ = SC.timeZone || 'Asia/Taipei';
+  const dayFmt = new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit' });
+  const toDs = v => { if (!v) return ''; if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return v; const t = Date.parse(v); return isNaN(t) ? String(v).slice(0, 10) : dayFmt.format(new Date(t)); };
+  const partsFmt = new Intl.DateTimeFormat('en-US', { timeZone: TZ, hourCycle: 'h23', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+  const midnight = ds => {
+    const [y, m, d] = ds.split('-').map(Number); const t = Date.UTC(y, m - 1, d);
+    const p = partsFmt.formatToParts(new Date(t)); const g = k => +p.find(x => x.type === k).value;
+    return new Date(t - (Date.UTC(g('year'), g('month') - 1, g('day'), g('hour'), g('minute')) - t)).toISOString().replace('.000', '');
+  };
+  const out = (k, f) => {
+    const o = {};
+    for (const [lk, v] of Object.entries(f)) {
+      const n = cols[k][lk]; if (!n || v === undefined) continue;
+      if (DATE_KEYS[k]?.includes(lk)) o[n] = v ? midnight(v) : null;
+      else if (BOOL_KEYS[k]?.includes(lk)) { const t = kinds[k][lk]; o[n] = t === 'number' ? (v ? 1 : 0) : t === 'text' ? (v ? '1' : '0') : !!v; }
+      else o[n] = v;
+    }
+    return o;
+  };
+  const L = k => `/sites/${site.id}/lists/${ids[k]}`;
+  return {
+    raw: call,
+    async init() {
+      let u; try { u = new URL(SC.siteUrl); } catch (_) { throw userErr('config.js 的 siteUrl 不是正確的網址。'); }
+      try { site = await call('GET', `/sites/${u.hostname}:${u.pathname.replace(/\/+$/, '')}?$select=id,displayName,webUrl`); }
+      catch (e) {
+        if (e.status === 404 || e.status === 400) throw userErr('找不到 SharePoint 網站，請檢查 config.js 的 siteUrl。');
+        if (e.status === 403) throw userErr('你的帳號沒有權限開啟排班資料，請確認你已加入工務排班的 Teams 團隊。');
+        throw e;
+      }
+      const lists = await all(`/sites/${site.id}/lists?$select=id,displayName,name&$top=200`);
+      const missing = [];
+      for (const [k, name] of Object.entries(LIST_NAMES)) {
+        const l = lists.find(x => x.displayName === name) || lists.find(x => x.name === name);
+        if (l) ids[k] = l.id; else if (k !== 'trash') missing.push('「' + name + '」');
+      }
+      if (missing.length) throw userErr(`在網站「${site.displayName}」找不到清單 ${missing.join('、')}。請確認清單名稱和指南一致。`);
+      const bad = [];
+      await pool(Object.keys(ids).map(k => async () => {
+        const cs = await all(`${L(k)}/columns?$top=200`);
+        cols[k] = {}; kinds[k] = {};
+        for (const [lk, [internal, disp]] of Object.entries(FIELD_DEFS[k])) {
+          const custom = SC.fields?.[k]?.[lk];
+          const c = (custom && cs.find(x => x.name === custom)) || cs.find(x => x.name === internal) || cs.find(x => x.displayName === disp);
+          if (!c && OPTIONAL_FIELDS[k]?.includes(lk)) continue;
+          if (c) { cols[k][lk] = c.name; kinds[k][lk] = c.boolean ? 'boolean' : c.number ? 'number' : (c.text || c.choice) ? 'text' : 'other'; } else bad.push(`${LIST_NAMES[k]} 的「${disp}」`);
+        }
+      }));
+      if (bad.length) throw userErr('清單裡找不到這些欄位：' + bad.join('、') + '。請對照指南的清單設計檢查。');
+    },
+    has: k => !!ids[k],
+    async items(k) {
+      if (!ids[k]) return [];
+      const sel = Object.values(cols[k]).join(',');
+      const rows = await all(`${L(k)}/items?$expand=fields($select=${sel})&$top=999`);
+      return rows.map(r => {
+        const f = {};
+        for (const [lk, n] of Object.entries(cols[k])) { let v = r.fields?.[n]; if (DATE_KEYS[k]?.includes(lk)) v = toDs(v); else if (BOOL_KEYS[k]?.includes(lk)) v = toBool(v); f[lk] = v; }
+        return { id: r.id, f };
+      });
+    },
+    async create(k, f) { const r = await call('POST', `${L(k)}/items`, { fields: out(k, f) }); return r.id; },
+    async patch(k, id, f) { await call('PATCH', `${L(k)}/items/${id}/fields`, out(k, f)); },
+    async remove(k, id) { await call('DELETE', `${L(k)}/items/${id}`); }
+  };
+}
+
+/* ---------- 示範模式（網址加 ?demo）：資料只在這個分頁，不會存到任何地方 ---------- */
+function memoryBackend(seed) {
+  const db = {}; let n = 1;
+  for (const [k, rows] of Object.entries(seed)) db[k] = rows.map(f => ({ id: String(n++), f: { ...f } }));
+  const lag = () => new Promise(r => setTimeout(r, 40));
+  return {
+    async init() {}, has: k => !!db[k], raw: async () => ({ value: [] }),
+    async items(k) { await lag(); return (db[k] || []).map(r => ({ id: r.id, f: { ...r.f } })); },
+    async create(k, f) { await lag(); const id = String(n++); (db[k] ||= []).push({ id, f: { ...f } }); return id; },
+    async patch(k, id, f) { await lag(); const r = (db[k] || []).find(x => x.id === id); if (!r) throw Object.assign(new Error('找不到資料'), { code: 'error' }); Object.assign(r.f, f); },
+    async remove(k, id) { await lag(); db[k] = (db[k] || []).filter(x => x.id !== id); }
+  };
+}
+function demoSeed() {
+  const now = new Date(); const y = now.getFullYear(), m = now.getMonth();
+  const d = n => ds(y, m, n);
+  const reg = ['王大明', '李志豪', '陳建宏', '林俊傑', '張家豪', '黃信宏', '吳承恩', '劉育成'];
+  const sup = ['小安', '阿凱', '小豪'];
+  const staff = [...reg.map((name, i) => ({ name, group: '正職', order: i + 1, active: true })), ...sup.map((name, i) => ({ name, group: '支援', order: 20 + i, active: true }))];
+  const options = [...['7111', '7222', '3.5噸 A', '3.5噸 B'].map((name, i) => ({ name, cat: '公司車輛', order: i + 1 })),
+    ...['順發', '大華'].map((name, i) => ({ name, cat: '外調公司', order: 10 + i })), ...['3.5噸', '11噸', '小貨車'].map((name, i) => ({ name, cat: '車種', order: 20 + i }))];
+  const J = (n, title, start, end, people, leaders, vehicles, extra) => ({ key: 'demo' + n + title.length, date: d(n), title, start, end, timeNote: '', people: people.join(';'), leaders: leaders.join(';'), vehicles: vehicles.join(';'), unattended: false, note: '', order: 1, ...(extra || {}) });
+  const t = Math.min(now.getDate(), 26);
+  const jobs = [
+    J(t, '淡江校慶', '08:00', '17:00', ['王大明', '李志豪', '小安'], ['王大明'], ['7111']),
+    J(t, '台大活動中心', '13:00', '20:00', ['陳建宏', '李志豪'], ['陳建宏'], ['7222'], { order: 2 }),
+    J(t + 1, '世貿展覽 進場', '07:00', '', ['林俊傑', '張家豪', '阿凱'], ['林俊傑'], ['3.5噸 A'], { timeNote: '疊車' }),
+    J(t + 2, '世貿展覽 撤場', '18:00', '23:00', ['林俊傑', '黃信宏'], [], ['3.5噸 A']),
+    J(t + 2, '公司倉庫整理', '', '', [], [], [], { unattended: true, order: 2, note: '不留守' })
+  ];
+  const ext = [{ key: jobs[2].key, date: jobs[2].date, company: '順發', type: '11噸', plate: 'KLA-1234', driver: '陳先生', ok: false }];
+  const days = [{ key: d(t), date: d(t), leave: '吳承恩', office: '劉育成' }, { key: d(t + 1), date: d(t + 1), leave: '李志豪', office: '' }];
+  return { staff, options, jobs, ext, days, trash: [] };
+}
+
+/* ---------- 把清單包成畫面原本使用的資料介面（collection / doc / onSnapshot） ---------- */
+function makeDb(B) {
+  const M = { jobs: new Map(), ext: new Map(), days: new Map(), trash: new Map(), staff: [], opts: [] };
+  const subs = { jobs: [], days: [], trash: [], config: [] };
+  const last = {};
+  let gen = 0, busy = 0, syncT = null, syncing = null;
+  const extOf = r => ({ company: r.f.company || '', type: r.f.type || '', plate: r.f.plate || '', driver: r.f.driver || '', phone: r.f.phone || '', ok: !!r.f.ok });
+  const jobOf = (f, exts) => ({ date: f.date || '', order: f.order ?? 0, title: f.title || '', start: f.start || '', end: f.end || '', timeNote: f.timeNote || '', people: splitNames(f.people), leaders: splitNames(f.leaders), vehicles: splitNames(f.vehicles), ext: (exts || []).map(e => ({ ...e.v })), note: f.note || '', unattended: !!f.unattended });
+  const byOrder = (a, b) => (a.order ?? 9999) - (b.order ?? 9999);
+  const cfg = () => {
+    const c = { staff: M.staff.filter(s => s.active !== false).sort(byOrder).map(s => ({ name: s.name, group: s.group || '正職' })) };
+    for (const [k, cat] of OPT_CATS) c[k] = M.opts.filter(o => o.cat === cat).sort(byOrder).map(o => o.name);
+    return c;
+  };
+  const textOf = s => { s = String(s ?? ''); return /^\s*</.test(s) ? new DOMParser().parseFromString(s, 'text/html').body.textContent : s; };
+  const snapOf = c => c === 'config'
+    ? { exists: true, data: () => clone(cfg()), metadata: { fromCache: false } }
+    : { docs: [...M[c].entries()].map(([id, r]) => ({ id, data: () => clone(r.data) })), metadata: { fromCache: false } };
+  const sig = c => JSON.stringify(c === 'config' ? cfg() : [...M[c].entries()].map(([id, r]) => [id, r.data]));
+  const emit = (c, force) => {
+    const s = sig(c); if (!force && last[c] === s) return; last[c] = s;
+    subs[c].forEach(x => { try { x(snapOf(c)); } catch (e) { console.error(e); } });
+  };
+  const emitAll = force => Object.keys(subs).forEach(c => emit(c, force));
+
+  async function load() {
+    const g = gen;
+    const [js, xs, dd, st, op, tr] = await Promise.all(['jobs', 'ext', 'days', 'staff', 'options', 'trash'].map(k => B.items(k)));
+    if (g !== gen || busy) return false; // 讀取途中有人存檔，這次的結果可能是舊的，丟掉等下一輪
+    const ext = new Map();
+    for (const r of xs) { const k = r.f.key; if (!k) continue; if (!ext.has(k)) ext.set(k, []); ext.get(k).push({ itemId: r.id, v: extOf(r) }); }
+    M.ext = ext;
+    M.jobs = new Map(js.map(r => { const id = r.f.key || ('sp' + r.id); return [id, { itemId: r.id, data: jobOf(r.f, ext.get(id)) }]; }));
+    M.days = new Map(dd.map(r => [r.f.key || r.f.date, { itemId: r.id, data: { leave: splitNames(r.f.leave), office: splitNames(r.f.office) } }]));
+    M.staff = st.map(r => ({ itemId: r.id, name: String(r.f.name || '').trim(), group: r.f.group || '正職', order: r.f.order, active: r.f.active !== false })).filter(s => s.name);
+    M.opts = op.map(r => ({ itemId: r.id, name: String(r.f.name || '').trim(), cat: r.f.cat || '', order: r.f.order })).filter(o => o.name);
+    M.trash = new Map();
+    for (const r of tr) { try { const t = JSON.parse(textOf(r.f.data)); if (t && t.id && t.job) M.trash.set(t.id, { itemId: r.id, data: { job: t.job, deletedAt: t.deletedAt, batch: t.batch } }); } catch (_) {} }
+    return true;
+  }
+  async function sync() {
+    if (syncing) return syncing;
+    syncing = (async () => {
+      try { if (await load()) { emitAll(); setStatus(DEMO ? '示範模式（資料不會儲存）' : S.canWrite === false ? '僅可檢視' : '已同步'); } }
+      catch (e) { console.warn(e); setStatus('連線中斷，稍後自動重試', true); }
+      finally { syncing = null; }
+    })();
+    return syncing;
+  }
+  const later = () => { clearTimeout(syncT); syncT = setTimeout(sync, 2500); };
+  async function w(fn) { busy++; gen++; try { return await fn(); } finally { busy--; gen++; later(); } }
+
+  /* 場次與外調車輛 */
+  async function syncExt(id, date, list) {
+    const cur = M.ext.get(id) || [];
+    const want = (list || []).filter(e => e && (e.company || e.type || e.plate || e.driver || e.phone || e.name))
+      .map(e => ({ company: e.company || e.name || '', type: e.type || '', plate: e.plate || '', driver: e.driver || '', phone: e.phone || '', ok: !!e.ok }));
+    const oldDate = M.jobs.get(id)?.data.date;
+    const next = [];
+    await pool(want.map((v, i) => async () => {
+      const c = cur[i];
+      if (c) { if (JSON.stringify(c.v) !== JSON.stringify(v) || oldDate !== date) await B.patch('ext', c.itemId, { ...v, key: id, date }); next[i] = { itemId: c.itemId, v }; }
+      else next[i] = { itemId: await B.create('ext', { ...v, key: id, date }), v };
+    }));
+    await pool(cur.slice(want.length).map(c => () => B.remove('ext', c.itemId)));
+    if (next.length) M.ext.set(id, next); else M.ext.delete(id);
+  }
+  async function setJob(id, data) {
+    const rec = M.jobs.get(id);
+    const f = { title: data.title || '', key: id, date: data.date || '', start: data.start || '', end: data.end || '', timeNote: data.timeNote || '', people: joinNames(data.people), leaders: joinNames(data.leaders), vehicles: joinNames(data.vehicles), unattended: !!data.unattended, note: data.note || '', order: data.order ?? 0 };
+    let itemId = rec?.itemId;
+    if (itemId) await B.patch('jobs', itemId, f); else itemId = await B.create('jobs', f);
+    await syncExt(id, f.date, data.ext);
+    M.jobs.set(id, { itemId, data: jobOf(f, M.ext.get(id)) });
+    emit('jobs');
+  }
+  async function delJob(id) {
+    const rec = M.jobs.get(id); if (!rec) return;
+    await pool((M.ext.get(id) || []).map(c => () => B.remove('ext', c.itemId)));
+    await B.remove('jobs', rec.itemId);
+    M.ext.delete(id); M.jobs.delete(id); emit('jobs');
+  }
+  /* 每日休假與公司 */
+  async function setDay(id, data) {
+    const rec = M.days.get(id);
+    const f = { key: id, date: id, leave: joinNames(data.leave), office: joinNames(data.office) };
+    let itemId = rec?.itemId;
+    if (itemId) await B.patch('days', itemId, f); else itemId = await B.create('days', f);
+    M.days.set(id, { itemId, data: { leave: splitNames(f.leave), office: splitNames(f.office) } }); emit('days');
+  }
+  /* 最近刪除 */
+  async function setTrash(id, data) {
+    if (!B.has('trash')) return; // 沒建「最近刪除」清單時，刪除後只能用畫面上的「復原」或 SharePoint 資源回收筒
+    const rec = M.trash.get(id);
+    const f = { title: data.job?.title || '（未命名）', data: JSON.stringify({ id, ...data }) };
+    let itemId = rec?.itemId;
+    if (itemId) await B.patch('trash', itemId, f); else itemId = await B.create('trash', f);
+    M.trash.set(id, { itemId, data: clone(data) }); emit('trash');
+  }
+  async function delTrash(id) { const rec = M.trash.get(id); if (!rec) return; await B.remove('trash', rec.itemId); M.trash.delete(id); emit('trash'); }
+  /* 人員名單與車輛選單：比對前後差異，只改有變的那幾筆 */
+  async function setConfig(next) {
+    const items = M.staff;
+    const byName = new Map(items.map(s => [s.name, s]));
+    const wantNames = (next.staff || []).map(p => p.name);
+    const removed = items.filter(s => s.active !== false && !wantNames.includes(s.name));
+    const added = wantNames.filter(n => !byName.has(n));
+    if (removed.length === 1 && added.length === 1) { // 改名：沿用同一筆，保留公司帳號等其他欄位
+      const s = removed[0]; await B.patch('staff', s.itemId, { name: added[0] });
+      byName.delete(s.name); s.name = added[0]; byName.set(s.name, s); removed.length = 0;
+    }
+    await pool(removed.map(s => async () => { await B.patch('staff', s.itemId, { active: false }); s.active = false; })); // 移除＝停用，舊班表的名字照留
+    await pool((next.staff || []).map((p, i) => async () => {
+      const group = p.group || '正職', order = i + 1, s = byName.get(p.name);
+      if (!s) { const id = await B.create('staff', { name: p.name, group, order, active: true }); items.push({ itemId: id, name: p.name, group, order, active: true }); return; }
+      const ch = {};
+      if (s.active === false) ch.active = true;
+      if (s.group !== group) ch.group = group;
+      if (s.order !== order) ch.order = order;
+      if (Object.keys(ch).length) { await B.patch('staff', s.itemId, ch); Object.assign(s, ch); }
+    }), 5);
+    for (const [k, cat] of OPT_CATS) {
+      const cur = M.opts.filter(o => o.cat === cat); const want = next[k] || [];
+      const gone = cur.filter(o => !want.includes(o.name)); const fresh = want.filter(n => !cur.some(o => o.name === n));
+      if (gone.length === 1 && fresh.length === 1) { const o = gone[0]; await B.patch('options', o.itemId, { name: fresh[0] }); o.name = fresh[0]; gone.length = 0; }
+      await pool(gone.map(o => async () => { await B.remove('options', o.itemId); M.opts = M.opts.filter(x => x !== o); }));
+      await pool(want.map((n, i) => async () => {
+        const o = M.opts.find(x => x.cat === cat && x.name === n), order = i + 1;
+        if (!o) { const id = await B.create('options', { name: n, cat, order }); M.opts.push({ itemId: id, name: n, cat, order }); }
+        else if (o.order !== order) { await B.patch('options', o.itemId, { order }); o.order = order; }
+      }), 5);
+    }
+    emit('config');
+  }
+  const handlers = {
+    jobs: { set: setJob, update: (id, p) => { const r = M.jobs.get(id); if (!r) throw Object.assign(new Error('找不到這個場次，可能已被別人刪除'), { code: 'error' }); return setJob(id, { ...r.data, ...p }); }, delete: delJob },
+    days: { set: setDay, update: (id, p) => setDay(id, { ...(M.days.get(id)?.data || {}), ...p }), delete: async () => {} },
+    trash: { set: setTrash, update: (id, p) => setTrash(id, { ...(M.trash.get(id)?.data || {}), ...p }), delete: delTrash },
+    config: { set: (_, next) => setConfig(next), update: (_, p) => setConfig({ ...cfg(), ...p }), delete: async () => {} }
+  };
+  const docRef = (c, id) => ({
+    id,
+    set: data => w(() => handlers[c].set(id, data)),
+    update: data => w(() => handlers[c].update(id, data)),
+    delete: () => w(() => handlers[c].delete(id)),
+    onSnapshot: cb => { subs[c].push(cb); if (last[c] !== undefined) cb(snapOf(c)); return () => {}; }
+  });
+  return {
+    collection: c => ({ doc: id => docRef(c, id || newId()), onSnapshot: cb => { subs[c].push(cb); if (last[c] !== undefined) cb(snapOf(c)); return () => {}; } }),
+    doc: path => { const [c, id] = path.split('/'); return docRef(c, id); },
+    async start() {
+      if (!(await load())) await load();
+      emitAll(true);
+      setInterval(() => { if (document.visibilityState === 'visible' && !busy) sync(); }, Math.max(15, +SC.pollSeconds || 30) * 1000);
+      document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') sync(); });
+    }
+  };
+}
+
+/* ---------- 錯誤訊息翻成看得懂的話 ---------- */
+function explain(e) {
+  if (e && e.userMsg) return e.userMsg;
+  const m = String((e && (e.errorMessage || e.message)) || e || '');
+  if (/AADSTS65001|consent_required|AADSTS90094/i.test(m)) return '這個 App 的權限還沒核准。請管理員到 Microsoft Entra 系統管理中心 → 應用程式註冊 → 工務排班 → API 權限，按「代表 … 授與管理員同意」。';
+  if (/AADSTS50011|redirect_uri/i.test(m)) return '登入網址不符。請在應用程式註冊的「驗證」裡加入這個重新導向 URI：' + redirectUri();
+  if (/AADSTS700016|AADSTS90002|AADSTS900023/i.test(m)) return '找不到這個 App 或公司，請檢查 config.js 的 clientId 和 tenantId。';
+  if (/user_cancelled|popup_window_error|block/i.test(m)) return '登入視窗被關掉或擋下了，請重新整理頁面再登入一次。';
+  return '無法連線：' + m;
+}
+
+/* ---------- boot ---------- */
+render();
+(async () => {
+  const blank = v => !v || /請填/.test(v);
+  try {
+    let B;
+    if (DEMO) B = memoryBackend(demoSeed());
+    else {
+      if (blank(SC.tenantId) || blank(SC.clientId) || blank(SC.siteUrl)) {
+        S.dbMsg = '還沒設定連線資訊。請照指南填好 config.js 的 tenantId、clientId、siteUrl。<br>想先看看畫面，可以在網址最後加上 <b>?demo</b>。';
+        setStatus('未設定', true); render(); return;
+      }
+      S.dbMsg = '正在用公司帳號登入…'; render();
+      await initAuth();
+      await getToken();
+      S.dbMsg = '正在讀取排班資料…'; render();
+      B = graphBackend();
+      await B.init();
+      if (!blank(SC.editorGroupId)) {
+        try { const r = await B.raw('POST', '/me/checkMemberGroups', { groupIds: [SC.editorGroupId] }); S.canWrite = (r.value || []).includes(SC.editorGroupId); }
+        catch (e) { console.warn('無法確認編輯群組', e); }
+      }
+    }
+    const db = makeDb(B);
+    db.collection('jobs').onSnapshot(snap => { S.jobs = new Map(snap.docs.map(d => [d.id, { id: d.id, ...d.data() }])); S.loaded.jobs = true; refresh(); });
+    db.collection('days').onSnapshot(snap => { S.days = new Map(snap.docs.map(d => [d.id, d.data()])); S.loaded.days = true; refresh(); });
+    db.collection('trash').onSnapshot(snap => {
+      S.trash = new Map(snap.docs.map(d => [d.id, { id: d.id, ...d.data() }]));
+      const b = $('#trashbtn'); b.hidden = !S.trash.size; b.textContent = `最近刪除 ${S.trash.size}`;
+      if (TR) openTrash();
+    });
+    db.doc('config/main').onSnapshot(snap => {
+      const c = snap.exists ? snap.data() : {};
+      S.config = { staff: c.staff || [], vehicles: c.vehicles || [], extCompanies: c.extCompanies || [], carTypes: c.carTypes || [] };
+      S.loaded.config = true; refresh();
+    });
+    S.db = db;
+    await db.start();
+    setStatus(DEMO ? '示範模式（資料不會儲存）' : S.canWrite === false ? '僅可檢視' : '已同步');
+    render();
+  } catch (e) {
+    console.error(e);
+    S.dbMsg = esc(explain(e)); setStatus('未連線', true); render();
+  }
+})();
+
+function refresh() {
+  // keep focus/scroll inside open sheet; just re-render the page and refresh pick hints
+  const keep = ['ren-input', 'add-in', 'ls-input'].map(id => { const el = document.getElementById(id); return el && { id, v: el.value, f: document.activeElement === el }; }).filter(Boolean);
+  const y = scrollY, was = S.scrolled; render();
+  keep.forEach(k => { const el = document.getElementById(k.id); if (el) { el.value = k.v; if (k.f) el.focus(); } }); if (was) scrollTo(0, y); if (F) renderPicks(); if (L && L.draw) L.draw();
+}
+</script>
+
+</body></html>

@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>新增工務排班分頁</title>
+<script src="https://res.cdn.office.net/teams-js/2.58.0/js/MicrosoftTeams.min.js" integrity="sha384-sMo/EOqQPa1OCup2/VBRum7oFeOS22kvs8WGDc45xK53tUVZzFR5WwFYDUYN1LO4" crossorigin="anonymous"></script>
+<style>
+  body { font-family: "Microsoft JhengHei", "PingFang TC", system-ui, sans-serif; margin: 24px; color: #1b2220; background: transparent; line-height: 1.6; }
+  @media (prefers-color-scheme: dark) { body { color: #e6ebe9; } }
+  h1 { font-size: 18px; margin: 0 0 8px; }
+  p { margin: 0; font-size: 14px; }
+</style>
+</head>
+<body>
+<h1>工務派車排班</h1>
+<p>按右下角的「儲存」，就會把排班表加成這個頻道的分頁。</p>
+<script>
+  // Teams 新增頻道分頁時會開這一頁；按「儲存」後把排班表的網址交給 Teams
+  const home = new URL('./', location.href).href;
+  microsoftTeams.app.initialize().then(() => {
+    microsoftTeams.pages.config.registerOnSaveHandler(ev => {
+      microsoftTeams.pages.config.setConfig({
+        entityId: 'schedule',
+        contentUrl: home,
+        websiteUrl: home,
+        suggestedDisplayName: '排班'
+      }).then(() => ev.notifySuccess()).catch(err => ev.notifyFailure(String(err)));
+    });
+    microsoftTeams.pages.config.setValidityState(true);
+  });
+</script>
+</body>
+</html>
