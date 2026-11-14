@@ -1284,7 +1284,10 @@ function graphBackend() {
         cols[k] = {}; kinds[k] = {};
         for (const [lk, [internal, disp]] of Object.entries(FIELD_DEFS[k])) {
           const custom = SC.fields?.[k]?.[lk];
-          const c = (custom && cs.find(x => x.name === custom)) || cs.find(x => x.name === internal) || cs.find(x => x.displayName === disp);
+          const usable = cs.filter(x => !x.readOnly || x.name === 'Title');
+          // 從 Excel 匯入的清單，內部名稱常是 field_1、field_2…，所以也比對顯示名稱（英文標題或改過的中文名）
+          const c = (custom && cs.find(x => x.name === custom)) || usable.find(x => x.name === internal) || usable.find(x => x.displayName === internal) || usable.find(x => x.displayName === disp)
+            || usable.find(x => String(x.displayName || '').toLowerCase() === internal.toLowerCase());
           if (!c && OPTIONAL_FIELDS[k]?.includes(lk)) continue;
           if (c) { cols[k][lk] = c.name; kinds[k][lk] = c.boolean ? 'boolean' : c.number ? 'number' : (c.text || c.choice) ? 'text' : 'other'; } else bad.push(`${LIST_NAMES[k]} 的「${disp}」`);
         }
