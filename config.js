@@ -1,9 +1,9 @@
 // 工務排班的連線設定
 window.SCHEDULE_CONFIG = {
   // 目錄 (租用戶) 識別碼
-  tenantId: '請填入',
+  tenantId: 'd265d19d-3bf8-4d9b-8438-863e8309d436',
   // 應用程式 (用戶端) 識別碼
-  clientId: '請填入',
+  clientId: 'e0acb3b8-97fc-46a6-aa0b-0a409689822d',
   // 團隊的 SharePoint 網站網址
   siteUrl: 'https://galaxyca.sharepoint.com/sites/-672',
   // 「排班編輯」群組的物件識別碼
