@@ -684,7 +684,7 @@ function openEditor(job, date) {
   sh.innerHTML = `<div class="card" role="dialog" aria-modal="true" aria-labelledby="ed-h">
     <h2 id="ed-h">${job ? '編輯場次' : '新增場次'}<button class="icon-btn x" data-act="close" aria-label="關閉">×</button></h2>
     <div class="fgrid">
-      <div class="field full"><span>${job ? '日期（填「到」會把這場複製到之後每一天）' : '日期（多天的案子選起訖，每天會各排一場）'}</span>
+      <div class="field full"><span>${job ? '日期（填「到」會在之後每一天建立同名場次，只有場次名稱，人員和車輛要各自排）' : '日期（多天的案子選起訖，每天會建立同名場次；人員和車輛只排在第一天）'}</span>
         <div class="drange"><input type="date" id="f-date" value="${esc(F.date)}" aria-label="開始日期"><span>到</span><input type="date" id="f-date2" value="" min="${esc(F.date)}" aria-label="結束日期"><span class="hint" id="f-days"></span></div>
       </div>
       <label class="field full"><span>場次 / 內容</span><input type="text" id="f-title" value="${esc(F.title)}"></label>
@@ -825,9 +825,9 @@ async function learnExt(ext) {
 function renderPicks() {
   if (!F) return;
   readForm();
-  const dates = rangeDates(F.date, F.dateEnd);
-  const multi = dates.length > 1;
-  $('#f-days').textContent = multi ? `共 ${dates.length} 天` : '';
+  const range = rangeDates(F.date, F.dateEnd);
+  $('#f-days').textContent = range.length > 1 ? `共 ${range.length} 天，人員和車輛只排在第一天` : '';
+  const dates = [F.date]; const multi = false; // 多天排班時，其他天只建立場次名稱，所以提示只看第一天
   const others = dates.flatMap(d => jobsOn(d).filter(j => j.id !== F.id && !j.unattended));
   const pick = (kind, name) => {
     const field = kind === 'p' ? 'people' : 'vehicles';
@@ -905,10 +905,12 @@ async function saveJob() {
   const ok = await write(async () => {
     for (const [i, d] of dates.entries()) {
       const isSelf = i === 0 && F.id;
-      const body = jobBody({ ...F, date: d, order: isSelf ? F.order : nextOrder(d) });
+      const body = i === 0
+        ? jobBody({ ...F, date: d, order: isSelf ? F.order : nextOrder(d) })
+        : jobBody({ date: d, title: F.title, order: nextOrder(d), start: '', end: '', timeNote: '', people: [], leaders: [], vehicles: [], ext: [], note: '', unattended: false }); // 其他天只建場次，人和車每天不同
       await (isSelf ? S.db.doc('jobs/' + F.id) : S.db.collection('jobs').doc()).set(body);
     }
-  }, dates.length > 1 ? `已排入 ${md(dates[0])}–${md(dates.at(-1))} 共 ${dates.length} 天` : '已儲存');
+  }, dates.length > 1 ? `已建立 ${md(dates[0])}–${md(dates.at(-1))} 共 ${dates.length} 天的場次，其他天的人員和車輛請各自排` : '已儲存');
   if (ok) { const ext = F.ext; closeEditor(); learnExt(ext); } else if ($('#b-save')) $('#b-save').disabled = false;
 }
 // 同名場次、日期連續的一整段（例如 Ultra 11/9–11/14），中間斷掉就不算同一個案子
