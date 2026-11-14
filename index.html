@@ -285,6 +285,7 @@ textarea{width:100%;resize:vertical;min-height:56px}
 .acts{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .acts .sp{flex:1}
 .delq{font-size:14px;color:var(--bad);flex-basis:100%}
+.delq.ovq{color:var(--warn)}
 @media (min-width:600px){.delq{flex-basis:auto}}
 .hint{font-size:12px;color:var(--muted)}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:8px;font-size:14px;z-index:30;display:flex;align-items:center;gap:14px;max-width:calc(100% - 32px)}
@@ -379,8 +380,10 @@ const allNames = () => {
   for (const j of S.jobs.values()) (j.people || []).forEach(p => s.add(p));
   return [...s];
 };
+const isOvernight = j => !!(j.start && j.end && toMin(j.end) < toMin(j.start));
+const endMin = j => { const e = toMin(j.end); return e == null ? null : (isOvernight(j) ? e + 1440 : e); }; // 跨夜的結束時間加 24 小時
 function pairStatus(a, b) {
-  const as = toMin(a.start), ae = toMin(a.end), bs = toMin(b.start), be = toMin(b.end);
+  const as = toMin(a.start), ae = endMin(a), bs = toMin(b.start), be = endMin(b);
   if (as != null && ae != null && bs != null && be != null) return (as < be && bs < ae) ? 'clash' : 'ok';
   return 'check';
 }
@@ -414,7 +417,7 @@ function analyze(date) {
   return { flags, issues };
 }
 function timeHTML(j) {
-  const t = j.start ? (j.end ? `${j.start}–${j.end}` : j.start) : '';
+  const t = j.start ? (j.end ? `${j.start}–${isOvernight(j) ? '隔天' : ''}${j.end}` : j.start) : '';
   if (!t) return '<div class="jt"><span class="none">—</span></div>';
   return `<div class="jt">${esc(t)}</div>`;
 }
@@ -894,10 +897,21 @@ async function write(fn, okMsg) {
     return false;
   }
 }
+// 結束時間比開始早：先請排班的人確認是跨夜工作，確認後才存檔
+let OV_ACTS = null;
+function askOvernight() {
+  const acts = $('#b-save')?.closest('.acts'); if (!acts) return;
+  OV_ACTS = acts.innerHTML;
+  acts.innerHTML = `<span class="delq ovq">結束時間 ${esc(F.end)} 比開始時間 ${esc(F.start)} 早，會當作<b>跨夜工作到隔天 ${esc(F.end)}</b>。確定嗎？</span>
+    <span class="sp"></span>
+    <button class="btn sec" data-act="ovback">改時間</button>
+    <button class="btn" data-act="ovok" id="b-ovok">確定跨夜，儲存</button>`;
+}
 async function saveJob() {
   readForm();
   if (!F.title) { $('#f-title').focus(); toast('請填場次名稱'); return; }
-  if (F.end && F.start && toMin(F.end) <= toMin(F.start)) { toast('結束時間要晚於開始時間'); return; }
+  if (F.end && F.start && toMin(F.end) === toMin(F.start)) { toast('開始和結束時間不能一樣'); return; }
+  if (isOvernight(F) && F.overnightOk !== F.start + '-' + F.end) { askOvernight(); return; }
   const dates = rangeDates(F.date, F.dateEnd);
   if (dates.length > 62) { toast('一次最多排 62 天'); return; }
   $('#b-save').disabled = true;
@@ -1012,6 +1026,8 @@ document.addEventListener('click', async e => {
     const ok = await trashJobs(run, `已刪除「${F.title}」共 ${new Set(run.map(j => j.date)).size} 天`);
     if (ok) closeEditor(); else t.disabled = false;
   }
+  else if (a === 'ovok') { readForm(); F.overnightOk = F.start + '-' + F.end; const acts = t.closest('.acts'); if (acts && OV_ACTS != null) acts.innerHTML = OV_ACTS; OV_ACTS = null; saveJob(); }
+  else if (a === 'ovback') { const acts = t.closest('.acts'); if (acts && OV_ACTS != null) acts.innerHTML = OV_ACTS; OV_ACTS = null; }
   else if (a === 'delcancel') { const j = S.jobs.get(F.id); if (j) openEditor(j); }
   else if (a === 'leave') openLeave(t.dataset.date, 'leave');
   else if (a === 'office') openLeave(t.dataset.date, 'office');
