@@ -1,5 +1,5 @@
 <!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
-<title>工務派車排班</title>
+<title>金星班表</title>
 <script src="config.js"></script>
 <script src="https://res.cdn.office.net/teams-js/2.58.0/js/MicrosoftTeams.min.js" integrity="sha384-sMo/EOqQPa1OCup2/VBRum7oFeOS22kvs8WGDc45xK53tUVZzFR5WwFYDUYN1LO4" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@3/lib/msal-browser.min.js"></script>
@@ -108,6 +108,7 @@ body.full .wrap{max-width:none}
 .chip.leave,.chip.clash{background:var(--bad-bg);color:var(--bad);border-color:var(--bad)}
 .chip.check{background:var(--warn-bg);color:var(--warn);border-color:color-mix(in srgb,var(--warn) 50%,transparent)}
 .chip sup{font-size:10px;font-family:var(--font-num)}
+.jsub{font-size:14px;font-weight:400;color:var(--muted)}
 .unatt{font-size:12px;border:1px solid var(--line);border-radius:4px;padding:0 6px;color:var(--muted);font-weight:400}
 .note{margin:0;font-size:13px;color:var(--muted)}
 .emptymsg{color:var(--muted);font-size:13px}
@@ -292,6 +293,17 @@ textarea{width:100%;resize:vertical;min-height:56px}
 .tritem{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;padding:10px 0;border-bottom:1px solid var(--line)}
 .trmain{flex:1;min-width:0;display:flex;flex-direction:column}
 .trmain span,.trwhen{font-size:12px;color:var(--muted);font-family:var(--font-num)}
+.exportwrap{position:fixed;left:-10000px;top:0;pointer-events:none}
+.exportbox{width:860px;padding:18px;background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.5}
+.exportbox .dact{display:none}
+.exhead{display:flex;align-items:baseline;gap:12px;margin-bottom:12px}
+.exhead b{font-size:22px}
+.exhead span{font-size:16px}
+.exhead small{margin-left:auto;color:var(--muted);font-size:12px}
+.exopts{display:flex;flex-wrap:wrap;gap:8px}
+.exopt{display:inline-flex;gap:6px;align-items:center;border:1px solid var(--line);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:14px}
+.exopt:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+.exopt input{margin:0}
 .notice{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;color:var(--muted)}
 .ro .mini.add,.ro .ownly{display:none}
 @media (max-width:520px){.job{grid-template-columns:70px 1fr;gap:10px;padding-inline:12px}.dlabel{min-width:0}}
@@ -301,7 +313,7 @@ textarea{width:100%;resize:vertical;min-height:56px}
 <header class="bar">
   <div class="wrap">
     <div class="bar-in">
-      <div class="brand">工務排班</div>
+      <div class="brand">金星班表</div>
       <div class="tabs" role="group" aria-label="檢視">
         <button id="tab-day" data-view="day" aria-pressed="true">依日期</button>
         <button id="tab-person" data-view="person" aria-pressed="false">依人員</button>
@@ -326,6 +338,7 @@ textarea{width:100%;resize:vertical;min-height:56px}
       <button class="ghost" id="gotoday">今天</button>
       <select class="ghost" id="focus" aria-label="只看某人"><option value="">全部人員</option></select>
       <button class="ghost" id="trashbtn" data-act="trash" hidden>最近刪除</button>
+      <button class="ghost" id="exportbtn" type="button">匯出</button>
       <span class="status" id="status">連線中…</span>
     </div>
   </div>
@@ -400,8 +413,8 @@ function analyze(date) {
 }
 function timeHTML(j) {
   const t = j.start ? (j.end ? `${j.start}–${j.end}` : j.start) : '';
-  if (!t && !j.timeNote) return '<div class="jt"><span class="none">—</span></div>';
-  return `<div class="jt">${esc(t)}${j.timeNote ? `<small>${esc(j.timeNote)}</small>` : ''}</div>`;
+  if (!t) return '<div class="jt"><span class="none">—</span></div>';
+  return `<div class="jt">${esc(t)}</div>`;
 }
 
 /* ---------- render ---------- */
@@ -412,6 +425,7 @@ function render() {
   if (S.focus && S.config.staff.length && !names.includes(S.focus)) S.focus = '';
   fs.innerHTML = '<option value="">全部人員</option>' + names.map(n => `<option ${n === S.focus ? 'selected' : ''}>${esc(n)}</option>`).join('');
   document.body.classList.toggle('ro', S.canWrite === false);
+  { const tb = $('#trashbtn'); if (tb) tb.hidden = !S.trash.size || S.canWrite === false; } { const eb = $('#exportbtn'); if (eb) eb.hidden = S.canWrite === false; } // 最近刪除、匯出只給有編輯權限的人
   const main = $('#main');
   if (!S.db) { main.innerHTML = `<div class="notice">${S.dbMsg || '正在連線排班資料…'}</div>`; return; }
   if (S.view === 'person') main.innerHTML = renderPerson();
@@ -427,11 +441,11 @@ function monthDates() {
   const { y, m } = S.month; const n = new Date(y, m + 1, 0).getDate();
   return Array.from({ length: n }, (_, i) => ds(y, m, i + 1));
 }
-function renderDays() {
+function renderDays(only) {
   const today = todayStr();
   let out = '';
   if (S.loaded.jobs && !monthDates().some(d => jobsOn(d).length)) out += `<p class="emptymsg">這個月還沒有場次。按日期旁的「＋ 場次」開始排。</p>`;
-  for (const date of monthDates()) {
+  for (const date of (only || monthDates())) {
     const list = jobsOn(date); const leave = [...leaveOn(date)]; const office = [...officeOn(date)];
     const d = parseD(date); const w = d.getDay();
     const { flags, issues } = analyze(date);
@@ -469,7 +483,7 @@ function jobRow(j, idx, f) {
   return `<article class="job ${dim}" data-act="edit" data-id="${esc(j.id)}" tabindex="0">
     ${timeHTML(j)}
     <div class="jm">
-      <h3><span class="num">${idx + 1}</span>${esc(j.title || '（未命名）')}${j.unattended ? '<span class="unatt">不留守</span>' : ''}</h3>
+      <h3><span class="num">${idx + 1}</span>${esc(j.title || '（未命名）')}${j.timeNote ? `<span class="jsub">${esc(j.timeNote)}</span>` : ''}${j.unattended ? '<span class="unatt">不留守</span>' : ''}</h3>
       ${pReg ? `<div class="chips"><span class="k">正職</span>${pReg}</div>` : ''}
       ${pSup ? `<div class="chips"><span class="k">支援</span>${pSup}</div>` : ''}
       ${veh ? `<div class="chips"><span class="k">車輛</span>${veh}</div>` : ''}
@@ -671,10 +685,10 @@ function openEditor(job, date) {
       <div class="field full"><span>${job ? '日期（填「到」會把這場複製到之後每一天）' : '日期（多天的案子選起訖，每天會各排一場）'}</span>
         <div class="drange"><input type="date" id="f-date" value="${esc(F.date)}" aria-label="開始日期"><span>到</span><input type="date" id="f-date2" value="" min="${esc(F.date)}" aria-label="結束日期"><span class="hint" id="f-days"></span></div>
       </div>
-      <label class="field full"><span>場次 / 內容</span><input type="text" id="f-title" value="${esc(F.title)}" placeholder="例：淡江校慶"></label>
+      <label class="field full"><span>場次 / 內容</span><input type="text" id="f-title" value="${esc(F.title)}"></label>
+      <label class="field full"><span>說明（顯示在場次名稱右邊）</span><input type="text" id="f-tnote" value="${esc(F.timeNote)}"></label>
       <div class="field full"><span>時間（24 小時制，填起訖就能自動判斷一人兩場會不會撞）</span>
         <div class="tline">${timePick('f-start', F.start, '開始')}<span class="to">到</span>${timePick('f-end', F.end, '結束')}</div>
-        <input type="text" id="f-tnote" value="${esc(F.timeNote)}" placeholder="時間說明：進場、疊車、撤場、公司集合…">
       </div>
     </div>
     <div class="field"><div class="fhead"><span>人員</span><label class="chk unbox"><input type="checkbox" id="f-un" ${F.unattended ? 'checked' : ''}>不留守</label></div>
@@ -687,7 +701,7 @@ function openEditor(job, date) {
       <div id="ext-list" class="ext-list"></div>
       <button type="button" class="mini add ext-add ownly" data-act="extadd">＋ 新增外調車輛</button>
     </div>
-    <label class="field"><span>備註</span><input type="text" id="f-note" value="${esc(F.note)}" placeholder="例：結束後前往Ultra、小安×4"></label>
+    <label class="field"><span>備註</span><input type="text" id="f-note" value="${esc(F.note)}"></label>
     <div class="acts">
       ${ro ? '<span class="hint">你目前只有檢視權限。</span>' : `
       ${job ? '<button class="btn danger" data-act="del" id="b-del">刪除</button>' : ''}
@@ -1052,7 +1066,7 @@ document.addEventListener('change', e => {
     if (s.value === '__new') {
       const inp = document.createElement('input');
       inp.type = 'text'; inp.dataset.f = s.dataset.f; inp.id = s.id; inp.className = 'newopt';
-      inp.placeholder = s.dataset.f === 'company' ? '輸入公司名稱' : '輸入車種，例：3.5噸';
+      inp.placeholder = s.dataset.f === 'company' ? '輸入公司名稱' : '輸入車種';
       inp.setAttribute('aria-label', inp.placeholder);
       s.replaceWith(inp); inp.focus();
     } else s.classList.toggle('empty', !s.value);
@@ -1099,6 +1113,7 @@ async function restoreJobs(ids, captured) {
 }
 let TR = false;
 function openTrash() {
+  if (S.canWrite === false) return;
   TR = true;
   const list = [...S.trash.values()].sort((a, b) => b.deletedAt - a.deletedAt);
   const batches = []; const seen = new Map();
@@ -1120,6 +1135,93 @@ function openTrash() {
   sh.hidden = false;
 }
 function setStatus(msg, err) { const s = $('#status'); s.textContent = msg; s.classList.toggle('err', !!err); }
+
+/* ---------- 匯出整月／半月為 PNG 或 PDF ---------- */
+const EXPORT_LIBS = {
+  img: 'https://cdn.jsdelivr.net/npm/html-to-image@1.11.13/dist/html-to-image.js',
+  pdf: 'https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js'
+};
+const loadScript = src => new Promise((ok, no) => {
+  const old = [...document.scripts].find(s => s.src === src);
+  if (old && old.dataset.ready) return ok();
+  const s = document.createElement('script'); s.src = src;
+  s.onload = () => { s.dataset.ready = '1'; ok(); };
+  s.onerror = () => { s.remove(); no(new Error('匯出元件載入失敗，請確認網路後再試一次')); };
+  document.head.appendChild(s);
+});
+const EX = { range: 'all', fmt: 'png' };
+function openExport() {
+  if (S.canWrite === false) return;
+  const sh = $('#sheet'); const { y, m } = S.month; const last = new Date(y, m + 1, 0).getDate();
+  const opt = (name, val, label, cur) => `<label class="exopt"><input type="radio" name="${name}" value="${val}" ${cur === val ? 'checked' : ''}><span>${label}</span></label>`;
+  sh.innerHTML = `<div class="card" role="dialog" aria-modal="true" aria-labelledby="ex-h">
+    <h2 id="ex-h">匯出 ${y}年${m + 1}月<button class="icon-btn x" data-act="close" aria-label="關閉">×</button></h2>
+    <div class="field"><span>範圍</span><div class="exopts">${opt('exr', 'all', `整個月（1–${last}日）`, EX.range)}${opt('exr', 'h1', '上半月（1–15日）', EX.range)}${opt('exr', 'h2', `下半月（16–${last}日）`, EX.range)}</div></div>
+    <div class="field"><span>格式</span><div class="exopts">${opt('exf', 'png', '圖片 PNG', EX.fmt)}${opt('exf', 'pdf', 'PDF（A4，可列印）', EX.fmt)}</div></div>
+    <p class="hint" style="margin:0">匯出「依日期」的排班內容，不含按鈕。要看其他月份，先用上方的 ‹ › 切換月份再匯出。</p>
+    <div class="acts"><span class="sp"></span><button class="btn" id="b-ex" type="button">下載</button></div>
+  </div>`;
+  sh.hidden = false;
+  $('#b-ex').onclick = () => { EX.range = sh.querySelector('[name=exr]:checked').value; EX.fmt = sh.querySelector('[name=exf]:checked').value; doExport(); };
+}
+async function saveBlob(blob, name) {
+  // 在 claude.ai 的預覽裡要透過它的下載功能；在 GitHub／Teams 用一般下載
+  const dl = window.claude && window.claude.use ? await Promise.resolve(window.claude.use('downloads')).catch(() => null) : null;
+  if (dl) { await dl.save({ filename: name, data: blob }); return; }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000);
+}
+async function doExport() {
+  const btn = $('#b-ex'); btn.disabled = true; btn.textContent = '產生中…';
+  const { y, m } = S.month; const all = monthDates();
+  const dates = EX.range === 'h1' ? all.slice(0, 15) : EX.range === 'h2' ? all.slice(15) : all;
+  const part = EX.range === 'h1' ? '上半月' : EX.range === 'h2' ? '下半月' : '整月';
+  const fname = `金星班表-${y}-${pad(m + 1)}-${part}`;
+  const root = document.documentElement; const prevTheme = root.getAttribute('data-theme'); const prevFocus = S.focus;
+  const wrap = document.createElement('div'); wrap.className = 'exportwrap';
+  const box = document.createElement('div'); box.className = 'exportbox'; wrap.appendChild(box);
+  try {
+    await loadScript(EXPORT_LIBS.img); if (EX.fmt === 'pdf') await loadScript(EXPORT_LIBS.pdf);
+    root.setAttribute('data-theme', 'light'); S.focus = '';
+    const stamp = new Date().toLocaleString('zh-TW', { hour12: false, month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    box.innerHTML = `<div class="exhead"><b>金星班表</b><span>${y}年${m + 1}月　${md(dates[0])}–${md(dates.at(-1))}</span><small>${stamp} 匯出</small></div>` + renderDays(dates);
+    box.querySelectorAll('.day.today').forEach(d => d.classList.remove('today'));
+    document.body.appendChild(wrap);
+    const scale = 2;
+    const canvas = await htmlToImage.toCanvas(box, { pixelRatio: scale, backgroundColor: '#eef1ef', skipFonts: true });
+    if (EX.fmt === 'png') {
+      await saveBlob(await new Promise(r => canvas.toBlob(r, 'image/png')), fname + '.png');
+    } else {
+      // A4 分頁：盡量在兩天之間換頁，不把同一天切成兩半
+      const top0 = box.getBoundingClientRect().top;
+      const ends = [...box.querySelectorAll('.exhead, .day')].map(el => (el.getBoundingClientRect().bottom - top0 + 5) * scale);
+      const pdf = await PDFLib.PDFDocument.create();
+      const PW = 595.28, PH = 841.89, M = 24, k = (PW - 2 * M) / canvas.width, pageH = (PH - 2 * M) / k;
+      for (let start = 0; start < canvas.height - 2;) {
+        let end = start + pageH;
+        if (end < canvas.height) { const fit = ends.filter(e => e > start + 40 && e <= end).pop(); if (fit) end = fit; }
+        end = Math.min(end, canvas.height);
+        const slice = document.createElement('canvas'); slice.width = canvas.width; slice.height = Math.ceil(end - start);
+        const ctx = slice.getContext('2d'); ctx.fillStyle = '#eef1ef'; ctx.fillRect(0, 0, slice.width, slice.height); ctx.drawImage(canvas, 0, -start);
+        const bytes = await new Promise(r => slice.toBlob(b => b.arrayBuffer().then(r), 'image/png'));
+        const img = await pdf.embedPng(bytes);
+        const page = pdf.addPage([PW, PH]);
+        page.drawImage(img, { x: M, y: PH - M - slice.height * k, width: slice.width * k, height: slice.height * k });
+        start = end;
+      }
+      await saveBlob(new Blob([await pdf.save()], { type: 'application/pdf' }), fname + '.pdf');
+    }
+    closeEditor(); toast(`已下載「${fname}」`);
+  } catch (e) {
+    if (e && e.code === 'declined') { closeEditor(); toast('已取消下載'); return; }
+    console.error(e); toast(e.message || '匯出失敗，請再試一次');
+    if ($('#b-ex')) { $('#b-ex').disabled = false; $('#b-ex').textContent = '下載'; }
+  } finally {
+    wrap.remove(); S.focus = prevFocus;
+    if (prevTheme === null) root.removeAttribute('data-theme'); else root.setAttribute('data-theme', prevTheme);
+  }
+}
+$('#exportbtn').addEventListener('click', openExport);
 
 /* ---------- 顯示大小（拉桿 10–200%）與全寬，只記在這台裝置 ---------- */
 function applyZoom(v, save) {
@@ -1268,7 +1370,7 @@ function graphBackend() {
       try { site = await call('GET', `/sites/${u.hostname}:${u.pathname.replace(/\/+$/, '')}?$select=id,displayName,webUrl`); }
       catch (e) {
         if (e.status === 404 || e.status === 400) throw userErr('找不到 SharePoint 網站，請檢查 config.js 的 siteUrl。');
-        if (e.status === 403) throw userErr('你的帳號沒有權限開啟排班資料，請確認你已加入工務排班的 Teams 團隊。');
+        if (e.status === 403) throw userErr('你的帳號沒有權限開啟排班資料，請確認你已加入排班用的 Teams 團隊。');
         throw e;
       }
       const lists = await all(`/sites/${site.id}/lists?$select=id,displayName,name&$top=200`);
@@ -1509,7 +1611,7 @@ function makeDb(B) {
 function explain(e) {
   if (e && e.userMsg) return e.userMsg;
   const m = String((e && (e.errorMessage || e.message)) || e || '');
-  if (/AADSTS65001|consent_required|AADSTS90094/i.test(m)) return '這個 App 的權限還沒核准。請管理員到 Microsoft Entra 系統管理中心 → 應用程式註冊 → 工務排班 → API 權限，按「代表 … 授與管理員同意」。';
+  if (/AADSTS65001|consent_required|AADSTS90094/i.test(m)) return '這個 App 的權限還沒核准。請管理員到 Microsoft Entra 系統管理中心 → 應用程式註冊 → 排班表 → API 權限，按「代表 … 授與管理員同意」。';
   if (/AADSTS50011|redirect_uri/i.test(m)) return '登入網址不符。請在應用程式註冊的「驗證」裡加入這個重新導向 URI：' + redirectUri();
   if (/AADSTS700016|AADSTS90002|AADSTS900023/i.test(m)) return '找不到這個 App 或公司，請檢查 config.js 的 clientId 和 tenantId。';
   if (/user_cancelled|popup_window_error|block/i.test(m)) return '登入視窗被關掉或擋下了，請重新整理頁面再登入一次。';
@@ -1544,7 +1646,7 @@ render();
     db.collection('days').onSnapshot(snap => { S.days = new Map(snap.docs.map(d => [d.id, d.data()])); S.loaded.days = true; refresh(); });
     db.collection('trash').onSnapshot(snap => {
       S.trash = new Map(snap.docs.map(d => [d.id, { id: d.id, ...d.data() }]));
-      const b = $('#trashbtn'); b.hidden = !S.trash.size; b.textContent = `最近刪除 ${S.trash.size}`;
+      const b = $('#trashbtn'); b.hidden = !S.trash.size || S.canWrite === false; b.textContent = `最近刪除 ${S.trash.size}`;
       if (TR) openTrash();
     });
     db.doc('config/main').onSnapshot(snap => {
