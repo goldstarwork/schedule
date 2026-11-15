@@ -34,8 +34,9 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 header.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
 .bar-in{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;padding-block:10px}
 .brand{font-weight:700;font-size:17px;letter-spacing:.02em;margin-right:auto}
-.tabs{display:flex;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:2px}
-.tabs button{border:0;background:none;padding:5px 12px;border-radius:6px;color:var(--muted);font-weight:500}
+.tabs{display:flex;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:2px;max-width:100%;overflow-x:auto;scrollbar-width:none}
+.tabs button{border:0;background:none;padding:5px 12px;border-radius:6px;color:var(--muted);font-weight:500;white-space:nowrap;flex:none}
+@media (max-width:520px){.tabs button{padding:5px 9px}}
 .tabs button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgb(0 0 0 / .12)}
 .sub{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding-block:0 10px}
 .mnav{display:flex;align-items:center;gap:4px}
@@ -398,6 +399,7 @@ table.permtbl{border-collapse:separate;border-spacing:0;font-size:13px;min-width
         <button id="tab-day" data-view="day" aria-pressed="true">依日期</button>
         <button id="tab-person" data-view="person" aria-pressed="false">依人員</button>
         <button id="tab-set" data-view="set" aria-pressed="false">人員管理</button>
+        <button id="tab-veh" data-view="veh" aria-pressed="false">車輛管理</button>
         <button id="tab-perm" data-view="perm" aria-pressed="false" hidden>權限管理</button>
       </div>
       <div class="viewctl">
@@ -531,7 +533,7 @@ function render() {
   const main = $('#main');
   if (!S.db) { main.innerHTML = `<div class="notice">${S.dbMsg || '正在連線排班資料…'}</div>`; return; }
   if (S.view === 'person') main.innerHTML = renderPerson();
-  else if (S.view === 'set') main.innerHTML = renderSettings();
+  else if (S.view === 'set' || S.view === 'veh') main.innerHTML = renderSettings();
   else if (S.view === 'perm') main.innerHTML = renderPerm();
   else main.innerHTML = renderDays();
   if (S.view === 'day' && !S.scrolled && S.loaded.jobs) {
@@ -642,29 +644,24 @@ function renderPerson() {
   return h + '</tbody></table></div>';
 }
 function renderSettings() {
-  const tab = S.setTab || 'people';
+  const tab = S.view === 'veh' ? 'veh' : 'people';
   const staffBy = g => activeStaff().filter(p => (p.group || '正職') === g);
   const off = S.config.staff.filter(p => !isActive(p));
   const col = g => { const list = staffBy(g); return `<div class="scol" data-group="${g}">
       <div class="scol-h"><b>${GLABEL[g] || g}</b><span>${list.length} ${g === '團隊' ? '隊' : '人'}</span></div>
       <div class="scards">${list.map(staffCard).join('')}${addChip('staff', g, '＋ 新增' + (g === '團隊' ? '團隊' : GLABEL[g] || g))}</div>
     </div>`; };
-  return `<div class="settabs" role="group" aria-label="切換">
-      <button data-act="settab" data-tab="people" aria-pressed="${tab === 'people'}">人員</button>
-      <button data-act="settab" data-tab="veh" aria-pressed="${tab === 'veh'}">車輛</button>
-    </div>
-    <div class="set2 show-${tab}">
-      <section class="panel ppl">
-        <div class="ph"><h2>人員</h2><p>拖曳 ⋮⋮ 調整順序，拖到另一欄就是換組。排班時依這個順序列出。改名會一併更新已排的場次和休假。</p></div>
+  return `<div class="set1">
+      ${tab === 'people' ? `<section class="panel ppl">
+        <div class="ph"><h2>人員管理</h2><p>拖曳 ⋮⋮ 調整順序，拖到另一欄就是換組。排班時依這個順序列出。改名會一併更新已排的場次和休假。</p></div>
         <div class="scols">${col('正職')}${col('行政')}${col('支援')}${col('團隊')}</div>
         ${off.length ? `<details class="offlist"><summary>已停用 ${off.length} 位（以前的場次與時間都保留）</summary><div class="chipsrow">${off.map(p => `<span class="tchip">${esc(p.name)}<small>${esc(GLABEL[p.group] || p.group || '')}</small>${S.canWrite === false ? '' : `<button data-act="restaff" data-name="${esc(p.name)}">恢復</button>`}</span>`).join('')}</div></details>` : ''}
-      </section>
-      <section class="panel veh">
-        <div class="ph"><h2>車輛</h2></div>
+      </section>` : `<section class="panel veh">
+        <div class="ph"><h2>車輛管理</h2><p>公司車輛的目前里程來自用車紀錄；設定保養里程後，到了會亮紅色。外調公司和車種是外調車輛的選單。</p></div>
         ${vehicleList()}
         ${chipList('extCompanies', '外調公司', '外調車輛的公司選單')}
         ${chipList('carTypes', '車種', '外調車輛的車種選單')}
-      </section>
+      </section>`}
     </div>`;
 }
 function addChip(kind, key, label) {
@@ -1127,7 +1124,7 @@ async function saveConfig(next) {
 
 /* ---------- events ---------- */
 document.addEventListener('click', async e => {
-  if ((S.menu || S.armed) && !e.target.closest('.smenu,[data-act=menu],[data-act=rmlist],[data-act=pdel]')) { S.menu = null; S.armed = null; if (S.view === 'set' || S.view === 'perm') render(); }
+  if ((S.menu || S.armed) && !e.target.closest('.smenu,[data-act=menu],[data-act=rmlist],[data-act=pdel]')) { S.menu = null; S.armed = null; if (S.view === 'set' || S.view === 'veh' || S.view === 'perm') render(); }
   const t = e.target.closest('[data-act],[data-view]');
   if (!t) { if (e.target.id === 'sheet') closeEditor(); return; }
   if (t.dataset.view) { S.view = t.dataset.view; try { localStorage.setItem('view', S.view); } catch (_) {} render(); return; }
@@ -1532,7 +1529,8 @@ async function delTime(t) {
 function renderPerm() {
   if (!can('admin')) return '<div class="notice">你沒有權限管理的權限。</div>';
   const acc = S.config.accounts || [];
-  const staffOpts = (cur) => `<option value="">（不對應）</option>` + S.config.staff.filter(p => isActive(p) || p.name === cur).map(p => `<option ${p.name === cur ? 'selected' : ''} value="${esc(p.name)}">${esc(p.name)}・${esc(p.group || '正職')}</option>`).join('');
+  // 只列正職和行政（支援人員沒有公司帳號）；已經對應的人照樣顯示
+  const staffOpts = (cur) => `<option value="">（不對應）</option>` + S.config.staff.filter(p => p.name === cur || (isActive(p) && ['正職', '行政'].includes(p.group || '正職'))).map(p => `<option ${p.name === cur ? 'selected' : ''} value="${esc(p.name)}">${esc(p.name)}・${esc(p.group || '正職')}</option>`).join('');
   return `<section class="panel permpanel">
     <div class="ph"><h2>權限管理</h2><p>每一列是一位有公司帳號的同事，勾選他可以做的事。「對應排班人員」是他在班表上的名字，「填自己的時間」要靠這一欄知道誰是他自己。</p></div>
     <div class="permwrap"><table class="permtbl">
