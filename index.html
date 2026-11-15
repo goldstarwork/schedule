@@ -1861,7 +1861,8 @@ async function pool(tasks, n = 4) {
 }
 
 /* ---------- 登入：在 Teams 裡用 Teams 的帳號（NAA），在瀏覽器裡轉到微軟登入頁 ---------- */
-const SCOPES = ['User.Read', 'Sites.ReadWrite.All', 'GroupMember.Read.All'];
+// User.ReadBasic.All：讀群組成員時才拿得到姓名和信箱（只有 GroupMember.Read.All 時只會回傳 ID）
+const SCOPES = ['User.Read', 'User.ReadBasic.All', 'Sites.ReadWrite.All', 'GroupMember.Read.All'];
 const ADMIN_SCOPES = ['GroupMember.ReadWrite.All']; // 只有在權限管理頁打勾時才會要
 let PCA = null, IN_TEAMS = false, TEAMS_HINT = '';
 const TOKENS = {};
@@ -2106,12 +2107,13 @@ function makeDb(B, ME) {
   /* 誰有哪些權限：讀群組成員（同事名單＝Teams 團隊成員＋各權限群組的成員） */
   async function loadAccounts() {
     const users = new Map();
-    const touch = u => { if (!users.has(u.id)) users.set(u.id, { id: u.id, name: u.name, mail: u.mail, upn: u.upn, perms: new Set() }); return users.get(u.id); };
+    const touch = u => { if (!users.has(u.id)) users.set(u.id, { id: u.id, name: '', mail: '', upn: '', perms: new Set() }); const x = users.get(u.id); for (const k of ['name', 'mail', 'upn']) if (!x[k] && u[k]) x[k] = u[k]; return x; };
     if (!isBlank(SC.teamGroupId)) { try { (await B.members(SC.teamGroupId)).forEach(touch); } catch (e) { console.warn('讀不到團隊成員', e); } }
     await pool(Object.entries(GID).map(([p, gid]) => async () => {
       try { (await B.members(gid)).forEach(u => touch(u).perms.add(p)); } catch (e) { console.warn('讀不到群組成員', PERM_LABEL[p], e); }
     }));
     const me = touch(ME); me.perms = new Set(M.myPerms);
+    for (const u of users.values()) if (!u.name) u.name = u.mail || u.upn || '（讀不到姓名）';
     // 還沒設定群組的權限：先給排班編輯
     for (const u of users.values()) for (const p of Object.keys(PERM_LABEL)) if (!GID[p] && (p === 'edit' ? !GID.edit : u.perms.has('edit'))) u.perms.add(p);
     const rank = a => { const s = M.staff.find(x => x.name === staffOfMail(a.mail, a.upn)); return s ? (s.order ?? 9999) : 99999; };
