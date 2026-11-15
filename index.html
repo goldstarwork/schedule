@@ -2617,7 +2617,7 @@ async function doExport() {
   const { y, m } = S.month; const all = monthDates();
   const dates = EX.range === 'h1' ? all.slice(0, 15) : EX.range === 'h2' ? all.slice(15) : all;
   const part = EX.range === 'h1' ? '上半月' : EX.range === 'h2' ? '下半月' : '整月';
-  const fname = `金星班表-${y}-${pad(m + 1)}-${part}`;
+  const fname = `金星工作站-班表-${y}-${pad(m + 1)}-${part}`;
   const root = document.documentElement; const prevTheme = root.getAttribute('data-theme'); const prevFocus = S.focus;
   const wrap = document.createElement('div'); wrap.className = 'exportwrap';
   const box = document.createElement('div'); box.className = 'exportbox'; wrap.appendChild(box);
@@ -2840,9 +2840,12 @@ function graphBackend() {
       const usable = cs.filter(x => !x.readOnly || x.name === 'Title');
       // 從 Excel 匯入的清單，內部名稱常是 field_1、field_2…，所以也比對顯示名稱（英文標題或改過的中文名）
       const c = (custom && cs.find(x => x.name === custom)) || usable.find(x => x.name === internal) || usable.find(x => x.displayName === internal) || usable.find(x => x.displayName === disp)
-        || usable.find(x => String(x.displayName || '').toLowerCase() === internal.toLowerCase());
+        || usable.find(x => String(x.displayName || '').toLowerCase() === internal.toLowerCase())
+        || usable.find(x => String(x.displayName || '').trim().toLowerCase() === internal.toLowerCase() || String(x.displayName || '').trim() === disp)
+        // 車輛紀錄的 Data 欄位，建立時曾誤打成 Date：內部名稱是 Date、類型是文字，也當成 Data
+        || (lk === 'data' && usable.find(x => x.text && /^dat[ae]\d*$/i.test(x.name)));
       if (!c && OPTIONAL_FIELDS[k]?.includes(lk)) continue;
-      if (c) { c2[lk] = c.name; k2[lk] = c.boolean ? 'boolean' : c.number ? 'number' : (c.text || c.choice) ? 'text' : 'other'; } else bad.push(`${LIST_NAMES[k]} 的「${internal}」`);
+      if (c) { c2[lk] = c.name; k2[lk] = c.boolean ? 'boolean' : c.number ? 'number' : (c.text || c.choice) ? 'text' : 'other'; } else { const have = usable.filter(x => !['ContentType','Attachments','Edit','LinkTitle','LinkTitleNoMenu','DocIcon','ItemChildCount','FolderChildCount','_ColorTag','ComplianceAssetId','AppAuthor','AppEditor','_UIVersionString','Modified','Created','Author','Editor'].includes(x.name)).map(x => `${x.displayName}=${x.name}`).join('，'); bad.push(`${LIST_NAMES[k]} 的「${internal}」（這張清單目前的欄位：${have}）`); }
     }
     cols[k] = c2; kinds[k] = k2; delete why[k];
   }
