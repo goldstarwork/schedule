@@ -1,9 +1,11 @@
 <!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
-<title>金星班表</title>
+<title>金星工作站</title>
+<meta name="claude:viewport-fit-sides" content="cover">
 <script src="config.js"></script>
 <script src="https://res.cdn.office.net/teams-js/2.58.0/js/MicrosoftTeams.min.js" integrity="sha384-sMo/EOqQPa1OCup2/VBRum7oFeOS22kvs8WGDc45xK53tUVZzFR5WwFYDUYN1LO4" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@3/lib/msal-browser.min.js"></script>
 <script>if(!window.msal)document.write('<script src="https://unpkg.com/@azure/msal-browser@3/lib/msal-browser.min.js"><\/script>')</script>
+<script>if(!Array.prototype.at){Object.defineProperty(Array.prototype,'at',{value:function(n){n=Math.trunc(n)||0;if(n<0)n+=this.length;return this[n];},configurable:true,writable:true});}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
 <style>
@@ -296,6 +298,8 @@ textarea{width:100%;resize:vertical;min-height:56px}
 .delq.ovq{color:var(--warn)}
 @media (min-width:600px){.delq{flex-basis:auto}}
 .hint{font-size:12px;color:var(--muted)}
+.addrsug:empty{display:none}.addrsug{margin-top:4px}
+.linkbtn{border:0;background:none;padding:0;color:var(--accent);font-size:12px;font-weight:500;text-decoration:underline;cursor:pointer}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:8px;font-size:14px;z-index:30;display:flex;align-items:center;gap:14px;max-width:calc(100% - 32px)}
 .toast .undo{border:0;background:none;color:var(--bg);font-weight:700;text-decoration:underline;padding:2px 4px;white-space:nowrap}
 .trlist{display:grid;border-top:1px solid var(--line)}
@@ -391,15 +395,202 @@ table.permtbl{border-collapse:separate;border-spacing:0;font-size:13px;min-width
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 
+<style>
+/* 車輛管理頁 */
+:root{--k-ins:#1f7a45;--k-ins-bg:#e2f3e8;--k-chk:#6b3fb0;--k-chk-bg:#efe8fb}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--k-ins:#7fd6a0;--k-ins-bg:#16301f;--k-chk:#c3a6f5;--k-chk-bg:#2a1f3d}}
+:root[data-theme="dark"]{--k-ins:#7fd6a0;--k-ins-bg:#16301f;--k-chk:#c3a6f5;--k-chk-bg:#2a1f3d}
+.pg-fleet .tabs,.pg-fleet .sub{display:none}
+.fbox{border:1px solid var(--line);border-radius:8px;background:var(--surface-2);padding:8px 0 0;margin-bottom:14px}
+.fbox>b{display:block;padding:0 14px;font-size:13px}
+.fbox .issues{border-bottom:0}
+.falerts{padding-inline:14px}
+.fdetail .falerts{padding:8px 0 0;border-bottom:0}
+.alink{border:0;background:none;padding:0;color:inherit;font-weight:700;text-decoration:underline;text-underline-offset:2px}
+.fok{color:var(--muted);font-size:13px}
+.fcars{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(210px,1fr))}
+.fcar{display:flex;flex-direction:column;align-items:stretch;gap:2px;text-align:left;border:1px solid var(--line);border-radius:var(--r);background:var(--surface-2);padding:12px;min-width:0}
+.fcar:hover{border-color:var(--accent)}
+.fcar.bad{border-color:var(--bad)}
+.fcar.warn{border-color:color-mix(in srgb,var(--warn) 60%,var(--line))}
+.fc-h{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 8px}
+.fc-h b{font-size:17px}
+.fc-plate{font-family:var(--font-num);font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:0 5px;background:var(--surface)}
+.fc-sub{font-size:12px;color:var(--muted)}
+.fc-dl{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;margin:8px 0 0;font-size:13px}
+.fc-dl dt{color:var(--muted)}
+.fc-dl dd{margin:0;font-family:var(--font-num);text-align:right}
+.fc-dl dd.bad{color:var(--bad);font-weight:600}
+.fc-dl dd.warn{color:var(--warn);font-weight:600}
+.fc-al{margin-top:8px;font-size:12px;font-weight:600;color:var(--warn)}
+.fcar.bad .fc-al{color:var(--bad)}
+.fdetail{display:grid;gap:12px}
+.fhead2{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 10px}
+.fhead2 h2{margin:0}
+.fstats{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:12px}
+.fstat{border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--surface-2);min-width:0}
+.fstat span{display:block;font-size:12px;color:var(--muted)}
+.fstat b{font-family:var(--font-num);font-size:15px;font-weight:600}
+.fstat small{display:block;font-size:11px;color:var(--muted)}
+.fstat.bad{border-color:var(--bad);background:var(--bad-bg)}
+.fstat.bad b,.fstat.bad small{color:var(--bad)}
+.fstat.warn{border-color:color-mix(in srgb,var(--warn) 60%,var(--line));background:var(--warn-bg)}
+.fstat.warn b,.fstat.warn small{color:var(--warn)}
+.fcols{display:grid;gap:12px}
+@media (min-width:780px){.fcols{grid-template-columns:minmax(0,1fr) 290px;align-items:start}}
+.fside{display:grid;gap:12px;min-width:0}
+.fside h2,.fcols h2{font-size:15px}
+.seg{display:flex;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:2px;overflow-x:auto;scrollbar-width:none;max-width:100%}
+.seg::-webkit-scrollbar{display:none}
+.seg button{border:0;background:none;padding:4px 10px;border-radius:6px;color:var(--muted);white-space:nowrap;flex:none;font-size:14px}
+.seg button small{font-family:var(--font-num);font-size:11px}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgb(0 0 0 / .12)}
+.frecbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px}
+.frecbar h2{margin:0}
+.frecbar .btn,.frecbar .mini{margin-left:auto}
+.flist{display:grid;border-top:1px solid var(--line);margin-top:10px}
+.frow{display:grid;grid-template-columns:6em auto minmax(0,1fr) auto;gap:2px 10px;align-items:center;border:0;border-bottom:1px solid var(--line);background:none;padding:9px 4px;text-align:left}
+.frow:hover{background:var(--surface-2)}
+.fr-d{font-family:var(--font-num);font-size:13px;color:var(--muted)}
+.fr-w{min-width:0}
+.fr-w b{font-weight:500;display:block;overflow-wrap:anywhere}
+.fr-w small{display:block;font-size:12px;color:var(--muted)}
+.fr-c{font-family:var(--font-num);font-size:13px}
+@media (max-width:520px){.frow{grid-template-columns:auto minmax(0,1fr) auto}.fr-d{grid-column:1/-1}}
+.ftag{font-style:normal;font-size:12px;border-radius:5px;padding:1px 7px;background:var(--surface-2);border:1px solid var(--line);white-space:nowrap}
+.ftag[data-k="保養"]{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+.ftag[data-k="維修"]{background:var(--warn-bg);color:var(--warn);border-color:transparent}
+.ftag[data-k="保險"]{background:var(--k-ins-bg);color:var(--k-ins);border-color:transparent}
+.ftag[data-k="驗車"]{background:var(--k-chk-bg);color:var(--k-chk);border-color:transparent}
+.fdl{display:grid;grid-template-columns:auto 1fr;gap:5px 12px;margin:0;font-size:14px}
+.fdl dt{color:var(--muted);font-size:13px}
+.fdl dd{margin:0;overflow-wrap:anywhere}
+.fage{display:block;font-size:12px;color:var(--muted)}
+.ftot{display:grid;gap:4px;font-size:14px}
+.ftot div{display:flex;justify-content:space-between;gap:8px}
+.ftot span:last-child{font-family:var(--font-num)}
+.ftot .sum{border-top:1px solid var(--line);padding-top:4px;font-weight:700}
+.ftrip{display:grid;gap:5px;font-size:13px}
+.ftrip div{display:flex;gap:8px;min-width:0}
+.ftrip .ftrow{display:flex;gap:8px;min-width:0;border:0;background:none;padding:3px 4px;margin:0 -4px;border-radius:6px;text-align:left;font-size:13px}
+.ftrip .ftrow:hover{background:var(--surface-2)}
+.ftrip .ftrow span:first-child{font-family:var(--font-num);color:var(--muted);flex:none;width:3.2em}
+.ftrip .ftrow span:nth-child(2){min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ftrip span:first-child{font-family:var(--font-num);color:var(--muted);flex:none;width:3.2em}
+.ftrip span:nth-child(2){min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ftrip .kmv{margin-left:auto;font-family:var(--font-num);flex:none}
+.fchk{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.fchk label{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:13px;cursor:pointer;background:var(--surface)}
+.fchk label:has(input:checked){background:var(--accent-soft);border-color:var(--accent)}
+.field .fchk input{margin:0;width:auto}
+.fchk label{white-space:nowrap}
+.fc-plate.none{border-style:dashed;font-family:var(--font-body)}
+.fhead2 .fedit{margin-left:auto}
+.ffacts{margin:6px 0 0!important;font-size:13px;color:var(--ink)!important}
+.ffacts.muted{color:var(--muted)!important}
+.dotsep{color:var(--muted);margin:0 2px}
+.fold{margin-top:10px}
+.fold summary{cursor:pointer;font-size:13px;color:var(--muted)}
+.fold .flist{margin-top:6px}
+.seg-sm{margin-left:auto}
+.seg-sm button{padding:2px 8px;font-size:12px}
+.ftot .krow{margin-top:4px}
+.ftot .krow:first-child{margin-top:0}
+.ftot .ksub{font-size:12px;color:var(--muted);padding-left:14px}
+.ctwrap{overflow-x:auto;margin:0 -2px}
+.ctab{border-collapse:collapse;width:100%;font-size:13px;white-space:nowrap}
+.ctab th,.ctab td{padding:6px 10px;border-bottom:1px solid var(--line);text-align:right;font-family:var(--font-num)}
+.ctab th:first-child{text-align:left;font-family:var(--font-body)}
+.ctab thead th{color:var(--muted);font-weight:500;font-family:var(--font-body)}
+.ctab tfoot th,.ctab tfoot td,.ctab .rs{font-weight:700}
+.ctab tfoot td,.ctab tfoot th{border-bottom:0;border-top:2px solid var(--line)}
+@media (max-width:520px){.frgrid{grid-template-columns:1fr}}
+.fpols{display:grid;gap:8px}
+.fpol{border:1px solid var(--line);border-radius:8px;background:var(--surface-2);padding:8px 10px}
+.fpol.bad{border-color:var(--bad);background:var(--bad-bg)}
+.fpol.warn{border-color:color-mix(in srgb,var(--warn) 60%,var(--line));background:var(--warn-bg)}
+.fp-h{display:grid;grid-template-columns:auto minmax(0,1.2fr) minmax(0,1.2fr) auto auto;gap:4px 12px;align-items:center}
+.fp-type{font-size:12px;font-weight:600;border-radius:5px;padding:2px 8px;background:var(--k-ins-bg);color:var(--k-ins);white-space:nowrap}
+.fp-type[data-t="強制險"]{background:var(--accent-soft);color:var(--accent)}
+.fp-who{min-width:0}.fp-who small,.fp-p small{display:block;font-size:12px;color:var(--muted)}
+.fp-p{font-family:var(--font-num);font-size:13px}
+.fpol.bad .fp-p small{color:var(--bad);font-weight:600}.fpol.warn .fp-p small{color:var(--warn);font-weight:600}
+.fp-c{font-family:var(--font-num);font-size:13px;font-weight:600;text-align:right}
+.fp-h .fi-a{grid-area:auto}
+.fp-cov{list-style:none;margin:8px 0 0;padding:6px 0 0;border-top:1px dashed var(--line);display:grid;gap:3px;font-size:13px}
+.fp-cov li{display:grid;grid-template-columns:minmax(6em,auto) minmax(0,1fr) auto;gap:10px;align-items:baseline}
+.fp-cov b{font-weight:500}.fp-cov span{color:var(--muted);font-size:12px;min-width:0}.fp-cov .c{font-family:var(--font-num);color:var(--ink)}
+.fp-ft{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:6px;font-size:12px;color:var(--muted)}
+.fp-ft a{color:var(--accent)}
+@media (max-width:700px){.fp-h{grid-template-columns:auto minmax(0,1fr) auto}.fp-p{grid-column:1/-1;grid-row:2}.fp-h .fi-a{grid-column:1/-1;grid-row:3}.fp-cov li{grid-template-columns:minmax(0,1fr) auto}.fp-cov li span:not(.c){grid-column:1/-1;grid-row:2}}
+.ftol{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;font-size:13px;margin:-2px 0 12px}
+.ftol input{width:4.5em;padding:3px 8px;text-align:right}
+.ftol small{flex-basis:100%;font-size:12px;color:var(--muted)}
+.panel.priv{border-style:dashed}
+.fc-lent{font-size:11px;font-weight:600;color:var(--accent);border:1px solid var(--accent);border-radius:4px;padding:0 5px}
+.fc-privtag{font-size:12px;color:var(--muted);border:1px dashed var(--line);border-radius:4px;padding:0 6px}
+.fpriv{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:8px;padding:8px 10px;border-radius:8px;background:var(--accent-soft);font-size:13px}
+.fpriv span{flex:1 1 220px}
+.kmgap{display:block;margin-top:6px;color:var(--warn);font-weight:500}
+.kmgapq{display:grid;gap:6px;width:100%;padding:10px;border:1px solid color-mix(in srgb,var(--warn) 60%,var(--line));border-radius:8px;background:var(--warn-bg);color:var(--ink);font-size:13px}
+.kmgapq b{color:var(--warn)}
+.kmgapt{display:block;font-size:11px;color:var(--warn);font-family:var(--font-body)}
+.fstat .fsetbtn{float:right;border:0;background:none;color:var(--accent);font-size:12px;padding:0;text-decoration:underline;cursor:pointer}
+.fr-car{font-size:13px;font-weight:500;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:1px 8px}
+.fterms{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:6px}
+.ft-lbl{font-size:12px;color:var(--muted)}
+.tpick{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:2px 10px;font-size:13px}
+.tpick:hover{border-color:var(--accent);color:var(--accent)}
+.ft-add input{width:9em;padding:3px 8px}
+.fitems{display:grid;gap:6px}
+.fit{display:grid;grid-template-columns:minmax(0,1.3fr) 6.5em minmax(0,1.5fr) auto;gap:6px;align-items:center}
+.fit input{padding:5px 8px}
+@media (max-width:520px){.fit{grid-template-columns:minmax(0,1fr) 5.5em auto}.fit .it-o{grid-column:1/3;grid-row:2}}
+.fitfoot{display:flex;gap:10px;align-items:center;margin-top:6px}
+.fphotos{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.fphotos #fr-ph{display:contents}
+.fph{position:relative;width:72px;height:72px;border-radius:8px;overflow:hidden;border:1px solid var(--line);background:var(--surface-2)}
+.fph img{width:100%;height:100%;object-fit:cover;cursor:zoom-in}
+.fph button{position:absolute;top:2px;right:2px;width:22px;height:22px;border-radius:50%;border:0;background:rgb(0 0 0 / .55);color:#fff;font-size:13px;line-height:1}
+.fup{display:inline-grid;place-items:center;width:72px;height:72px;border:1px dashed var(--line);border-radius:8px;font-size:12px;color:var(--accent);cursor:pointer;text-align:center}
+.fup input{position:absolute;width:1px;height:1px;opacity:0}
+.phview{position:fixed;inset:0;z-index:40;background:rgb(0 0 0 / .85);display:grid;place-items:center;padding:16px;cursor:zoom-out}
+.phview img{max-width:100%;max-height:100%;border-radius:6px}
+.phview .icon-btn{position:absolute;top:max(12px,env(safe-area-inset-top,0px));right:12px}
+.fr-ph{display:block;font-size:11px;color:var(--muted);font-family:var(--font-body)}
+.field small.hint{font-size:11px}
+.fcar.off{opacity:.8;border-style:dashed}
+.fretired{display:grid;gap:2px;justify-items:start;border:1px dashed var(--line);background:var(--surface-2);border-radius:8px;padding:8px 10px;margin-bottom:10px;font-size:13px}
+.fretired small{color:var(--muted);font-size:12px}
+.fretired .mini{margin-top:4px}
+.offtag{margin-left:6px;font-size:11px;color:var(--muted);font-weight:400}
+.vlist-ro{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}
+.vplate{font-family:var(--font-num);font-size:13px;color:var(--muted);margin-left:auto}
+.vplate.none{font-family:var(--font-body);font-size:12px}
+.fmain{display:grid;gap:12px;min-width:0}
+.finslist{display:grid;gap:6px}
+.fins{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1.3fr) minmax(0,1fr) auto auto;grid-template-areas:"t p v c a";gap:4px 12px;align-items:center;border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--surface-2)}
+.fins.bad{border-color:var(--bad);background:var(--bad-bg)}
+.fins.warn{border-color:color-mix(in srgb,var(--warn) 60%,var(--line));background:var(--warn-bg)}
+.fins b{font-weight:600}
+.fins small{display:block;font-size:12px;color:var(--muted)}
+.fi-t{grid-area:t;min-width:0}.fi-p{grid-area:p;font-family:var(--font-num);font-size:13px}.fi-v{grid-area:v;font-size:13px;min-width:0}.fi-c{grid-area:c;font-family:var(--font-num);font-size:13px;text-align:right}.fi-a{grid-area:a;display:flex;gap:4px}
+.fins.bad .fi-p small{color:var(--bad);font-weight:600}
+.fins.warn .fi-p small{color:var(--warn);font-weight:600}
+@media (max-width:700px){.fins{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"t c" "p p" "v v" "a a"}}
+.fplus{display:flex;gap:6px;align-items:center}
+.fplus input{flex:1;min-width:0}
+.fplus .mini{white-space:nowrap;padding:4px 8px}
+</style>
 <header class="bar">
   <div class="wrap">
     <div class="bar-in">
-      <div class="brand">金星班表</div>
+      <div class="brand" id="brand">金星工作站・班表</div>
       <div class="tabs" role="group" aria-label="檢視">
         <button id="tab-day" data-view="day" aria-pressed="true">依日期</button>
         <button id="tab-person" data-view="person" aria-pressed="false">依人員</button>
         <button id="tab-set" data-view="set" aria-pressed="false">人員管理</button>
-        <button id="tab-veh" data-view="veh" aria-pressed="false">車輛管理</button>
+        <button id="tab-veh" data-view="veh" aria-pressed="false">車輛清單</button>
         <button id="tab-perm" data-view="perm" aria-pressed="false" hidden>權限管理</button>
       </div>
       <div class="viewctl">
@@ -433,6 +624,7 @@ table.permtbl{border-collapse:separate;border-spacing:0;font-size:13px;min-width
 <div class="toast" id="toast" hidden></div>
 
 <script>
+const APP_NAME = '金星工作站'; // App 名稱，改名時只要改這裡
 const WD = '日一二三四五六';
 const pad = n => String(n).padStart(2, '0');
 const ds = (y, m, d) => `${y}-${pad(m + 1)}-${pad(d)}`;
@@ -445,12 +637,14 @@ const $ = s => document.querySelector(s);
 const md = s => { const d = parseD(s); return `${d.getMonth() + 1}/${d.getDate()}`; };
 
 const S = {
-  db: null, canWrite: true, jobs: new Map(), days: new Map(), trash: new Map(), km: new Map(), times: new Map(), me: null, meId: '',
-  config: { staff: [], vehicles: [], extCompanies: [], carTypes: [], vehicleService: {}, accounts: [] }, view: 'day',
+  db: null, canWrite: true, jobs: new Map(), days: new Map(), trash: new Map(), km: new Map(), times: new Map(), vrec: new Map(), page: 'sched', fleetV: null, fleetKind: '全部', me: null, meId: '',
+  config: { staff: [], vehicles: [], extCompanies: [], carTypes: [], vehicleService: {}, vehicleServiceDate: {}, vehicleInfo: {}, fleetTerms: {}, kmTol: 3, accounts: [] }, view: 'day',
   month: (() => { const d = new Date(); return { y: d.getFullYear(), m: d.getMonth() }; })(),
   focus: '', loaded: { jobs: false, days: false, config: false }, scrolled: false
 };
 try { S.focus = localStorage.getItem('focus') || ''; const v = localStorage.getItem('view'); if (v) S.view = v; } catch (e) {}
+// 同一個網頁有兩種分頁：網址加 ?page=fleet 是車輛管理（放在私人頻道），其他是班表
+S.page = new URLSearchParams(location.search).get('page') === 'fleet' ? 'fleet' : 'sched';
 
 /* ---------- data helpers ---------- */
 const jobsOn = date => [...S.jobs.values()].filter(j => j.date === date).sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || String(a.start || '99').localeCompare(String(b.start || '99')));
@@ -459,9 +653,11 @@ const officeOn = date => new Set(S.days.get(date)?.office || []);
 /* 車輛里程：目前里程＝這台車所有用車登記中最大的里程數 */
 const kmFmt = n => n == null || n === '' || isNaN(n) ? '' : Number(n).toLocaleString('en-US');
 const kmLogs = v => [...S.km.values()].filter(r => r.vehicle === v);
-const odo = v => { let m = null; for (const r of kmLogs(v)) for (const x of [r.start, r.end]) if (x != null && x !== '' && !isNaN(x) && (m == null || +x > m)) m = +x; return m; };
-const serviceKm = v => { const s = (S.config.vehicleService || {})[v]; return s == null || s === '' ? null : +s; };
-const isDue = v => { const s = serviceKm(v), o = odo(v); return s != null && o != null && o >= s; };
+const odo = v => { let m = null; for (const r of kmLogs(v)) for (const x of [r.start, r.end]) if (x != null && x !== '' && !isNaN(x) && (m == null || +x > m)) m = +x; for (const r of S.vrec.values()) if (r.vehicle === v && r.km != null && r.km !== '' && !isNaN(r.km) && (m == null || +r.km > m)) m = +r.km; return m; };
+// 保養里程：先看「車輛管理」最新一筆保養紀錄的「下次保養里程」，還沒有紀錄的車才用車輛選項設定的
+const lastService = v => [...S.vrec.values()].filter(r => r.vehicle === v && r.kind === '保養' && r.nextKm != null && r.nextKm !== '').sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')) || (+b.km || 0) - (+a.km || 0))[0] || null;
+const serviceKm = v => { const r = lastService(v); if (r) return +r.nextKm; const s = (S.config.vehicleService || {})[v]; return s == null || s === '' ? null : +s; };
+const isDue = v => { const s = serviceKm(v), o = odo(v); return (s != null && o != null && o >= s) || svcDateDue(v); }; // 里程或日期，哪個先到
 const jobKm = (jid, v) => [...S.km.values()].find(r => r.jobId === jid && r.vehicle === v);
 const isActive = p => p.active !== false;
 const activeStaff = () => S.config.staff.filter(isActive);
@@ -523,6 +719,7 @@ function timeHTML(j) {
 
 /* ---------- render ---------- */
 function render() {
+  document.body.classList.toggle('pg-fleet', S.page === 'fleet'); $('#brand').textContent = APP_NAME + (S.page === 'fleet' ? '・車輛管理' : '・班表');
   document.querySelectorAll('.tabs button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.view === S.view)));
   $('#mlabel').textContent = `${S.month.y}年${S.month.m + 1}月`;
   const fs = $('#focus'); const names = activeStaff().filter(p => (p.group || '正職') === '正職').map(p => p.name);
@@ -532,6 +729,7 @@ function render() {
   { const tb = $('#trashbtn'); if (tb) tb.hidden = !S.trash.size || S.canWrite === false; } { const eb = $('#exportbtn'); if (eb) eb.hidden = !can('export'); const kb = $('#kmbtn'); if (kb) kb.hidden = !can('km'); const pt = $('#tab-perm'); if (pt) pt.hidden = !can('admin'); } // 最近刪除、匯出只給有編輯權限的人
   const main = $('#main');
   if (!S.db) { main.innerHTML = `<div class="notice">${S.dbMsg || '正在連線排班資料…'}</div>`; return; }
+  if (S.page === 'fleet') { main.innerHTML = renderFleet(); return; }
   if (S.view === 'person') main.innerHTML = renderPerson();
   else if (S.view === 'set' || S.view === 'veh') main.innerHTML = renderSettings();
   else if (S.view === 'perm') main.innerHTML = renderPerm();
@@ -588,13 +786,13 @@ function jobRow(j, idx, f) {
       : `<span class="${cls}" data-n="${esc(n)}" ${ld ? 'title="帶班"' : ''}>${inner}</span>`;
   };
   const vChip = n => {
-    const st = f['v:' + n]; const company = (S.config.vehicles || []).includes(n);
+    const st = f['v:' + n]; const company = (S.config.vehicles || []).includes(n) && !((S.config.vehicleInfo || {})[n] || {}).private;
     const r = company ? jobKm(j.id, n) : null; const due = company && isDue(n);
     const km = r ? (r.start != null && r.end != null ? ` <small class="kmd">${kmFmt(r.end - r.start)}km</small>` : ' <small class="kmd">已登記</small>') : '';
     const cls = `chip v ${st && st !== 'ok' ? st : ''} ${due ? 'due' : ''} ${company ? 'kmable' : ''}`;
     return company && can('km') && !EXPORTING
-      ? `<button type="button" class="${cls}" data-act="km" data-id="${esc(j.id)}" data-v="${esc(n)}" title="${due ? '已到保養里程・' : ''}點一下登記用車里程">${esc(n)}${km}</button>`
-      : `<span class="${cls}" ${due ? 'title="已到保養里程"' : ''}>${esc(n)}${km}</span>`;
+      ? `<button type="button" class="${cls}" data-act="km" data-id="${esc(j.id)}" data-v="${esc(n)}" title="${due ? '該保養了・' : ''}點一下登記用車里程">${esc(n)}${km}</button>`
+      : `<span class="${cls}" ${due ? 'title="該保養了"' : ''}>${esc(n)}${km}</span>`;
   };
   const ppl = [...(j.people || [])].sort((a, b) => leads.has(b) - leads.has(a));
   const sup = new Set(S.config.staff.filter(p => p.group === '支援').map(p => p.name));
@@ -657,7 +855,7 @@ function renderSettings() {
         <div class="scols">${col('正職')}${col('行政')}${col('支援')}${col('團隊')}</div>
         ${off.length ? `<details class="offlist"><summary>已停用 ${off.length} 位（以前的場次與時間都保留）</summary><div class="chipsrow">${off.map(p => `<span class="tchip">${esc(p.name)}<small>${esc(GLABEL[p.group] || p.group || '')}</small>${S.canWrite === false ? '' : `<button data-act="restaff" data-name="${esc(p.name)}">恢復</button>`}</span>`).join('')}</div></details>` : ''}
       </section>` : `<section class="panel veh">
-        <div class="ph"><h2>車輛管理</h2><p>公司車輛的目前里程來自用車紀錄；設定保養里程後，到了會亮紅色。外調公司和車種是外調車輛的選單。</p></div>
+        <div class="ph"><h2>車輛清單</h2><p>排班時可以選的公司車輛，以及外調車輛的公司和車種選單。公司車輛的新增、改別名、車號、保養和保險，由負責車輛的同事在「車輛管理」頁處理。</p></div>
         ${vehicleList()}
         ${chipList('extCompanies', '外調公司', '外調車輛的公司選單')}
         ${chipList('carTypes', '車種', '外調車輛的車種選單')}
@@ -808,6 +1006,21 @@ document.addEventListener('pointercancel', () => { if (DR) { DR.target = null; e
 
 /* ---------- editor ---------- */
 let F = null;
+// 以前用過的地址：最近的場次排前面，不重複
+function addrHistory() {
+  const seen = new Set(), out = [];
+  for (const j of [...S.jobs.values()].sort((a, b) => (b.date || '').localeCompare(a.date || ''))) {
+    const a = (j.address || '').trim(); if (a && !seen.has(a)) { seen.add(a); out.push(a); }
+  }
+  return out.slice(0, 80);
+}
+// 場次名稱跟以前一樣、地址還沒填時，提示以前的地址（按一下才套用）
+function addrSuggest() {
+  const el = $('#f-addrsug'); if (!el) return;
+  const t = ($('#f-title')?.value || '').trim(), cur = ($('#f-addr')?.value || '').trim();
+  const prev = t && !cur ? [...S.jobs.values()].filter(j => j.id !== F.id && (j.title || '').trim() === t && (j.address || '').trim()).sort((a, b) => (b.date || '').localeCompare(a.date || ''))[0] : null;
+  el.innerHTML = prev ? `以前「${esc(t)}」（${md(prev.date)}）的地址：${esc(prev.address)}　<button type="button" class="linkbtn" data-act="addrapply" data-v="${esc(prev.address)}">套用</button>` : '';
+}
 function openEditor(job, date) {
   F = job ? JSON.parse(JSON.stringify(job)) : { id: null, date, title: '', start: '', end: '', timeNote: '', people: [], vehicles: [], ext: [], note: '', unattended: false };
   F.people = F.people || []; F.vehicles = F.vehicles || []; F.ext = F.ext || []; F.leaders = F.leaders || []; F.teams = JSON.parse(JSON.stringify(F.teams || []));
@@ -821,7 +1034,10 @@ function openEditor(job, date) {
       </div>
       <label class="field full"><span>場次 / 內容</span><input type="text" id="f-title" value="${esc(F.title)}"></label>
       <label class="field full"><span>說明（顯示在場次名稱右邊）</span><input type="text" id="f-tnote" value="${esc(F.timeNote)}"></label>
-      <label class="field full"><span>地址（填了會在場次名稱右邊顯示地址和地圖按鈕）</span><input type="text" id="f-addr" value="${esc(F.address || '')}" autocomplete="street-address"></label>
+      <div class="field full"><span>地址（打字會跳出以前用過的地址；填了會在場次名稱右邊顯示地址和地圖按鈕）</span><input type="text" id="f-addr" value="${esc(F.address || '')}" list="addr-hist" autocomplete="off" aria-label="地址">
+        <datalist id="addr-hist">${addrHistory().map(a => `<option value="${esc(a)}"></option>`).join('')}</datalist>
+        <div class="hint addrsug" id="f-addrsug"></div>
+      </div>
       <div class="field full"><span>時間（24 小時制，填起訖就能自動判斷一人兩場會不會撞）</span>
         <div class="tline">${timePick('f-start', F.start, '開始')}<span class="to">到</span>${timePick('f-end', F.end, '結束')}</div>
       </div>
@@ -847,6 +1063,7 @@ function openEditor(job, date) {
     </div>
   </div>`;
   sh.hidden = false;
+  ['f-title', 'f-addr'].forEach(id => $('#' + id)?.addEventListener('input', addrSuggest)); addrSuggest();
   initWheels(sh);
   if (ro) sh.querySelectorAll('.wheel').forEach(w => w.style.pointerEvents = 'none');
   renderExt();
@@ -1029,7 +1246,7 @@ async function addSupport() {
   }
   if (F) renderPicks();
 }
-function closeEditor() { TR = false; KML = false; KM = null; TM = null; $('#sheet').hidden = true; $('#sheet').innerHTML = ''; F = null; }
+function closeEditor() { FR = null; FI = null; TR = false; KML = false; KM = null; TM = null; $('#sheet').hidden = true; $('#sheet').innerHTML = ''; F = null; }
 function jobBody(f) {
   return { address: (f.address || '').trim(), teams: (f.teams || []).filter(t => t && t.name).map(t => ({ name: t.name, count: +t.count || 0, members: (t.members || []).slice(0, +t.count || 0).map(x => String(x || '').trim()) })), date: f.date, order: f.order ?? Date.now(), title: f.title, start: f.start, end: f.end, timeNote: f.timeNote, people: f.people, leaders: (f.leaders || []).filter(n => f.people.includes(n)), vehicles: f.vehicles, ext: (f.ext || []).filter(extFilled), note: f.note, unattended: !!f.unattended };
 }
@@ -1137,6 +1354,7 @@ document.addEventListener('click', async e => {
   else if (a === 'addteamok') addTeam();
   else if (a === 'mtime') { const tt = TD; closeEditor(); openTime(tt.jobId, tt.name, +t.dataset.i); }
   else if (a === 'map') { return; } // 地圖連結：直接開新分頁，不打開場次
+  else if (a === 'addrapply') { $('#f-addr').value = t.dataset.v; addrSuggest(); }
   else if (a === 'pickteam') { readForm(); const n = t.dataset.name; F.teams = F.teams.some(x => x.name === n) ? F.teams.filter(x => x.name !== n) : [...F.teams, { name: n, count: 1, members: leaderOf(n) ? [leaderOf(n)] : [] }]; renderPicks(); }
   else if (a === 'team') openTeam(t.dataset.id, t.dataset.t);
   else if (a === 'teamsave') saveTeam();
@@ -1193,6 +1411,8 @@ document.addEventListener('click', async e => {
   else if (a === 'kmedit') { const r = S.km.get(t.dataset.kid); if (r) openKmForm({ ...r, back: true }); }
   else if (a === 'kmback') openKmList();
   else if (a === 'kmsave') saveKm();
+  else if (a === 'kmgapback') { const acts = t.closest('.kmgapq').parentElement; acts.innerHTML = KM.acts; KM.pendingGap = null; $('#km-s').focus(); }
+  else if (a === 'kmgapok') { KM.gapOk = KM.pendingGap.key; const acts = t.closest('.kmgapq').parentElement; acts.innerHTML = KM.acts; saveKm(); }
   else if (a === 'kmdel') delKm(t);
   else if (a === 'vedit') { S.editing = 'veh:' + t.dataset.name; S.armed = null; render(); $('#vs-input')?.focus(); }
   else if (a === 'vsave') saveVehicle(t.dataset.name);
@@ -1421,6 +1641,8 @@ const PERMS = [
   ['editTime', '改大家的時間', '看得到也能修改任何人填的時間（不用有排班編輯）'],
   ['km', '登記用車里程', '點車輛登記里程、事務用車'],
   ['export', '匯出班表', 'PNG／PDF'],
+  ['fleet', '車輛管理', '車輛管理頁：新增車輛、改別名與車號，記保險、保養、維修、驗車、稅費'],
+  ['private', '私人車', '車輛管理頁的私人車：看、編輯，決定要不要開放排班'],
   ['admin', '權限管理', '打開這一頁設定大家的權限']
 ];
 const can = p => !!(S.me && S.me.perms && S.me.perms.includes(p));
@@ -1542,7 +1764,7 @@ function renderPerm() {
         
       </tr>`).join('')}</tbody>
     </table></div>
-    <p class="hint" style="margin:10px 0 0">名單是「金星視覺-工作」團隊成員。要新增同事，請在 Teams 把他加入團隊，重新整理這一頁就會出現。<br>打勾會直接把他加入 Microsoft 365 裡對應的「班表-」群組，SharePoint 清單的權限也跟著生效；同事重新整理後就是新權限。</p>
+    <p class="hint" style="margin:10px 0 0">名單是「金星工作站」團隊成員。要新增同事，請在 Teams 把他加入團隊，重新整理這一頁就會出現。<br>打勾會直接把他加入 Microsoft 365 裡對應的群組（班表-…、車輛-私人車），SharePoint 清單的權限也跟著生效；同事重新整理後就是新權限。</p>
   </section>`;
 }
 async function setAccounts(list, msg) {
@@ -1576,7 +1798,7 @@ function openKmForm(rec) {
   KML = false;
   KM = { id: rec.id || null, kind: rec.kind || 'misc', jobId: rec.jobId || null, vehicle: rec.vehicle || '', date: rec.date || todayStr(), back: !!rec.back };
   const j = KM.jobId ? S.jobs.get(KM.jobId) : null;
-  const vs = [...new Set([...(S.config.vehicles || []), ...(KM.vehicle ? [KM.vehicle] : [])])];
+  const vs = [...new Set([...companyCars(), ...(KM.vehicle ? [KM.vehicle] : [])])];
   const v0 = KM.vehicle || vs[0] || '';
   const names = j ? [...(j.people || [])] : S.config.staff.map(p => p.name);
   if (rec.driver && !names.includes(rec.driver)) names.push(rec.driver);
@@ -1604,6 +1826,22 @@ function openKmForm(rec) {
   ['km-s', 'km-e'].forEach(id => $('#' + id).addEventListener('input', kmInfo));
   setTimeout(() => (KM && KM.kind === 'job' && !KM.id ? $('#km-e') : null)?.focus(), 30);
 }
+// 上一次的里程讀數：這天以前所有紀錄，加上同一天比這次起始里程小的紀錄（同一天可能有好幾趟）
+function prevOdo(v, date, start, selfId) {
+  let before = null, same = null;
+  const take = (d, x) => { if (x == null || x === '' || isNaN(x)) return; x = +x; if (d < date) { if (before == null || x > before) before = x; } else if (d === date && start != null && x <= start) { if (same == null || x > same) same = x; } };
+  for (const r of kmLogs(v)) if (r.id !== selfId) { take(r.date, r.start); take(r.date, r.end); }
+  for (const r of S.vrec.values()) if (r.vehicle === v && r.id !== selfId) take(r.date, r.km);
+  return { before, prev: same != null ? Math.max(same, before ?? -Infinity) : before };
+}
+// 回傳要提醒的內容；沒有問題就回傳 null
+function kmGap(v, date, start, selfId) {
+  if (start == null || !v || !date) return null;
+  const { before, prev } = prevOdo(v, date, start, selfId);
+  if (before != null && start < before) return { lv: 'back', prev: before, diff: before - start, t: `起始里程 ${kmFmt(start)} 比之前紀錄的 ${kmFmt(before)} km 還少 ${kmFmt(before - start)} km。里程數不會倒退，可能是打錯了，或之前那筆登記錯了。` };
+  if (prev != null && start - prev > kmTol()) return { lv: 'gap', prev, diff: start - prev, t: `上一次紀錄的里程是 ${kmFmt(prev)} km，這次起始 ${kmFmt(start)} km，中間差了 ${kmFmt(start - prev)} km（容忍值 ${kmTol()} km）。可能是打錯了，或上一位用車的人沒有登記。` };
+  return null;
+}
 function kmInfo() {
   const el = $('#km-info'); if (!el || !KM) return;
   const v = KM.kind === 'misc' ? $('#km-v')?.value : KM.vehicle; if (!v) { el.textContent = ''; return; }
@@ -1615,6 +1853,8 @@ function kmInfo() {
   if (sv != null && ev != null) parts.push(ev >= sv ? `本次 ${kmFmt(ev - sv)} km` : '<span class="bad">完成里程小於起始里程</span>');
   const reach = Math.max(o ?? -Infinity, ev ?? -Infinity);
   el.innerHTML = parts.join('・') + (s != null && reach >= s ? '　<b class="bad">已到保養里程</b>' : '');
+  const date = KM.kind === 'misc' ? $('#km-d')?.value : KM.date; const g = kmGap(v, date, sv, KM.id);
+  if (g) el.innerHTML += `<span class="kmgap">⚠ ${esc(g.t)}</span>`;
 }
 async function saveKm() {
   const num = id => { const x = ($('#' + id)?.value || '').replace(/[^\d.]/g, ''); return x === '' ? null : Math.round(+x); };
@@ -1629,6 +1869,14 @@ async function saveKm() {
   if (!rec.date) { toast('請選日期'); return; }
   if (rec.start == null) { toast('請填起始里程'); $('#km-s').focus(); return; }
   if (rec.end != null && rec.end < rec.start) { toast('完成里程不能小於起始里程'); $('#km-e').focus(); return; }
+  // 跟上一次的里程差太多：先停下來請登記的人確認
+  const g = kmGap(rec.vehicle, rec.date, rec.start, KM.id);
+  if (g && KM.gapOk !== `${rec.vehicle}|${rec.date}|${rec.start}`) {
+    const acts = $('#b-km').closest('.acts'); KM.acts = acts.innerHTML;
+    acts.innerHTML = `<div class="kmgapq"><b>${g.lv === 'back' ? '起始里程比之前還少' : '里程差距超過容忍值'}</b><span>${esc(g.t)}</span><div class="acts"><span class="sp"></span><button class="btn sec" data-act="kmgapback">回去修改</button><button class="btn" data-act="kmgapok">確定沒錯，儲存</button></div></div>`;
+    KM.pendingGap = { key: `${rec.vehicle}|${rec.date}|${rec.start}`, g }; return;
+  }
+  if (g) { rec.gap = g.diff; rec.gapPrev = g.prev; rec.gapType = g.lv; }
   $('#b-km').disabled = true; const back = KM.back;
   const ok = await write(() => (KM.id ? S.db.doc('mileage/' + KM.id) : S.db.collection('mileage').doc()).set(rec), '已登記里程');
   if (ok) { if (back) openKmList(); else closeEditor(); } else if ($('#b-km')) $('#b-km').disabled = false;
@@ -1660,29 +1908,17 @@ function openKmList() {
         <span class="kd">${md(r.date)}${r.tStart ? ' ' + esc(r.tStart) : ''}</span>
         <b class="kv">${esc(r.vehicle)}</b>
         <span class="kt">${r.kind === 'misc' ? '<i class="ktag">事務</i>' : ''}${esc(what)}${r.driver ? '・' + esc(r.driver) : ''}</span>
-        <span class="kn">${kmFmt(r.start)} → ${r.end != null ? kmFmt(r.end) : '未填'}${d != null ? `　<b>${kmFmt(d)} km</b>` : ''}</span>
+        <span class="kn">${kmFmt(r.start)} → ${r.end != null ? kmFmt(r.end) : '未填'}${d != null ? `　<b>${kmFmt(d)} km</b>` : ''}${r.gap ? `<small class="kmgapt">⚠ 跟上次${r.gapType === 'back' ? '倒退' : '相差'} ${kmFmt(r.gap)} km，登記的人已確認</small>` : ''}</span>
       </button>`; }).join('')}</div>` : '<p class="emptymsg">這個月還沒有用車紀錄。</p>'}
   </div>`;
   sh.hidden = false;
 }
 function vehicleList() {
-  const list = S.config.vehicles || []; const ro = S.canWrite === false;
-  return `<div class="clist"><div class="clist-h"><b>公司車輛</b><span>目前里程取自用車登記；到了保養里程，排班選車時會亮紅色</span></div>
-    <div class="vlist">${list.map(v => {
-      const o = odo(v), s = serviceKm(v), due = isDue(v), left = s != null && o != null ? s - o : null;
-      if (S.editing === 'veh:' + v) return `<div class="vrow editing">
-          <input type="text" id="vn-input" value="${esc(v)}" aria-label="車輛名稱">
-          <label class="vsv">保養里程<input type="text" inputmode="numeric" id="vs-input" value="${s ?? ''}" placeholder="未設定"> km</label>
-          <span class="vbtns"><button class="btn sm" data-act="vsave" data-name="${esc(v)}">儲存</button><button class="icon-btn sm" data-act="lscancel" aria-label="取消">×</button></span>
-        </div>`;
-      const armed = S.armed === 'vehicles:' + v;
-      return `<div class="vrow ${due ? 'due' : ''}"><b class="vname">${esc(v)}</b>
-        <span class="vkm">目前 ${o != null ? kmFmt(o) + ' km' : '—'}</span>
-        <span class="vkm">保養 ${s != null ? kmFmt(s) + ' km' : '未設定'}${due ? '・<b>已到保養</b>' : left != null ? `・還有 ${kmFmt(left)} km` : ''}</span>
-        ${ro ? '' : `<span class="vbtns"><button class="mini" data-act="vedit" data-name="${esc(v)}">修改</button><button class="mini del ${armed ? 'armed' : ''}" data-act="rmlist" data-key="vehicles" data-name="${esc(v)}">${armed ? '確定刪除？' : '刪除'}</button></span>`}
-      </div>`;
-    }).join('')}</div>
-    <div class="chipsrow" style="margin-top:8px">${addChip('list', 'vehicles', '＋ 新增車輛')}</div></div>`;
+  // 班表這邊只看：別名（排班選車用）和完整車號。新增、修改都在「車輛管理」頁
+  const list = S.config.vehicles || [];
+  return `<div class="clist"><div class="clist-h"><b>公司車輛</b><span>${list.length} 台・要新增或修改，請找負責車輛管理的同事</span></div>
+    ${list.length ? `<div class="vlist vlist-ro">${list.map(v => { const p = vinfo(v).plate; return isPriv(v) ? `<div class="vrow"><b class="vname">${esc(v)}</b><span class="vplate none">私人車・暫時開放排班</span></div>` : `<div class="vrow"><b class="vname">${esc(v)}</b><span class="vplate ${p ? '' : 'none'}">${p ? esc(p) : '未填車號'}</span></div>`; }).join('')}</div>` : '<p class="emptymsg">還沒有公司車輛。</p>'}
+  </div>`;
 }
 async function saveVehicle(oldN) {
   const newN = ($('#vn-input')?.value || '').trim(); const raw = ($('#vs-input')?.value || '').replace(/[^\d]/g, '');
@@ -1690,15 +1926,654 @@ async function saveVehicle(oldN) {
   const list = S.config.vehicles || [];
   if (newN !== oldN && list.includes(newN)) { toast(`已經有「${newN}」`); return; }
   const svc = { ...(S.config.vehicleService || {}) }; delete svc[oldN]; if (raw) svc[newN] = +raw;
+  const vi = { ...(S.config.vehicleInfo || {}) }; if (newN !== oldN && vi[oldN]) { vi[newN] = vi[oldN]; delete vi[oldN]; }
+  const vr = newN === oldN ? [] : [...S.vrec.values()].filter(r => r.vehicle === oldN);
   const jobs = newN === oldN ? [] : [...S.jobs.values()].filter(j => (j.vehicles || []).includes(oldN));
   const logs = newN === oldN ? [] : kmLogs(oldN);
   const ok = await write(async () => {
-    await S.db.doc('config/main').set({ ...S.config, vehicles: list.map(x => x === oldN ? newN : x), vehicleService: svc });
+    await S.db.doc('config/main').set({ ...S.config, vehicles: list.map(x => x === oldN ? newN : x), vehicleService: svc, vehicleInfo: vi });
     for (const j of jobs) await S.db.doc('jobs/' + j.id).update({ vehicles: j.vehicles.map(x => x === oldN ? newN : x) });
     for (const r of logs) await S.db.doc('mileage/' + r.id).update({ vehicle: newN });
+    for (const r of vr) await S.db.doc('vrecords/' + r.id).update({ vehicle: newN });
   }, newN !== oldN && (jobs.length || logs.length) ? `已更新，連同 ${jobs.length} 個場次、${logs.length} 筆里程` : '已更新車輛');
   if (ok) { S.editing = null; render(); }
 }
+
+/* ---------- 車輛管理頁（放在私人頻道「車輛管理」的分頁） ---------- */
+// 每一種紀錄要填的欄位。保養紀錄的「下次保養里程」就是班表上的保養提醒
+const VK = {
+  '保養': { date: '保養日期', km: true, items: ['機油', '機油芯', '空氣芯', '冷氣芯', '汽油芯', '煞車油', '變速箱油', '水箱水', '火星塞', '皮帶'], vendor: '保養廠', cost: true, nextKm: true, nextDate: '下次保養日', plus: 6 },
+  '維修': { date: '維修日期', km: true, items: ['輪胎', '電瓶', '來令片', '雨刷', '燈泡', '冷氣', '鈑金烤漆'], vendor: '維修廠', cost: true },
+  '保險': { subText: '險種', subPh: '例如：強制險、車體險（乙式）', subSug: ['強制險', '第三人責任險', '車體險（甲式）', '車體險（乙式）', '車體險（丙式）', '竊盜險', '乘客險', '駕駛人傷害險', '超額責任險', '貨物險'], detail: '保障內容／保額', vendor: '保險公司', ref: '保單號碼', date: '生效日', nextDate: '到期日', cost: true, plus: 12 },
+  '驗車': { date: '驗車日期', km: true, vendor: '驗車地點', cost: true, nextDate: '下次驗車日', plus: 12 },
+  '稅費': { sub: ['牌照稅', '燃料稅', 'ETC', '罰單', '其他'], subL: '項目', date: '繳費日期', cost: true, nextDate: '下次繳費日', plus: 12 },
+  '里程': { date: '日期', km: true },
+  '其他': { subText: '項目', date: '日期', km: true, vendor: '廠商', cost: true, nextDate: '提醒日期' }
+};
+// 「其他」不再新增（只為了顯示以前的資料）
+const VKINDS = Object.keys(VK).filter(k => k !== '其他');
+const recKinds = v => VKINDS.filter(k => k !== '保險'); // 「里程」：私人車平常記里程；公司車用來記起始里程和定期盤點
+const VKALL = Object.keys(VK);
+let FR = null, FI = null; // 正在編輯的紀錄／基本資料
+const vrecs = v => [...S.vrec.values()].filter(r => r.vehicle === v).sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')) || (+b.km || 0) - (+a.km || 0));
+const vinfo = v => (S.config.vehicleInfo || {})[v] || {};
+// 班表上用別名（例如「大貨車」），車輛管理另外顯示完整車號
+const plateTag = v => { const p = vinfo(v).plate; return p ? (p !== v ? `<span class="fc-plate">${esc(p)}</span>` : '') : '<span class="fc-plate none">未填車號</span>'; };
+const addMonths = (s, n) => { const d = parseD(s); const day = d.getDate(); d.setDate(1); d.setMonth(d.getMonth() + n); const last = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate(); d.setDate(Math.min(day, last)); return ds(d.getFullYear(), d.getMonth(), d.getDate()); };
+const daysTo = s => Math.round((parseD(s) - parseD(todayStr())) / 86400000);
+const money = n => n == null || n === '' || isNaN(n) ? '' : '$' + Number(n).toLocaleString('en-US');
+const fmtD = s => s ? String(s).replace(/-/g, '/') : '';
+// 提醒用的名稱，例如「車體險到期」「下次驗車」
+const DUE = { '保養': () => '下次保養日', '維修': () => '提醒', '保險': r => polLabel(r) + (r.coverages && r.ref ? `（${r.ref}）` : '') + '到期', '驗車': () => '下次驗車', '稅費': r => (r.sub || '稅費') + '繳費日', '其他': r => (r.sub || '其他') + '提醒' };
+const dueName = r => (DUE[r.kind] || (() => '到期'))(r);
+const subLabel = r => r.sub && r.kind !== '保養' && r.kind !== '維修' && r.kind !== '驗車' ? r.sub : r.kind;
+// 每種紀錄（保險、稅費再按險種／項目分）只看最新的那一筆
+const latestPer = (v, kind) => { const m = new Map(); for (const r of vrecs(v)) if ((!kind || r.kind === kind) && !m.has(r.kind + ':' + (r.sub || ''))) m.set(r.kind + ':' + (r.sub || ''), r); return [...m.values()]; };
+const dateLv = s => { if (!s) return ''; const d = daysTo(s); return d < 0 ? 'bad' : d <= 30 ? 'warn' : ''; };
+const dateLeft = s => { const d = daysTo(s); return d < 0 ? `已過 ${-d} 天` : d === 0 ? '今天到期' : `還有 ${d} 天`; };
+// 提醒：從「提醒日」開始（沒填就是到期前 30 天）。驗車是驗車日前後 30 天都可以驗，過了驗車日 30 天才算逾期
+const remindFrom = r => r.remind || addDays(r.nextDate, -30);
+function recLv(r) {
+  if (!r || !r.nextDate) return ''; const t = todayStr();
+  if (r.kind === '驗車') return t > addDays(r.nextDate, 30) ? 'bad' : t >= remindFrom(r) ? 'warn' : '';
+  return t > r.nextDate ? 'bad' : t >= remindFrom(r) ? 'warn' : '';
+}
+function recLeft(r) {
+  if (!r || !r.nextDate) return '';
+  if (r.kind === '驗車') {
+    const end = addDays(r.nextDate, 30), t = todayStr();
+    if (t > end) return `已超過驗車期限 ${-daysTo(end)} 天`;
+    if (t > r.nextDate) return `已過驗車日 ${-daysTo(r.nextDate)} 天，${fmtD(end)} 前要驗`;
+    if (t >= addDays(r.nextDate, -30)) return `可以驗車了（${fmtD(addDays(r.nextDate, -30))}–${fmtD(end)}）`;
+  }
+  return dateLeft(r.nextDate);
+}
+// 保養：下次保養里程、下次保養日，哪一個先到就算該保養（班表上的車也會亮紅色）
+const svcDateDue = v => { const r = latestPer(v, '保養')[0]; const nd = r ? r.nextDate : (S.config.vehicleServiceDate || {})[v]; return !!(nd && nd <= todayStr()); };
+const kmLv = v => { const o = odo(v), n = serviceKm(v); if (o == null || n == null) return ''; return n - o <= 0 ? 'bad' : n - o <= 1000 ? 'warn' : ''; };
+const ageText = s => { const a = parseD(s), b = parseD(todayStr()); let m = (b.getFullYear() - a.getFullYear()) * 12 + b.getMonth() - a.getMonth(); if (b.getDate() < a.getDate()) m--; if (m < 0) return ''; return ((m >= 12 ? Math.floor(m / 12) + ' 年 ' : '') + (m % 12 ? (m % 12) + ' 個月' : '')).trim() || '未滿 1 個月'; };
+const insFirst = v => insCurrent(v).filter(r => r.nextDate).sort((a, b) => a.nextDate.localeCompare(b.nextDate))[0] || null;
+function fleetAlerts(v) {
+  const out = []; const o = odo(v), nk = serviceKm(v);
+  if (nk != null && o != null) { const left = nk - o; if (left <= 0) out.push({ lv: 'bad', t: `已超過保養里程 ${kmFmt(-left)} km` }); else if (left <= 1000) out.push({ lv: 'warn', t: `再 ${kmFmt(left)} km 要保養` }); }
+  for (const r of [...latestPer(v).filter(x => x.kind !== '保險'), ...insCurrent(v)]) {
+    if (!r.nextDate) continue; const lv = recLv(r); if (!lv) continue;
+    out.push({ lv, t: `${dueName(r)} ${fmtD(r.nextDate)}（${recLeft(r)}）` });
+  }
+  return out.sort((a, b) => (a.lv === 'bad' ? 0 : 1) - (b.lv === 'bad' ? 0 : 1));
+}
+// ---- 公司車與私人車 ----
+const isPriv = v => !!vinfo(v).private;
+const companyCars = () => (S.config.vehicles || []).filter(v => !isPriv(v));
+const privCars = () => Object.keys(S.config.vehicleInfo || {}).filter(n => { const x = S.config.vehicleInfo[n] || {}; return x.private && !x.retired; });
+const isLent = v => isPriv(v) && (S.config.vehicles || []).includes(v);
+const kmTol = () => S.config.kmTol ?? 3;
+function fleetSection(o) {
+  const all = o.list.flatMap(v => fleetAlerts(v).map(a => ({ ...a, v }))).sort((a, b) => (a.lv === 'bad' ? 0 : 1) - (b.lv === 'bad' ? 0 : 1));
+  const y = todayStr().slice(0, 4);
+  return `<section class="panel fleet ${o.cls || ''}">
+    <div class="ph"><div class="frecbar" style="margin-bottom:2px"><h2>${o.title}</h2><button class="btn sm" data-act="${o.newAct}">${o.newLabel}</button></div><p>${o.desc}</p></div>
+    ${o.extra || ''}
+    ${all.length ? `<div class="fbox"><b>需要注意</b><ul class="issues falerts">${all.map(a => `<li class="${a.lv === 'bad' ? 'bad' : 'check'}"><span class="dot"></span><span><button type="button" class="alink" data-act="fv" data-v="${esc(a.v)}">${esc(a.v)}</button> ${esc(a.t)}</span></li>`).join('')}</ul></div>` : (o.list.length ? '<p class="fok">目前沒有快到期或該保養的車。</p>' : '')}
+    ${o.list.length ? `<div class="fcars">${o.list.map(v => carCard(v, y)).join('')}</div>` : `<p class="emptymsg">${o.empty}</p>`}
+    ${o.off.length ? `<details class="fold"><summary>已出售／報廢 ${o.off.length} 台（紀錄都保留）</summary><div class="fcars" style="margin-top:8px">${o.off.map(v => { const rt = vinfo(v).retired; return `<button type="button" class="fcar off" data-act="fv" data-v="${esc(v)}"><span class="fc-h"><b>${esc(v)}</b>${plateTag(v)}</span><span class="fc-sub">${fmtD(rt.date)} ${esc(rt.type)}${rt.price ? '・' + money(rt.price) : ''}${rt.to ? '・' + esc(rt.to) : ''}</span></button>`; }).join('')}</div></details>` : ''}
+  </section>
+  ${o.list.length || o.off.length ? costTable(o.list, o.off, o.costTitle) : ''}`;
+}
+function renderFleet() {
+  const cf = can('fleet'), cp = can('private');
+  if (!cf && !cp) return '<div class="notice">你沒有車輛管理的權限。請找負責權限管理的同事，在「權限管理」頁勾選「車輛管理」或「私人車」。</div>';
+  const list = companyCars(), off = retiredList();
+  const offC = off.filter(v => !isPriv(v)), offP = off.filter(isPriv), plist = privCars();
+  // 剛新增或改名的車，資料還沒同步回來前先顯示總覽，同步後會自動回到那台車
+  const okCar = v => (cf && (list.includes(v) || offC.includes(v))) || (cp && (plist.includes(v) || offP.includes(v)));
+  if (S.fleetV && okCar(S.fleetV)) return renderFleetCar(S.fleetV);
+  return `<div class="fdetail">
+    ${cf ? fleetSection({ title: '公司車輛', newAct: 'fvnew', newLabel: '＋ 新增車輛', list, off: offC, empty: '還沒有公司車輛。按右上角「＋ 新增車輛」。', costTitle: '公司車費用統計',
+      desc: '點一台車看資料，以及保險、保養、維修、驗車、稅費紀錄。大字是班表上選車用的別名，旁邊是完整車號。目前里程取自班表上的用車登記。',
+      extra: `<div class="ftol"><span>用車里程容忍值</span><input type="text" inputmode="numeric" id="ktol" value="${kmTol()}" aria-label="容忍值（km）"> km<button type="button" class="mini" data-act="fktol">儲存</button><small>登記用車時，起始里程跟上一次的完成里程相差超過這個數字，會跳提示請登記的人確認。</small></div>` }) : ''}
+    ${cp ? fleetSection({ title: '私人車', cls: 'priv', newAct: 'fvnewp', newLabel: '＋ 新增私人車', list: plist, off: offP, empty: '還沒有私人車。', costTitle: '私人車費用統計',
+      desc: '只有勾了「私人車」權限的人看得到。平常不會出現在排班；需要支援公司時，到車子頁面按「開放排班」。里程在車輛紀錄按「＋ 新增紀錄」選「里程」，填日期和里程就好。' }) : ''}
+  </div>`;
+}
+function carCard(v, y) {
+  const i = vinfo(v), o = odo(v), nk = serviceKm(v), al = fleetAlerts(v);
+  const lv = al.some(a => a.lv === 'bad') ? 'bad' : al.length ? 'warn' : '';
+  const ins = insFirst(v); const chk = latestPer(v, '驗車')[0];
+  const cost = vrecs(v).filter(r => String(r.date || '').startsWith(y)).reduce((s, r) => s + (+r.cost || 0), 0);
+  return `<button type="button" class="fcar ${lv}" data-act="fv" data-v="${esc(v)}">
+    <span class="fc-h"><b>${esc(v)}</b>${plateTag(v)}${isLent(v) ? '<span class="fc-lent">開放排班中</span>' : ''}</span>
+    <span class="fc-sub">${esc(i.model || '　')}</span>
+    <dl class="fc-dl">
+      <dt>目前里程</dt><dd>${o != null ? kmFmt(o) + ' km' : '—'}</dd>
+      <dt>下次保養</dt><dd class="${kmLv(v)}">${nk != null ? kmFmt(nk) + ' km' : '未設定'}</dd>
+      <dt>保險到期</dt><dd class="${recLv(ins)}">${ins ? fmtD(ins.nextDate) : '—'}</dd>
+      <dt>下次驗車</dt><dd class="${recLv(chk)}">${chk && chk.nextDate ? fmtD(chk.nextDate) : '—'}</dd>
+      <dt>${y} 年費用</dt><dd>${cost ? money(cost) : '—'}</dd>
+    </dl>
+    ${al.length ? `<span class="fc-al">${al.length} 項要注意</span>` : ''}
+  </button>`;
+}
+// 費用：選期間（今年／去年／全部），按種類加總；保險、稅費、其他再按險種／項目細分
+const costPer = () => S.costPer || todayStr().slice(0, 4);
+const inPer = (r, per) => per === 'all' || String(r.date || '').startsWith(per);
+const perLabel = per => per === 'all' ? '全部期間' : per + ' 年';
+function costSeg() {
+  const y = +todayStr().slice(0, 4); const cur = costPer();
+  return `<div class="seg seg-sm" role="group" aria-label="費用期間">${[String(y), String(y - 1), 'all'].map(p => `<button type="button" data-act="fcper" data-p="${p}" aria-pressed="${p === cur}">${p === 'all' ? '全部' : p === String(y) ? '今年' : '去年'}</button>`).join('')}</div>`;
+}
+function costSums(list, per) {
+  const by = {};
+  for (const r of list) {
+    if (!+r.cost || !inPer(r, per)) continue;
+    const k = by[r.kind] || (by[r.kind] = { total: 0, subs: {} });
+    k.total += +r.cost;
+    if (r.kind === '保險') {
+      const cv = polCovs(r); const s = cv.reduce((a, c) => a + (+c.cost || 0), 0);
+      cv.forEach(c => { if (+c.cost) k.subs[c.name] = (k.subs[c.name] || 0) + +c.cost; });
+      if (+r.cost > s) k.subs['其他／未分險種'] = (k.subs['其他／未分險種'] || 0) + (+r.cost - s);
+    } else if ((r.kind === '稅費' || r.kind === '其他') && r.sub) k.subs[r.sub] = (k.subs[r.sub] || 0) + +r.cost;
+  }
+  return by;
+}
+function costBlock(v) {
+  const per = costPer(); const by = costSums(vrecs(v), per);
+  const kinds = VKALL.filter(k => by[k]); const sum = kinds.reduce((s, k) => s + by[k].total, 0);
+  return `<section class="panel">
+    <div class="frecbar"><h2>費用</h2>${costSeg()}</div>
+    ${sum ? `<div class="ftot">${kinds.map(k => `<div class="krow"><span><i class="ftag" data-k="${k}">${k}</i></span><span>${money(by[k].total)}</span></div>${Object.entries(by[k].subs).sort((a, b) => b[1] - a[1]).map(([s, x]) => `<div class="ksub"><span>${esc(s)}</span><span>${money(x)}</span></div>`).join('')}`).join('')}<div class="sum"><span>合計</span><span>${money(sum)}</span></div></div>` : `<p class="emptymsg" style="margin:0">${perLabel(per)}沒有費用紀錄。</p>`}
+  </section>`;
+}
+// 總覽的費用統計：每台車一列、每種費用一欄
+function costTable(list, offs, title) {
+  const per = costPer();
+  const rows = [...list, ...offs].map(v => ({ v, off: !list.includes(v), by: costSums(vrecs(v), per) }));
+  const kinds = VKALL.filter(k => rows.some(r => r.by[k]));
+  const tot = k => rows.reduce((s, r) => s + (r.by[k] ? r.by[k].total : 0), 0);
+  const rsum = r => kinds.reduce((s, k) => s + (r.by[k] ? r.by[k].total : 0), 0);
+  const all = kinds.reduce((s, k) => s + tot(k), 0);
+  return `<section class="panel">
+    <div class="frecbar"><h2>${title}</h2>${costSeg()}</div>
+    ${all ? `<div class="ctwrap"><table class="ctab"><thead><tr><th>車輛</th>${kinds.map(k => `<th>${k}</th>`).join('')}<th>合計</th></tr></thead>
+      <tbody>${rows.filter(r => rsum(r)).map(r => `<tr><th><button type="button" class="alink" data-act="fv" data-v="${esc(r.v)}">${esc(r.v)}</button>${r.off ? '<small class="offtag">已停用</small>' : ''}</th>${kinds.map(k => `<td>${r.by[k] ? money(r.by[k].total) : '—'}</td>`).join('')}<td class="rs">${money(rsum(r))}</td></tr>`).join('')}</tbody>
+      <tfoot><tr><th>合計</th>${kinds.map(k => `<td>${money(tot(k))}</td>`).join('')}<td class="rs">${money(all)}</td></tr></tfoot></table></div>` : `<p class="emptymsg" style="margin:0">${perLabel(per)}沒有費用紀錄。</p>`}
+  </section>`;
+}
+function renderFleetCar(v) {
+  const i = vinfo(v), o = odo(v), nk = serviceKm(v), last = lastService(v), rt = i.retired;
+  const al = rt ? [] : fleetAlerts(v); const svc = latestPer(v, '保養')[0];
+  // 保險有自己的區塊，下面的「車輛紀錄」放保養、維修、驗車、稅費
+  const RK = recKinds(v);
+  const f = RK.includes(S.fleetKind) ? S.fleetKind : '全部'; const all = vrecs(v).filter(r => r.kind !== '保險');
+  const ins = insCurrent(v);
+  const insOld = insAll(v).filter(r => !ins.includes(r));
+  const insNear = ins.filter(r => r.nextDate).sort((a, b) => a.nextDate.localeCompare(b.nextDate));
+  const recs = all.filter(r => f === '全部' || r.kind === f);
+  const stat = (label, val, sub, lv, btn) => `<div class="fstat ${lv || ''}"><span>${esc(label)}${btn || ''}</span><b>${val}</b>${sub ? `<small>${sub}</small>` : ''}</div>`;
+  const stats = [
+    stat('目前里程', o != null ? kmFmt(o) + ' km' : '—', isPriv(v) ? '取自里程登記與保養紀錄' : '取自用車登記與里程盤點'),
+    stat('下次保養', nk != null ? kmFmt(nk) + ' km' : '未設定', nk != null && o != null ? (nk - o > 0 ? `還有 ${kmFmt(nk - o)} km` : `已超過 ${kmFmt(o - nk)} km`) + (last ? '' : '・取自車輛選項') : (last ? '' : '按右上「設定」，或新增保養紀錄'), kmLv(v), rt ? '' : `<button type="button" class="fsetbtn" data-act="fsvcset">${nk != null ? '修改' : '設定'}</button>`),
+    ...(insNear.length ? [stat('保險最近到期', fmtD(insNear[0].nextDate), `${esc(polLabel(insNear[0]))}・${recLeft(insNear[0])}`, recLv(insNear[0]))] : []),
+    ...(svc && svc.nextDate ? [stat('下次保養日', fmtD(svc.nextDate), recLeft(svc), recLv(svc))] : []),
+    ...latestPer(v).filter(r => r.kind !== '保養' && r.kind !== '保險' && r.nextDate).map(r => stat(dueName(r), fmtD(r.nextDate), recLeft(r), recLv(r)))
+  ].join('');
+  const kmRecs = vrecs(v).filter(r => r.kind === '里程').slice(0, 5);
+  const trips = kmLogs(v).sort((a, b) => String(b.date).localeCompare(String(a.date)) || (+b.start || 0) - (+a.start || 0)).slice(0, 5);
+  const rec = r => {
+    const what = r.setOnly ? `設定下次保養：${[r.nextKm ? kmFmt(r.nextKm) + ' km' : '', r.nextDate ? fmtD(r.nextDate) : ''].filter(Boolean).join('／')}${r.note ? '・' + r.note : ''}` : r.kind === '里程' ? `儀表板里程 ${kmFmt(r.km)} km${r.note ? '・' + r.note : ''}` : r.kind === '保險' ? [polLabel(r), r.vendor, polCovs(r).map(c => c.name).join('、'), r.ref ? '保單 ' + r.ref : ''].filter(Boolean).join('・') : r.kind === '保養' || r.kind === '維修' ? itemsText(r) : [r.sub, r.detail, r.ref ? '保單 ' + r.ref : ''].filter(Boolean).join('・');
+    const meta = r.setOnly ? '' : [r.vendor, r.kind !== '里程' && r.km != null && r.km !== '' ? kmFmt(r.km) + ' km' : '', r.nextKm ? '下次 ' + kmFmt(r.nextKm) + ' km' : '', r.nextDate ? ((VK[r.kind] || {}).nextDate || '到期') + ' ' + fmtD(r.nextDate) : ''].filter(Boolean).join('・');
+    return `<button type="button" class="frow" data-act="fredit" data-rid="${esc(r.id)}">
+      <span class="fr-d">${fmtD(r.date)}</span><i class="ftag" data-k="${esc(r.kind)}">${esc(r.kind)}</i>
+      <span class="fr-w"><b>${esc(what || r.note || (r.kind === '驗車' ? '定期檢驗' : r.kind))}</b>${meta ? `<small>${esc(meta)}</small>` : ''}${r.gap ? `<small class="kmgapt">⚠ 跟上次紀錄${r.gapType === 'back' ? '倒退' : '相差'} ${kmFmt(r.gap)} km</small>` : ''}</span>
+      <span class="fr-c">${money(r.cost)}${(r.photos || []).length ? `<small class="fr-ph">單據 ${r.photos.length} 張</small>` : ''}</span></button>`;
+  };
+  const cnt = k => all.filter(r => r.kind === k).length;
+  const kmPanel = `<section class="panel"><div class="frecbar"><h2>最近里程</h2><button class="btn sm" data-act="fkmlog">＋ 登記里程</button></div>${(kmRecs.length ? `<div class="ftrip">${kmRecs.map(r => `<button type="button" class="ftrow" data-act="fredit" data-rid="${esc(r.id)}" title="點一下修改或刪除"><span>${md(r.date)}</span><span>${esc(r.note || '')}</span><span class="kmv">${kmFmt(r.km)} km</span></button>`).join('')}</div><p class="hint" style="margin:6px 0 0">登記錯了：點那一筆就可以修改或刪除。</p>` : '<p class="emptymsg" style="margin:0">還沒有里程登記。</p>')}</section>`;
+  const tripPanel = `<section class="panel"><h2>最近用車</h2>${trips.length ? `<div class="ftrip">${trips.map(r => { const j = r.jobId ? S.jobs.get(r.jobId) : null; const d = r.start != null && r.end != null ? r.end - r.start : null; return `<div><span>${md(r.date)}</span><span>${esc(j ? j.title : (r.note || '事務用車'))}</span><span class="kmv">${d != null ? kmFmt(d) + ' km' : kmFmt(r.start)}</span></div>`; }).join('')}</div>` : '<p class="emptymsg" style="margin:0">還沒有用車登記。</p>'}</section>`;
+  // 基本資料直接放在車名下面
+  const facts = [i.model, i.year ? i.year + ' 年出廠' : '', i.buyDate ? `${fmtD(i.buyDate)} 購買（車齡 ${ageText(i.buyDate)}）` : '', i.price ? '購價 ' + money(i.price) : '', i.dealer].filter(Boolean);
+  return `<div class="fdetail">
+    <div><button type="button" class="ghost" data-act="fback">‹ 全部車輛</button></div>
+    <section class="panel">
+      ${rt ? `<div class="fretired"><span><b>此車已於 ${fmtD(rt.date)} ${esc(rt.type)}</b>${rt.price ? '・' + money(rt.price) : ''}${rt.to ? '・' + esc(rt.to) : ''}</span>${rt.note ? `<small>${esc(rt.note)}</small>` : ''}<small>排班已經不能選這台車，以前的紀錄都保留。</small><button type="button" class="mini" data-act="frestore" data-v="${esc(v)}">恢復使用</button></div>` : ''}
+      <div class="fhead2"><h2>${esc(v)}</h2>${plateTag(v)}${isPriv(v) ? '<span class="fc-privtag">私人車</span>' : ''}<button type="button" class="mini fedit" data-act="fiedit">修改車號與資料</button></div>
+      ${isPriv(v) && !rt ? `<div class="fpriv"><span>${isLent(v) ? '<b>目前開放排班</b>：排班時可以選這台車（不用登記用車里程）。用完記得關閉。' : '平常不會出現在排班。需要支援公司時，按「開放排班」。'}</span><button type="button" class="btn sm ${isLent(v) ? 'sec' : ''}" data-act="fplend">${isLent(v) ? '關閉排班' : '開放排班'}</button></div>` : ''}
+      ${facts.length ? `<p class="ffacts">${facts.map(esc).join('<span class="dotsep">・</span>')}</p>` : '<p class="ffacts muted">還沒有填廠牌型號、購買日期等資料。</p>'}
+      ${i.note ? `<p class="ffacts muted">${esc(i.note)}</p>` : ''}
+      ${al.length ? `<ul class="issues falerts">${al.map(a => `<li class="${a.lv === 'bad' ? 'bad' : 'check'}"><span class="dot"></span><span>${esc(a.t)}</span></li>`).join('')}</ul>` : ''}
+      <div class="fstats">${stats}</div>
+    </section>
+    <div class="fcols">
+      <div class="fmain">
+      <section class="panel">
+        <div class="frecbar"><h2>保險</h2><button class="btn sm" data-act="finsnew">＋ 新增保單</button></div>
+        ${ins.length ? `<div class="fpols">${ins.map(policyCard).join('')}</div>` : '<p class="emptymsg" style="margin:0">還沒有保單。強制險是獨立一張保單；任意險一張保單裡可以有好幾個險種。</p>'}
+        ${insOld.length ? `<details class="fold"><summary>以前的保單 ${insOld.length} 張（續保前的舊資料）</summary><div class="flist">${insOld.map(rec).join('')}</div></details>` : ''}
+      </section>
+      <section class="panel">
+        <div class="frecbar"><h2>車輛紀錄</h2><button class="btn sm" data-act="frnew">＋ 新增紀錄</button></div>
+        <div class="seg" role="group" aria-label="紀錄類別">${['全部', ...RK].map(k => `<button type="button" data-act="fkind" data-k="${k}" aria-pressed="${k === f}">${k}</button>`).join('')}</div>
+        ${recs.length ? `<div class="flist">${recs.map(rec).join('')}</div>` : `<p class="emptymsg" style="margin-top:12px">${f === '全部' ? '還沒有任何紀錄。' : `還沒有${f}紀錄。`}按「＋ 新增紀錄」開始記。</p>`}
+      </section>
+      </div>
+      <div class="fside">
+        ${costBlock(v)}
+        ${isPriv(v) ? '' : tripPanel}
+      </div>
+    </div>
+  </div>`;
+}
+// ---- 保養／維修項目：一行一項，可以記單項金額和備註 ----
+const normItems = a => (a || []).map(x => typeof x === 'string' ? { name: x, cost: null, note: '' } : { name: x.name || '', cost: x.cost ?? null, note: x.note || '' });
+const itemsText = r => normItems(r.items).map(it => it.name + (it.cost ? ' ' + money(it.cost) : '')).filter(Boolean).join('、');
+// 常用項目：預設清單，可以在表單裡新增或刪除（存在設定裡，大家共用）
+const terms = kind => (S.config.fleetTerms || {})[kind] || (kind === '保險' ? INS_SUG : (VK[kind] || {}).items) || [];
+function termsHTML(kind) {
+  const list = terms(kind);
+  if (FR && FR.termEdit) return `<span class="ft-lbl">常用項目</span>${list.map(t => `<span class="tchip">${esc(t)}<button type="button" data-act="ftermdel" data-t="${esc(t)}" aria-label="刪除 ${esc(t)}">×</button></span>`).join('')}
+    <span class="addin ft-add"><input type="text" id="ft-in" placeholder="新的常用項目" aria-label="新的常用項目"><button type="button" class="btn sm" data-act="ftermadd">加入</button></span><button type="button" class="linkbtn" data-act="ftermedit">完成</button>`;
+  return `<span class="ft-lbl">點一下加入</span>${list.map(t => `<button type="button" class="tpick" data-act="fterm" data-t="${esc(t)}">${esc(t)}</button>`).join('')}<button type="button" class="linkbtn" data-act="ftermedit">編輯常用項目</button>`;
+}
+// ---- 保險以「保單」為單位：強制險自己一張；任意險一張保單裡有好幾個險種 ----
+const INS_SUG = ['第三人責任險', '車體險（甲式）', '車體險（乙式）', '車體險（丙式）', '竊盜險', '乘客險', '駕駛人傷害險', '超額責任險', '貨物險', '颱風洪水險'];
+const insAll = v => vrecs(v).filter(r => r.kind === '保險');
+const polType = r => r.type || (r.sub === '強制險' ? '強制險' : '任意險');
+// 以前一筆只記一個險種的資料，也當成一張保單來看
+const polCovs = r => r.coverages ? r.coverages : [{ name: r.sub || '保險', detail: r.detail || '', cost: r.cost ?? null }];
+function polLabel(r) { return r.coverages ? polType(r) : (r.sub || '保險'); }
+// 目前有效的保單：沒有被「續保」接走的那些（舊資料則是同險種最新的一筆）
+function insCurrent(v) {
+  const all = insAll(v); const renewed = new Set(all.map(r => r.renewOf).filter(Boolean)); const seen = new Set(); const out = [];
+  for (const r of all) {
+    if (renewed.has(r.id)) continue;
+    if (!r.coverages) { const k = r.sub || ''; if (seen.has(k)) continue; seen.add(k); }
+    out.push(r);
+  }
+  return out.sort((a, b) => (polType(a) === '強制險' ? 0 : 1) - (polType(b) === '強制險' ? 0 : 1) || String(a.nextDate || '9999').localeCompare(String(b.nextDate || '9999')));
+}
+function policyCard(r) {
+  const lv = recLv(r), type = polType(r), covs = polCovs(r);
+  return `<div class="fpol ${lv}">
+    <div class="fp-h">
+      <span class="fp-type" data-t="${type}">${type}</span>
+      <div class="fp-who"><b>${esc(r.vendor || '（未填保險公司）')}</b>${r.ref ? `<small>保單 ${esc(r.ref)}</small>` : ''}</div>
+      <div class="fp-p">${fmtD(r.date)} – ${fmtD(r.nextDate)}<small>${r.nextDate ? recLeft(r) : '沒有填到期日'}</small></div>
+      <div class="fp-c">${money(r.cost)}</div>
+      <div class="fi-a"><button type="button" class="mini" data-act="fredit" data-rid="${esc(r.id)}">修改</button><button type="button" class="mini add" data-act="finsrenew" data-rid="${esc(r.id)}">續保</button></div>
+    </div>
+    ${type !== '強制險' || !r.coverages ? `<ul class="fp-cov">${covs.map(c => `<li><b>${esc(c.name)}</b><span>${esc(c.detail || '')}</span><span class="c">${money(c.cost)}</span></li>`).join('')}</ul>` : ''}
+    ${r.agent || r.agentPhone || (r.photos || []).length ? `<div class="fp-ft">${r.agent || r.agentPhone ? `<span>業務員 ${esc(r.agent || '')}${r.agentPhone ? ` <a href="tel:${esc(r.agentPhone.replace(/[^\d+]/g, ''))}">${esc(r.agentPhone)}</a>` : ''}</span>` : ''}${(r.photos || []).length ? `<span>單據 ${r.photos.length} 張</span>` : ''}</div>` : ''}
+  </div>`;
+}
+function drawIns(rec) {
+  const type = FR.type = polType(rec);
+  FR.draft = { ...rec };
+  const val = x => esc(rec[x] ?? '');
+  const covs = type === '強制險' ? [] : polCovs(rec).filter(c => c.name !== '強制險' && (rec.coverages || rec.sub)).map(c => ({ name: c.name, cost: c.cost, note: c.detail || '' }));
+  if (type === '任意險' && !covs.length) covs.push({ name: '', cost: null, note: '' });
+  const sumCov = covs.reduce((a, c) => a + (c.cost || 0), 0);
+  const sh = $('#sheet');
+  sh.innerHTML = `<div class="card" role="dialog" aria-modal="true" aria-labelledby="fr-h">
+    <h2 id="fr-h">${FR.id ? '修改保單' : '新增保單'}<span class="fr-car">${esc(rec.vehicle)}</span><button class="icon-btn x" data-act="close" aria-label="關閉">×</button></h2>
+    <div class="seg" role="group" aria-label="保單種類" style="margin:10px 0 4px">${['強制險', '任意險'].map(x => `<button type="button" data-act="frptype" data-t="${x}" aria-pressed="${x === type}">${x}</button>`).join('')}</div>
+    <p class="hint" style="margin:0 0 12px">${type === '強制險' ? '強制險是獨立一張保單。' : '任意險一張保單裡可以有好幾個險種，各自記保障內容和保費。'}</p>
+    <input type="hidden" id="fr-v" value="${esc(rec.vehicle)}">
+    <div class="fgrid frgrid">
+      <label class="field"><span>保險公司</span><input type="text" id="fr-vd" value="${val('vendor')}"></label>
+      <label class="field"><span>保單號碼</span><input type="text" id="fr-ref" value="${val('ref')}"></label>
+      <label class="field"><span>業務員</span><input type="text" id="fr-ag" value="${val('agent')}"></label>
+      <label class="field"><span>業務員電話</span><input type="text" inputmode="tel" id="fr-agp" value="${val('agentPhone')}"></label>
+      <label class="field"><span>生效日</span><input type="date" id="fr-d" value="${val('date')}"></label>
+      <div class="field"><span>到期日</span><div class="fplus"><input type="date" id="fr-nd" value="${val('nextDate')}" aria-label="到期日"><button type="button" class="mini" data-act="frplus" data-f="nd" data-n="12">+1年</button></div></div>
+      ${type === '任意險' ? `<div class="field full"><span>險種與保障內容</span>
+        <div class="fterms" id="fr-terms">${termsHTML('保險')}</div>
+        <datalist id="fr-termlist">${terms('保險').map(t => `<option value="${esc(t)}"></option>`).join('')}</datalist>
+        <div class="fitems" id="fr-items">${covs.map(itemRow).join('')}</div>
+        <div class="fitfoot"><button type="button" class="mini add" data-act="fitadd">＋ 加一個險種</button><span class="hint" id="fr-isum"></span></div>
+      </div>` : ''}
+      <label class="field"><span>${type === '強制險' ? '保費（元）' : '總保費（元，預設＝各險種小計）'}</span><input type="text" inputmode="numeric" id="fr-c" value="${val('cost')}" ${type === '任意險' && rec.cost != null && rec.cost !== '' && sumCov !== +rec.cost ? 'data-manual="1"' : ''}></label>
+      <label class="field"><span>提醒日</span><input type="date" id="fr-rm" value="${val('remind')}"><small class="hint">不填＝到期前 30 天開始提醒</small></label>
+      <div class="field full"><span>保單、收據照片</span><div class="fphotos"><span id="fr-ph">${photosHTML()}</span><label class="fup">＋ 加照片<input type="file" accept="image/*" multiple id="fr-file"></label></div></div>
+      <label class="field full"><span>備註</span><textarea id="fr-n" rows="2">${val('note')}</textarea></label>
+    </div>
+    <div class="acts" style="margin-top:12px">${FR.id ? '<button class="btn danger" data-act="frdel">刪除</button>' : ''}<span class="sp"></span><button class="btn" data-act="frsave" id="b-fr">儲存</button></div>
+  </div>`;
+  sh.hidden = false;
+  itemsSum();
+}
+function readIns() {
+  const d = FR.draft || {}; const type = FR.type;
+  const g = (id, k) => { const el = $('#' + id); return el ? el.value.trim() : (d[k] ?? ''); };
+  const c = g('fr-c', 'cost').toString().replace(/[^\d.]/g, ''); const cost = c === '' ? null : Math.round(+c);
+  const coverages = type === '強制險' ? [{ name: '強制險', detail: '', cost }] : $('#fr-items') ? readItems().map(it => ({ name: it.name, detail: it.note, cost: it.cost })) : polCovs(d);
+  return { vehicle: g('fr-v', 'vehicle'), kind: '保險', type, sub: type, vendor: g('fr-vd', 'vendor'), ref: g('fr-ref', 'ref'), agent: g('fr-ag', 'agent'), agentPhone: g('fr-agp', 'agentPhone'), date: g('fr-d', 'date'), nextDate: g('fr-nd', 'nextDate'), remind: g('fr-rm', 'remind'), coverages, cost, photos: FR.photos || [], note: g('fr-n', 'note'), renewOf: d.renewOf || '', detail: '', items: [], km: null, nextKm: null };
+}
+async function saveIns() {
+  const r = readIns();
+  if (!r.date) { toast('請填生效日'); $('#fr-d')?.focus(); return; }
+  if (!r.nextDate) { toast('請填到期日'); $('#fr-nd')?.focus(); return; }
+  if (r.type === '任意險') {
+    if (r.coverages.some(c => !c.name)) { toast('有一行沒有填險種名稱'); return; }
+    if (!r.coverages.length) { toast('請至少填一個險種'); return; }
+    if (r.cost == null) { const s = r.coverages.reduce((a, c) => a + (c.cost || 0), 0); if (s) r.cost = s; }
+  }
+  $('#b-fr').disabled = true;
+  const ok = await write(() => (FR.id ? S.db.doc('vrecords/' + FR.id) : S.db.collection('vrecords').doc()).set(r), FR.id ? '已更新保單' : r.renewOf ? '已續保，舊保單收在「以前的保單」' : `已新增${r.type}保單`);
+  if (ok) closeEditor(); else if ($('#b-fr')) $('#b-fr').disabled = false;
+}
+const itemRow = it => { const ins = FR && FR.kind === '保險'; return `<div class="fit">
+  <input type="text" class="it-n" value="${esc(it.name)}" placeholder="${ins ? '險種' : '項目'}" aria-label="${ins ? '險種' : '項目'}" list="fr-termlist">
+  <input type="text" inputmode="numeric" class="it-c" value="${esc(it.cost ?? '')}" placeholder="${ins ? '保費' : '金額'}" aria-label="${ins ? '保費' : '金額'}">
+  <input type="text" class="it-o" value="${esc(it.note)}" placeholder="${ins ? '保障內容（保額、自負額…）' : '備註（品牌、規格…）'}" aria-label="${ins ? '保障內容' : '備註'}">
+  <button type="button" class="icon-btn sm" data-act="fitdel" aria-label="刪除這一行">×</button>
+</div>`; };
+const readItems = () => [...document.querySelectorAll('#fr-items .fit')].map(el => { const c = el.querySelector('.it-c').value.replace(/[^\d.]/g, ''); return { name: el.querySelector('.it-n').value.trim(), cost: c === '' ? null : Math.round(+c), note: el.querySelector('.it-o').value.trim() }; }).filter(it => it.name || it.cost != null || it.note);
+function itemsSum() {
+  const s = readItems().reduce((a, it) => a + (it.cost || 0), 0); const el = $('#fr-isum'); if (el) el.textContent = s ? `項目小計 ${money(s)}` : '';
+  const c = $('#fr-c'); if (c && !c.dataset.manual && s) c.value = s; // 總金額沒有自己改過，就跟著小計
+}
+// ---- 單據照片：先縮小再存，手機拍的照片也不會太大 ----
+const shrink = file => new Promise((ok, no) => {
+  const rd = new FileReader();
+  rd.onload = () => { const im = new Image(); im.onload = () => { const m = 1400, sc = Math.min(1, m / Math.max(im.width, im.height)); const cv = document.createElement('canvas'); cv.width = Math.round(im.width * sc); cv.height = Math.round(im.height * sc); cv.getContext('2d').drawImage(im, 0, 0, cv.width, cv.height); ok({ name: file.name, src: cv.toDataURL('image/jpeg', 0.72) }); }; im.onerror = () => no(new Error('這個檔案不是圖片')); im.src = rd.result; };
+  rd.onerror = () => no(rd.error); rd.readAsDataURL(file);
+});
+// 照片網址：剛加的照片直接用本機資料；存好的照片向文件庫要暫時網址（約一小時有效），拿到後重畫縮圖
+const PHOTO_URL = new Map();
+function photoSrc(p) {
+  if (p.src) return p.src; if (!p.id) return '';
+  if (PHOTO_URL.has(p.id)) return PHOTO_URL.get(p.id) || '';
+  PHOTO_URL.set(p.id, '');
+  Promise.resolve(window.__loadPhoto && window.__loadPhoto(p)).then(u => { if (!u) { PHOTO_URL.delete(p.id); return; } PHOTO_URL.set(p.id, u); setTimeout(() => PHOTO_URL.delete(p.id), 50 * 60e3); if ($('#fr-ph') && FR) $('#fr-ph').innerHTML = photosHTML(); }).catch(() => PHOTO_URL.delete(p.id));
+  return '';
+}
+const photosHTML = () => (FR.photos || []).map((p, i) => `<span class="fph"><img src="${photoSrc(p)}" alt="${esc(p.name || '單據')}" data-act="phview" data-i="${i}"><button type="button" data-act="phdel" data-i="${i}" aria-label="移除這張">×</button></span>`).join('');
+function viewPhoto(src) {
+  const d = document.createElement('div'); d.className = 'phview'; d.innerHTML = `<img src="${src}" alt="單據"><button type="button" class="icon-btn" aria-label="關閉">×</button>`;
+  d.addEventListener('click', () => d.remove()); document.body.appendChild(d);
+}
+// ---- 設定下次保養：中途開始用系統、不清楚上次保養內容時，只填下次保養里程／日期 ----
+function openSvcSet(v, rec) {
+  if (!can(isPriv(v) ? 'private' : 'fleet')) return;
+  rec = rec || {}; FR = { id: rec.id || null, kind: '保養', setOnly: true, photos: [], v };
+  const o = odo(v);
+  const sh = $('#sheet');
+  sh.innerHTML = `<div class="card" role="dialog" aria-modal="true" aria-labelledby="sv-h">
+    <h2 id="sv-h">設定下次保養<span class="fr-car">${esc(v)}</span><button class="icon-btn x" data-act="close" aria-label="關閉">×</button></h2>
+    <p class="hint" style="margin:8px 0 12px">不知道上次保養的細節也沒關係，只要填下次什麼時候該保養。常見的資料來源：擋風玻璃上保養廠貼的貼紙、保養手冊、或問保養廠。目前里程 ${o != null ? kmFmt(o) + ' km' : '還沒有紀錄（建議先記一次里程盤點）'}。</p>
+    <div class="fgrid frgrid">
+      <div class="field"><span>下次保養里程（km）</span><div class="fplus"><input type="text" inputmode="numeric" id="sv-nk" value="${esc(rec.nextKm ?? '')}" aria-label="下次保養里程"><button type="button" class="mini" data-act="svplus" data-n="500">+500</button><button type="button" class="mini" data-act="svplus" data-n="1000">+1千</button><button type="button" class="mini" data-act="svplus" data-n="5000">+5千</button></div><small class="hint" id="sv-left"></small></div>
+      <label class="field"><span>下次保養日（不知道可不填）</span><input type="date" id="sv-nd" value="${esc(rec.nextDate || '')}"></label>
+      <label class="field full"><span>備註</span><input type="text" id="sv-n" value="${esc(rec.note || '')}" placeholder="例如：依擋風玻璃貼紙"></label>
+    </div>
+    <div class="acts" style="margin-top:12px">${FR.id ? '<button class="btn danger" data-act="frdel">刪除</button>' : ''}<span class="sp"></span><button class="btn" data-act="svsave" id="b-sv">儲存</button></div>
+  </div>`;
+  sh.hidden = false; svLeft(); setTimeout(() => $('#sv-nk')?.focus(), 30);
+}
+function svLeft() {
+  const el = $('#sv-left'); if (!el || !FR) return; const o = odo(FR.v);
+  const x = ($('#sv-nk')?.value || '').replace(/[^\d]/g, '');
+  el.textContent = x && o != null ? (+x > o ? `還有 ${kmFmt(+x - o)} km` : `已超過 ${kmFmt(o - +x)} km`) : '';
+}
+async function saveSvcSet() {
+  const v = FR.v; const x = ($('#sv-nk').value || '').replace(/[^\d]/g, ''); const nd = $('#sv-nd').value;
+  if (!x && !nd) { toast('請填下次保養里程或日期'); $('#sv-nk').focus(); return; }
+  const old = FR.id ? S.vrec.get(FR.id) : null;
+  const r = { vehicle: v, kind: '保養', setOnly: true, date: old ? old.date : todayStr(), km: old ? old.km : (odo(v) ?? null), items: [], vendor: '', cost: null, nextKm: x ? +x : null, nextDate: nd, remind: '', photos: [], note: $('#sv-n').value.trim() };
+  $('#b-sv').disabled = true;
+  const ok = await write(() => (FR.id ? S.db.doc('vrecords/' + FR.id) : S.db.collection('vrecords').doc()).set(r), '已設定下次保養');
+  if (ok) closeEditor(); else if ($('#b-sv')) $('#b-sv').disabled = false;
+}
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-act]'); if (!t) return; const a = t.dataset.act;
+  if (a === 'fsvcset') openSvcSet(S.fleetV);
+  else if (a === 'svsave') saveSvcSet();
+  else if (a === 'svplus') { const o = odo(FR.v) || 0; $('#sv-nk').value = o + +t.dataset.n; svLeft(); }
+});
+document.addEventListener('input', e => { if (e.target.id === 'sv-nk') svLeft(); });
+function openFR(rec) {
+  if (rec.setOnly) return openSvcSet(rec.vehicle, rec);
+  if (!can('fleet')) return;
+  FR = { id: rec.id || null, kind: rec.kind || '保養', photos: [...(rec.photos || [])] };
+  drawFR(rec);
+}
+function drawFR(rec) {
+  if (FR.kind === '保險') return drawIns(rec);
+  const k = VK[FR.kind];
+  FR.draft = { ...rec };
+  const val = x => esc(rec[x] ?? '');
+  const items = normItems(rec.items); if (k.items && !items.length) items.push({ name: '', cost: null, note: '' });
+  const subs = k.sub ? [...new Set([...k.sub, ...(rec.sub && !k.sub.includes(rec.sub) ? [rec.sub] : [])])] : [];
+  const rmHint = FR.kind === '驗車' ? '不填＝驗車日前 30 天開始提醒（前後 30 天都可以驗）' : '不填＝到期前 30 天開始提醒';
+  const sh = $('#sheet');
+  sh.innerHTML = `<div class="card" role="dialog" aria-modal="true" aria-labelledby="fr-h">
+    <h2 id="fr-h">${FR.kind === '里程' ? (FR.id ? '修改里程' : '登記里程') : FR.kind === '保險' ? (FR.id ? '修改保險' : '新增保險') : FR.id ? '修改紀錄' : '新增紀錄'}<span class="fr-car">${esc(rec.vehicle)}</span><button class="icon-btn x" data-act="close" aria-label="關閉">×</button></h2>
+    ${FR.kind === '保險' || FR.kind === '里程' ? '<div style="height:12px"></div>' : `<div class="seg" role="group" aria-label="紀錄類別" style="margin:10px 0 12px">${recKinds(rec.vehicle).map(x => `<button type="button" data-act="frkind" data-k="${x}" aria-pressed="${x === FR.kind}">${x}</button>`).join('')}</div>`}
+    <input type="hidden" id="fr-v" value="${esc(rec.vehicle)}">
+    <div class="fgrid frgrid">
+      ${k.sub ? `<label class="field"><span>${k.subL}</span><select class="inp" id="fr-sub"><option value="">（請選）</option>${subs.map(x => `<option ${x === rec.sub ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select></label>` : ''}
+      ${k.subText ? `<label class="field"><span>${k.subText}</span><input type="text" id="fr-sub" value="${val('sub')}" placeholder="${esc(k.subPh || '')}" ${k.subSug ? 'list="fr-sublist"' : ''} autocomplete="off">${k.subSug ? `<datalist id="fr-sublist">${[...new Set([...k.subSug, ...latestPer(rec.vehicle, FR.kind).map(x => x.sub).filter(Boolean)])].map(x => `<option value="${esc(x)}"></option>`).join('')}</datalist>` : ''}</label>` : ''}
+      <label class="field"><span>${k.date}</span><input type="date" id="fr-d" value="${val('date')}"></label>
+      ${k.km ? `<label class="field"><span>當時里程（km）</span><input type="text" inputmode="numeric" id="fr-km" value="${val('km')}"></label>` : ''}
+      ${k.vendor ? `<label class="field"><span>${k.vendor}</span><input type="text" id="fr-vd" value="${val('vendor')}"></label>` : ''}
+      ${k.ref ? `<label class="field"><span>${k.ref}</span><input type="text" id="fr-ref" value="${val('ref')}"></label>` : ''}
+      ${k.detail ? `<label class="field full"><span>${k.detail}</span><input type="text" id="fr-det" value="${val('detail')}" placeholder="例如：每人體傷 200 萬、每事故財損 50 萬"></label>` : ''}
+      ${k.items ? `<div class="field full"><span>${FR.kind}項目</span>
+        <div class="fterms" id="fr-terms">${termsHTML(FR.kind)}</div>
+        <datalist id="fr-termlist">${terms(FR.kind).map(t => `<option value="${esc(t)}"></option>`).join('')}</datalist>
+        <div class="fitems" id="fr-items">${items.map(itemRow).join('')}</div>
+        <div class="fitfoot"><button type="button" class="mini add" data-act="fitadd">＋ 加一行</button><span class="hint" id="fr-isum"></span></div>
+      </div>` : ''}
+      ${k.cost ? `<label class="field"><span>${k.items ? '總金額（元，預設＝項目小計）' : '金額（元）'}</span><input type="text" inputmode="numeric" id="fr-c" value="${val('cost')}" ${rec.cost != null && rec.cost !== '' && k.items && normItems(rec.items).reduce((a, it) => a + (it.cost || 0), 0) !== +rec.cost ? 'data-manual="1"' : ''}></label>` : ''}
+      ${k.nextKm ? `<div class="field"><span>下次保養里程（km）</span><div class="fplus"><input type="text" inputmode="numeric" id="fr-nk" value="${val('nextKm')}" aria-label="下次保養里程"><button type="button" class="mini" data-act="frplus" data-f="nk" data-n="5000">+5千</button><button type="button" class="mini" data-act="frplus" data-f="nk" data-n="10000">+1萬</button></div></div>` : ''}
+      ${k.nextDate ? `<div class="field"><span>${k.nextDate}</span><div class="fplus"><input type="date" id="fr-nd" value="${val('nextDate')}" aria-label="${k.nextDate}">${k.plus ? `<button type="button" class="mini" data-act="frplus" data-f="nd" data-n="${k.plus}">+${k.plus === 12 ? '1年' : k.plus + '個月'}</button>` : ''}</div></div>
+      <label class="field"><span>提醒日</span><input type="date" id="fr-rm" value="${val('remind')}"><small class="hint">${rmHint}</small></label>` : ''}
+      <div class="field full"><span>單據照片</span><div class="fphotos"><span id="fr-ph">${photosHTML()}</span><label class="fup">＋ 加照片<input type="file" accept="image/*" multiple id="fr-file"></label></div></div>
+      <label class="field full"><span>備註</span><textarea id="fr-n" rows="2">${val('note')}</textarea></label>
+    </div>
+    ${k.nextKm ? '<p class="hint" style="margin:8px 0 0">下次保養里程、下次保養日，哪一個先到就提醒；班表上這台車也會亮紅色。</p>' : ''}
+    ${FR.kind === '里程' ? `<p class="hint" style="margin:8px 0 0">${isPriv(rec.vehicle) ? '私人車不用登記每趟用車，偶爾記一下日期和儀表板里程就好。' : '看儀表板上的里程填。上線第一天先幫每台車記一次起始里程；之後可以定期盤點（例如每月月初），跟用車登記對不上，就知道中間有人漏登。'}</p><p class="hint kmgap" id="fr-kmhint" style="margin:6px 0 0"></p>` : ''}
+    <div class="acts" style="margin-top:12px">${FR.id ? '<button class="btn danger" data-act="frdel">刪除</button>' : ''}<span class="sp"></span>${FR.kind === '保險' && !FR.id ? '<button class="btn sec" data-act="frsave" data-next="1">儲存，再加一個險種</button>' : ''}<button class="btn" data-act="frsave" id="b-fr">儲存</button></div>
+  </div>`;
+  sh.hidden = false;
+  itemsSum(); kmHint();
+}
+// 里程盤點：跟上一次的讀數比，差太多就提示（照樣可以存，存了會標註）
+function kmHint() {
+  const el = $('#fr-kmhint'); if (!el || !FR) return;
+  const x = ($('#fr-km')?.value || '').replace(/[^\d.]/g, ''); const km = x === '' ? null : Math.round(+x);
+  const g = kmGap($('#fr-v').value, $('#fr-d')?.value, km, FR.id);
+  el.textContent = g ? '⚠ ' + g.t.replace('起始里程', '這次里程').replace('這次起始', '這次') + ' 一樣可以儲存，這筆會標註差距。' : '';
+}
+function readFR() {
+  if (FR.kind === '保險') return readIns();
+  // 這個類別沒有的欄位，沿用切換前填的（例如從保養切到驗車再切回來，里程不會不見）
+  const d = FR.draft || {};
+  const g = (id, k) => { const el = $('#' + id); return el ? el.value.trim() : (d[k] ?? ''); };
+  const n = (id, k) => { const el = $('#' + id); if (!el) return d[k] ?? null; const x = el.value.replace(/[^\d.]/g, ''); return x === '' ? null : Math.round(+x); };
+  const items = $('#fr-items') ? readItems() : normItems(d.items);
+  return { vehicle: g('fr-v', 'vehicle'), kind: FR.kind, sub: g('fr-sub', 'sub'), date: g('fr-d', 'date'), km: n('fr-km', 'km'), items, vendor: g('fr-vd', 'vendor'), ref: g('fr-ref', 'ref'), detail: g('fr-det', 'detail'), cost: n('fr-c', 'cost'), nextKm: n('fr-nk', 'nextKm'), nextDate: g('fr-nd', 'nextDate'), remind: g('fr-rm', 'remind'), photos: FR.photos || [], note: g('fr-n', 'note') };
+}
+async function saveFR(next) {
+  if (FR.kind === '保險') return saveIns();
+  const r = readFR(); const k = VK[r.kind];
+  if ((k.sub || k.subText) && !r.sub) { toast(`請填${k.subL || k.subText}`); $('#fr-sub')?.focus(); return; }
+  if (!r.date) { toast(`請填${k.date}`); $('#fr-d')?.focus(); return; }
+  if (r.kind === '里程' && r.km == null) { toast('請填里程'); $('#fr-km')?.focus(); return; }
+  if (r.kind === '里程') { const g = kmGap(r.vehicle, r.date, r.km, FR.id); r.gap = g ? g.diff : null; r.gapType = g ? g.lv : ''; r.gapPrev = g ? g.prev : null; }
+  if (r.kind === '保險' && !r.nextDate) { toast('請填到期日'); $('#fr-nd')?.focus(); return; }
+  if (r.nextKm != null && r.km != null && r.nextKm <= r.km) { toast('下次保養里程要大於這次的里程'); $('#fr-nk')?.focus(); return; }
+  if (!k.items) r.items = []; if (!k.vendor) r.vendor = ''; if (!k.ref) r.ref = ''; if (!k.detail) r.detail = ''; if (!k.sub && !k.subText) r.sub = '';
+  if (!k.km) r.km = null; if (!k.nextKm) r.nextKm = null; if (!k.nextDate) { r.nextDate = ''; r.remind = ''; }
+  if (k.items && r.cost == null) { const s = r.items.reduce((a, it) => a + (it.cost || 0), 0); if (s) r.cost = s; }
+  document.querySelectorAll('[data-act=frsave]').forEach(b => { b.disabled = true; });
+  const ok = await write(() => (FR.id ? S.db.doc('vrecords/' + FR.id) : S.db.collection('vrecords').doc()).set(r), FR.id ? '已更新紀錄' : `已新增${r.kind === '保險' ? '「' + r.sub + '」' : r.kind + '紀錄'}`);
+  if (!ok) { document.querySelectorAll('[data-act=frsave]').forEach(b => { b.disabled = false; }); return; }
+  closeEditor();
+  // 同一張保單常有好幾個險種：保險公司、保單號碼、日期先帶好，只要換險種
+  if (next) { openFR({ vehicle: r.vehicle, kind: '保險', vendor: r.vendor, ref: r.ref, date: r.date, nextDate: r.nextDate }); setTimeout(() => $('#fr-sub')?.focus(), 30); }
+}
+async function delFR(t) {
+  if (!t.dataset.armed) { t.dataset.armed = '1'; t.textContent = '確定刪除？'; return; }
+  const ok = await write(() => S.db.doc('vrecords/' + FR.id).delete(), '已刪除紀錄');
+  if (ok) closeEditor();
+}
+function openFI(v, priv) {
+  priv = priv || (v && isPriv(v));
+  if (!can(priv ? 'private' : 'fleet')) return;
+  FI = { v, priv }; const i = v ? vinfo(v) : {}; const val = x => esc(i[x] ?? '');
+  const off = !!(v && i.retired);
+  const sh = $('#sheet');
+  sh.innerHTML = `<div class="card" role="dialog" aria-modal="true" aria-labelledby="fi-h">
+    <h2 id="fi-h">${v ? esc(v) + ' 車號與資料' : priv ? '新增私人車' : '新增車輛'}<button class="icon-btn x" data-act="close" aria-label="關閉">×</button></h2>
+    <div class="fgrid frgrid" style="margin-top:12px">
+      <label class="field"><span>${priv ? '別名（例如：老闆 RX）' : '別名（班表上選車用的名字）'}</span><input type="text" id="fi-alias" value="${esc(v || '')}" placeholder="${priv ? '開放排班時，班表上會顯示這個名字' : '例如：大貨車、T6'}"></label>
+      <label class="field"><span>完整車號</span><input type="text" id="fi-plate" value="${val('plate')}" placeholder="例如：KLA-2391" autocapitalize="characters"></label>
+      <label class="field"><span>廠牌型號</span><input type="text" id="fi-model" value="${val('model')}" placeholder="例如：Isuzu 8.8噸"></label>
+      <label class="field"><span>出廠年份</span><input type="text" inputmode="numeric" id="fi-year" value="${val('year')}" placeholder="例如：2019"></label>
+      <label class="field"><span>購買日期</span><input type="date" id="fi-buy" value="${val('buyDate')}"></label>
+      <label class="field"><span>購買金額（元）</span><input type="text" inputmode="numeric" id="fi-price" value="${val('price')}"></label>
+      <label class="field"><span>購買車行</span><input type="text" id="fi-dealer" value="${val('dealer')}"></label>
+      <label class="field full"><span>備註</span><textarea id="fi-note" rows="2" placeholder="例如：車身號碼、貸款、配備">${val('note')}</textarea></label>
+    </div>
+    <p class="hint" style="margin:8px 0 0">${priv ? '私人車只有勾了「私人車」權限的人看得到，平常不會出現在排班。' : v ? '改別名會一起更新班表上已排的場次、用車里程和車輛紀錄。' : '新增後，排班時就可以選這台車（用別名）。'}</p>
+    <div class="acts" style="margin-top:12px">${v && !off ? '<button class="btn danger" data-act="firetire">出售／報廢</button>' : ''}<span class="sp"></span><button class="btn" data-act="fisave" id="b-fi">${v ? '儲存' : '新增'}</button></div>
+  </div>`;
+  sh.hidden = false;
+  setTimeout(() => $(v ? '#fi-plate' : '#fi-alias')?.focus(), 30);
+}
+// 已出售或報廢的車：從排班的選車名單拿掉，資料都留著
+const retiredList = () => Object.keys(S.config.vehicleInfo || {}).filter(n => (S.config.vehicleInfo[n] || {}).retired && !(S.config.vehicles || []).includes(n));
+async function saveFI() {
+  const g = id => ($('#' + id)?.value || '').trim();
+  const oldN = FI.v, alias = g('fi-alias'), plate = g('fi-plate').toUpperCase();
+  const list = S.config.vehicles || [];
+  if (!alias) { toast('請填別名'); $('#fi-alias').focus(); return; }
+  if (alias !== oldN && list.includes(alias)) { toast(`已經有叫「${alias}」的車`); $('#fi-alias').focus(); return; }
+  if (alias !== oldN && Object.keys(S.config.vehicleInfo || {}).includes(alias) && !retiredList().includes(alias)) { toast(`已經有叫「${alias}」的車`); $('#fi-alias').focus(); return; }
+  if (alias !== oldN && retiredList().includes(alias)) { toast(`已出售／報廢的車也叫「${alias}」，請換個名字（例如加上年份）`); $('#fi-alias').focus(); return; }
+  const dup = plate && [...list, ...privCars()].find(n => n !== oldN && String(vinfo(n).plate || '').toUpperCase() === plate);
+  if (dup) { toast(`車號 ${plate} 已經是「${dup}」`); $('#fi-plate').focus(); return; }
+  const price = g('fi-price').replace(/[^\d]/g, '');
+  const info = { plate, model: g('fi-model'), year: g('fi-year'), buyDate: g('fi-buy'), price: price ? +price : null, dealer: g('fi-dealer'), note: g('fi-note') };
+  if (oldN && vinfo(oldN).retired) info.retired = vinfo(oldN).retired;
+  if (FI.priv) info.private = true;
+  const renamed = !!oldN && alias !== oldN;
+  const vi = { ...(S.config.vehicleInfo || {}) }; if (oldN) delete vi[oldN]; vi[alias] = info;
+  const svc = { ...(S.config.vehicleService || {}) }; if (renamed && svc[oldN] != null) { svc[alias] = svc[oldN]; delete svc[oldN]; }
+  const jobs = renamed ? [...S.jobs.values()].filter(j => (j.vehicles || []).includes(oldN)) : [];
+  const logs = renamed ? kmLogs(oldN) : [];
+  const vr = renamed ? [...S.vrec.values()].filter(r => r.vehicle === oldN) : [];
+  const vehicles = oldN ? list.map(x => x === oldN ? alias : x) : FI.priv ? list : [...list, alias];
+  if (jobs.length && !can('edit')) { toast(`改別名會一起改 ${jobs.length} 個已排的場次，需要「排班編輯」權限，請找有權限的同事改`); return; }
+  $('#b-fi').disabled = true;
+  const ok = await write(async () => {
+    await S.db.doc('config/main').set({ ...S.config, vehicles, vehicleService: svc, vehicleInfo: vi });
+    for (const j of jobs) await S.db.doc('jobs/' + j.id).update({ vehicles: j.vehicles.map(x => x === oldN ? alias : x) });
+    for (const r of logs) await S.db.doc('mileage/' + r.id).update({ vehicle: alias });
+    for (const r of vr) await S.db.doc('vrecords/' + r.id).update({ vehicle: alias });
+  }, !oldN ? `已新增${FI.priv ? '私人車' : ''}「${alias}」` : renamed ? `已改名為「${alias}」，連同 ${jobs.length} 個場次、${logs.length} 筆里程、${vr.length} 筆車輛紀錄` : '已更新基本資料');
+  if (ok) { closeEditor(); S.fleetV = alias; render(); scrollTo(0, 0); } else if ($('#b-fi')) $('#b-fi').disabled = false;
+}
+function openRetire(v) {
+  FI = { v, retire: true };
+  const sh = $('#sheet');
+  sh.innerHTML = `<div class="card" role="dialog" aria-modal="true" aria-labelledby="rt-h">
+    <h2 id="rt-h">${esc(v)} 出售／報廢<button class="icon-btn x" data-act="close" aria-label="關閉">×</button></h2>
+    <p class="hint" style="margin:8px 0 12px">登記後排班就不能再選這台車，但以前的場次、用車里程、保險、保養紀錄都會保留，在車輛管理最下面的「已出售／報廢」可以查，也可以恢復。</p>
+    <div class="fgrid frgrid">
+      <label class="field"><span>處理方式</span><select class="inp" id="rt-type"><option>出售</option><option>報廢</option><option>其他</option></select></label>
+      <label class="field"><span>日期</span><input type="date" id="rt-date" value="${todayStr()}"></label>
+      <label class="field"><span>金額（元，出售價或回收金）</span><input type="text" inputmode="numeric" id="rt-price"></label>
+      <label class="field"><span>對象（買方、車行或回收廠）</span><input type="text" id="rt-to"></label>
+      <label class="field full"><span>備註</span><textarea id="rt-note" rows="2" placeholder="例如：過戶完成日、繳回車牌"></textarea></label>
+    </div>
+    <p class="hint" style="margin:8px 0 0">記得把還沒到期的保險辦理退保或轉讓，退回的保費可以用保險紀錄登記。</p>
+    <div class="acts" style="margin-top:12px"><span class="sp"></span><button class="btn danger" data-act="frtsave" id="b-rt">確定登記</button></div>
+  </div>`;
+  sh.hidden = false;
+}
+async function saveRetire() {
+  const v = FI.v; const g = id => ($('#' + id)?.value || '').trim();
+  if (!g('rt-date')) { toast('請填日期'); return; }
+  const p = g('rt-price').replace(/[^\d]/g, '');
+  const ret = { type: g('rt-type'), date: g('rt-date'), price: p ? +p : null, to: g('rt-to'), note: g('rt-note') };
+  $('#b-rt').disabled = true;
+  const vi = { ...(S.config.vehicleInfo || {}) }; vi[v] = { ...(vi[v] || {}), retired: ret };
+  const ok = await write(() => S.db.doc('config/main').set({ ...S.config, vehicles: (S.config.vehicles || []).filter(x => x !== v), vehicleInfo: vi }), `已登記「${v}」${ret.type}，紀錄都保留`);
+  if (ok) { closeEditor(); render(); } else if ($('#b-rt')) $('#b-rt').disabled = false;
+}
+async function restoreCar(v) {
+  const pv = isPriv(v);
+  if (!pv && (S.config.vehicles || []).includes(v)) { toast(`已經有叫「${v}」的車`); return; }
+  const vi = { ...(S.config.vehicleInfo || {}) }; const x = { ...(vi[v] || {}) }; delete x.retired; vi[v] = x;
+  await write(() => S.db.doc('config/main').set({ ...S.config, vehicles: pv ? (S.config.vehicles || []) : [...(S.config.vehicles || []), v], vehicleInfo: vi }), pv ? `已恢復「${v}」` : `已恢復「${v}」，排班又可以選了`);
+  render();
+}
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-act]'); if (!t) return; const a = t.dataset.act;
+  if (a === 'fv') { S.fleetV = t.dataset.v; S.fleetKind = '全部'; render(); scrollTo(0, 0); }
+  else if (a === 'fback') { S.fleetV = null; render(); scrollTo(0, 0); }
+  else if (a === 'fkind') { S.fleetKind = t.dataset.k; render(); }
+  else if (a === 'fcper') { S.costPer = t.dataset.p; render(); }
+  else if (a === 'frnew') openFR({ vehicle: S.fleetV, kind: VKINDS.includes(S.fleetKind) && S.fleetKind !== '保險' ? S.fleetKind : '保養', date: todayStr(), km: odo(S.fleetV) ?? '' });
+  else if (a === 'fredit') { const r = S.vrec.get(t.dataset.rid); if (r) openFR(r); }
+  else if (a === 'frkind') { const r = readFR(); if (FR.kind !== t.dataset.k) { r.sub = ''; r.nextDate = ''; r.remind = ''; } FR.kind = t.dataset.k; drawFR(r); }
+  else if (a === 'frplus') {
+    if (t.dataset.f === 'nk') { const base = +(($('#fr-km')?.value || '').replace(/[^\d]/g, '')) || odo($('#fr-v').value) || 0; $('#fr-nk').value = base + +t.dataset.n; }
+    else { const d = $('#fr-d').value || todayStr(); $('#fr-nd').value = addMonths(d, +t.dataset.n); }
+  }
+  else if (a === 'fitadd') { $('#fr-items').insertAdjacentHTML('beforeend', itemRow({ name: '', cost: null, note: '' })); $('#fr-items .fit:last-child .it-n').focus(); }
+  else if (a === 'fitdel') { t.closest('.fit').remove(); if (!$('#fr-items .fit')) $('#fr-items').insertAdjacentHTML('beforeend', itemRow({ name: '', cost: null, note: '' })); itemsSum(); }
+  else if (a === 'fterm') {
+    // 有空白的行就填進去，沒有就加一行；游標跳到金額
+    let row = [...document.querySelectorAll('#fr-items .fit')].find(el => !el.querySelector('.it-n').value.trim());
+    if (!row) { $('#fr-items').insertAdjacentHTML('beforeend', itemRow({ name: '', cost: null, note: '' })); row = $('#fr-items .fit:last-child'); }
+    row.querySelector('.it-n').value = t.dataset.t; row.querySelector('.it-c').focus();
+  }
+  else if (a === 'ftermedit') { FR.termEdit = !FR.termEdit; $('#fr-terms').innerHTML = termsHTML(FR.kind); if (FR.termEdit) $('#ft-in')?.focus(); }
+  else if (a === 'ftermadd' || a === 'ftermdel') {
+    const list = [...terms(FR.kind)];
+    let next = list;
+    if (a === 'ftermadd') { const v = ($('#ft-in')?.value || '').trim(); if (!v) { $('#ft-in')?.focus(); return; } if (list.includes(v)) { toast(`已經有「${v}」`); return; } next = [...list, v]; }
+    else next = list.filter(x => x !== t.dataset.t);
+    saveConfig({ ...S.config, fleetTerms: { ...(S.config.fleetTerms || {}), [FR.kind]: next } });
+    $('#fr-terms').innerHTML = termsHTML(FR.kind); $('#fr-termlist').innerHTML = next.map(x => `<option value="${esc(x)}"></option>`).join(''); $('#ft-in')?.focus();
+  }
+  else if (a === 'phview') { e.preventDefault(); viewPhoto(t.getAttribute('src')); }
+  else if (a === 'phdel') { FR.photos.splice(+t.dataset.i, 1); $('#fr-ph').innerHTML = photosHTML(); }
+  else if (a === 'frsave') saveFR(!!t.dataset.next);
+  else if (a === 'frdel') delFR(t);
+  else if (a === 'fiedit') openFI(S.fleetV);
+  else if (a === 'fvnew') openFI(null);
+  else if (a === 'fvnewp') openFI(null, true);
+  else if (a === 'fkmlog') openFR({ vehicle: S.fleetV, kind: '里程', date: todayStr(), km: '' });
+  else if (a === 'fplend') {
+    const v = S.fleetV; const on = isLent(v);
+    saveConfig({ ...S.config, vehicles: on ? (S.config.vehicles || []).filter(x => x !== v) : [...(S.config.vehicles || []), v] });
+    toast(on ? `已關閉，排班不會再出現「${v}」` : `已開放，排班時可以選「${v}」`);
+  }
+  else if (a === 'fktol') { const n = +(($('#ktol')?.value || '').replace(/[^\d.]/g, '')); if (!(n >= 0)) { toast('請填數字'); return; } saveConfig({ ...S.config, kmTol: n }); toast(`容忍值改成 ${n} km`); }
+  else if (a === 'finsnew') openFR({ vehicle: S.fleetV, kind: '保險', type: insCurrent(S.fleetV).some(r => polType(r) === '強制險') ? '任意險' : '強制險', date: todayStr() });
+  else if (a === 'frptype') { const r = readIns(); r.type = t.dataset.t; r.sub = r.type; drawIns(r); }
+  else if (a === 'finsrenew') { const r = S.vrec.get(t.dataset.rid); if (r) { const d0 = r.nextDate || todayStr(); openFR({ vehicle: r.vehicle, kind: '保險', type: polType(r), vendor: r.vendor, agent: r.agent || '', agentPhone: r.agentPhone || '', ref: '', date: d0, nextDate: addMonths(d0, 12), coverages: polCovs(r).map(c => ({ ...c })), cost: r.cost, renewOf: r.id }); } }
+  else if (a === 'fisave') saveFI();
+  else if (a === 'firetire') { const v = FI.v; closeEditor(); openRetire(v); }
+  else if (a === 'frtsave') saveRetire();
+  else if (a === 'frestore') restoreCar(t.dataset.v);
+});
+document.addEventListener('input', e => {
+  if (e.target.matches('#fr-items .it-c')) itemsSum();
+  if (e.target.id === 'fr-km' || e.target.id === 'fr-d') kmHint();
+  if (e.target.id === 'fr-c') { if (e.target.value.trim()) e.target.dataset.manual = '1'; else { delete e.target.dataset.manual; itemsSum(); } }
+});
+document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id === 'ft-in') { e.preventDefault(); document.querySelector('[data-act=ftermadd]')?.click(); } });
+document.addEventListener('change', async e => {
+  if (e.target.id !== 'fr-file' || !FR) return;
+  const files = [...e.target.files]; e.target.value = '';
+  for (const f of files) { try { FR.photos.push(await shrink(f)); } catch (err) { toast(err.message || '照片讀取失敗'); } }
+  $('#fr-ph').innerHTML = photosHTML();
+});
 
 /* ---------- 匯出整月／半月為 PNG 或 PDF ---------- */
 const EXPORT_LIBS = {
@@ -1750,7 +2625,7 @@ async function doExport() {
     await loadScript(EXPORT_LIBS.img); if (EX.fmt === 'pdf') await loadScript(EXPORT_LIBS.pdf);
     root.setAttribute('data-theme', 'light'); S.focus = ''; EXPORTING = { times: EX.times };
     const stamp = new Date().toLocaleString('zh-TW', { hour12: false, month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-    box.innerHTML = `<div class="exhead"><b>金星班表</b><span>${y}年${m + 1}月　${md(dates[0])}–${md(dates.at(-1))}</span><small>${stamp} 匯出</small></div>` + renderDays(dates);
+    box.innerHTML = `<div class="exhead"><b>${APP_NAME}・班表</b><span>${y}年${m + 1}月　${md(dates[0])}–${md(dates.at(-1))}</span><small>${stamp} 匯出</small></div>` + renderDays(dates);
     box.querySelectorAll('.day.today').forEach(d => d.classList.remove('today'));
     document.body.appendChild(wrap);
     const scale = 2;
@@ -1822,28 +2697,33 @@ try { applyZoom(localStorage.getItem('zoom') || 100); applyFull(localStorage.get
    ==================================================================== */
 const SC = window.SCHEDULE_CONFIG || {};
 const DEMO = new URLSearchParams(location.search).has('demo');
-const LIST_NAMES = Object.assign({ staff: '人員', options: '車輛選項', jobs: '場次', ext: '外調車輛', days: '每日狀態', trash: '最近刪除', times: '工時', mileage: '里程紀錄' }, SC.lists || {});
-const OPTIONAL_LISTS = ['trash', 'times', 'mileage']; // 還沒建立也能開，只是那個功能不能用
+const LIST_NAMES = Object.assign({ staff: '人員', options: '車輛選項', jobs: '場次', ext: '外調車輛', days: '每日狀態', trash: '最近刪除', times: '工時', mileage: '里程紀錄', vrec: '車輛紀錄', prec: '私人車紀錄' }, SC.lists || {});
+// 單據照片放的文件庫（公司車、私人車分開，權限也分開）
+const LIB_NAMES = Object.assign({ vrec: '車輛單據', prec: '私人車單據' }, SC.libraries || {});
+const OPTIONAL_LISTS = ['trash', 'times', 'mileage', 'vrec', 'prec']; // 還沒建立也能開，只是那個功能不能用
 // 每個欄位：[英文名稱, 中文名稱]。程式會比對內部名稱、英文顯示名稱、中文顯示名稱。
 const FIELD_DEFS = {
   staff: { name: ['Title', '姓名'], group: ['Group', '組別'], order: ['SortOrder', '排序'], active: ['Active', '啟用'], email: ['Email', '電子郵件'], leader: ['Leader', '負責人'] },
-  options: { name: ['Title', '名稱'], cat: ['Category', '類別'], order: ['SortOrder', '排序'], serviceKm: ['ServiceKm', '保養里程'] },
+  options: { name: ['Title', '名稱'], cat: ['Category', '類別'], order: ['SortOrder', '排序'], serviceKm: ['ServiceKm', '保養里程'], serviceDate: ['ServiceDate', '下次保養日'] },
   jobs: { title: ['Title', '場次名稱'], key: ['JobKey', '場次代碼'], date: ['JobDate', '日期'], start: ['StartTime', '開始時間'], end: ['EndTime', '結束時間'], timeNote: ['TimeNote', '時間說明'], people: ['Staff', '人員'], leaders: ['Leaders', '帶班'], vehicles: ['Vehicles', '車輛'], unattended: ['Unattended', '不留守'], note: ['Note', '備註'], order: ['SortOrder', '排序'], address: ['Address', '地址'], teams: ['Teams', '團隊'] },
   ext: { company: ['Title', '公司'], key: ['JobKey', '場次代碼'], date: ['JobDate', '日期'], type: ['CarType', '車種'], plate: ['Plate', '車號'], driver: ['Driver', '司機姓名'], phone: ['Phone', '電話'], ok: ['Confirmed', '已確認'] },
   days: { key: ['Title', '日期代碼'], date: ['DayDate', '日期'], leave: ['Leave', '休假'], office: ['Office', '公司'] },
   trash: { title: ['Title', '場次名稱'], data: ['Data', '資料'] },
   times: { name: ['Title', '姓名'], job: ['JobKey', '場次代碼'], date: ['JobDate', '日期'], slot: ['Slot', '團隊序號'], member: ['Member', '團隊成員'], start: ['StartTime', '開始時間'], end: ['EndTime', '結束時間'] },
-  mileage: { vehicle: ['Title', '車輛'], kind: ['Kind', '類型'], job: ['JobKey', '場次代碼'], date: ['KmDate', '日期'], tStart: ['TimeStart', '出發時間'], tEnd: ['TimeEnd', '回來時間'], start: ['StartKm', '起始里程'], end: ['EndKm', '完成里程'], driver: ['Driver', '駕駛'], note: ['Note', '備註'] }
+  mileage: { vehicle: ['Title', '車輛'], kind: ['Kind', '類型'], job: ['JobKey', '場次代碼'], date: ['KmDate', '日期'], tStart: ['TimeStart', '出發時間'], tEnd: ['TimeEnd', '回來時間'], start: ['StartKm', '起始里程'], end: ['EndKm', '完成里程'], driver: ['Driver', '駕駛'], note: ['Note', '備註'], gap: ['Gap', '里程差距'] },
+  // 車輛紀錄、私人車紀錄：一筆＝一筆紀錄（或一台車的基本資料、或設定），細節整包放在 Data（JSON）
+  vrec: { vehicle: ['Title', '車輛'], kind: ['Kind', '類別'], date: ['RecDate', '日期'], cost: ['Cost', '金額'], data: ['Data', '詳細資料'] },
+  prec: { vehicle: ['Title', '車輛'], kind: ['Kind', '類別'], date: ['RecDate', '日期'], cost: ['Cost', '金額'], data: ['Data', '詳細資料'] }
 };
-const DATE_KEYS = { jobs: ['date'], ext: ['date'], days: ['date'], times: ['date'], mileage: ['date'] };
+const DATE_KEYS = { jobs: ['date'], ext: ['date'], days: ['date'], times: ['date'], mileage: ['date'], options: ['serviceDate'], vrec: ['date'], prec: ['date'] };
 // 是/否欄位：匯入時若被設成數字或文字（1/0、是/否），讀寫時自動轉換
 const BOOL_KEYS = { staff: ['active'], jobs: ['unattended'], ext: ['ok'] };
 const toBool = v => (v === null || v === undefined || v === '') ? undefined : v === true || v === 1 || /^(1|true|yes|y|是)$/i.test(String(v).trim());
 // 清單沒有這欄也能用，只是那項資料不會存
-const OPTIONAL_FIELDS = { ext: ['phone'], staff: ['email', 'leader'], options: ['serviceKm'], jobs: ['address', 'teams'], times: ['slot', 'member'] };
+const OPTIONAL_FIELDS = { ext: ['phone'], staff: ['email', 'leader'], options: ['serviceKm', 'serviceDate'], jobs: ['address', 'teams'], times: ['slot', 'member'], mileage: ['gap'] };
 const OPT_CATS = [['vehicles', '公司車輛'], ['extCompanies', '外調公司'], ['carTypes', '車種']];
 // 權限對應的群組（config.js 的 groups）。「排班編輯」沿用原本的 editorGroupId。
-const PERM_LABEL = { edit: '排班編輯', timeSelf: '班表-填自己時間', timeSupport: '班表-填支援時間', viewTime: '班表-看大家時間', editTime: '班表-改大家時間', km: '班表-登記里程', export: '班表-匯出', admin: '班表-權限管理' };
+const PERM_LABEL = { edit: '排班編輯', timeSelf: '班表-填自己時間', timeSupport: '班表-填支援時間', viewTime: '班表-看大家時間', editTime: '班表-改大家時間', km: '班表-登記里程', export: '班表-匯出', admin: '班表-權限管理', fleet: '班表-車輛管理', private: '車輛-私人車' };
 const isBlank = v => !v || /請填/.test(v);
 const GID = (() => { const g = Object.assign({}, SC.groups || {}); if (isBlank(g.edit)) g.edit = SC.editorGroupId; for (const k of Object.keys(g)) if (isBlank(g[k])) delete g[k]; return g; })();
 const splitNames = s => String(s ?? '').split(/[;；]/).map(x => x.trim()).filter(Boolean);
@@ -1906,7 +2786,7 @@ function getToken(scopes = SCOPES) {
 /* ---------- SharePoint 清單與群組（Microsoft Graph） ---------- */
 function graphBackend() {
   const G = 'https://graph.microsoft.com/v1.0';
-  let site = null; const ids = {}, cols = {}, kinds = {};
+  let site = null; const ids = {}, cols = {}, kinds = {}, drives = {};
   async function call(method, url, body, opt = {}, tries = 0) {
     let r;
     try {
@@ -2022,6 +2902,25 @@ function graphBackend() {
     async create(k, f) { if (!ids[k] && !(await ensure(k, true))) throw userErr(`讀不到「${LIST_NAMES[k]}」清單：${why[k] || ''}。如果剛加權限，SharePoint 可能要幾分鐘到一小時才會生效，請稍後重新整理再試。`); const r = await guard(k, call('POST', `${L(k)}/items`, { fields: out(k, f) })); return r.id; },
     async patch(k, id, f) { await guard(k, call('PATCH', `${L(k)}/items/${id}/fields`, out(k, f))); },
     async remove(k, id) { await guard(k, call('DELETE', `${L(k)}/items/${id}`)); },
+    /* 文件庫（單據照片） */
+    async drive(lib) {
+      if (drives[lib]) return drives[lib];
+      const name = LIB_NAMES[lib];
+      const lists = await all(`/sites/${site.id}/lists?$select=id,displayName,name&$top=200`);
+      const l = lists.find(x => x.displayName === name) || lists.find(x => x.name === name);
+      if (!l) throw userErr(`找不到文件庫「${name}」，或你沒有權限。請管理員檢查文件庫名稱和權限。`);
+      const d = await call('GET', `/sites/${site.id}/lists/${l.id}/drive?$select=id`);
+      return (drives[lib] = d.id);
+    },
+    async upload(lib, name, blob) {
+      const did = await this.drive(lib);
+      const r = await fetch(`${G}/drives/${did}/root:/${encodeURIComponent(name)}:/content?@microsoft.graph.conflictBehavior=rename`, { method: 'PUT', headers: { Authorization: 'Bearer ' + await getToken(), 'Content-Type': blob.type || 'image/jpeg' }, body: blob });
+      if (!r.ok) throw userErr(r.status === 403 ? `沒有權限把照片存進「${LIB_NAMES[lib]}」，請管理員檢查你的群組。` : `照片上傳失敗（${r.status}），請再試一次。`);
+      return (await r.json()).id;
+    },
+    // 照片網址：微軟給的暫時下載網址（約一小時有效），直接當圖片來源
+    async fileUrl(lib, id) { const did = await this.drive(lib); const j = await call('GET', `/drives/${did}/items/${id}`); return j['@microsoft.graph.downloadUrl'] || ''; },
+    async delFile(lib, id) { const did = await this.drive(lib); try { await call('DELETE', `/drives/${did}/items/${id}`); } catch (e) { if (e.status !== 404) throw e; } },
     /* 帳號與群組 */
     async me() { const u = await call('GET', '/me?$select=id,displayName,mail,userPrincipalName'); return { id: u.id, name: u.displayName || '', mail: u.mail || '', upn: u.userPrincipalName || '' }; },
     async myGroups(gids) { if (!gids.length) return []; const r = await call('POST', '/me/checkMemberGroups', { groupIds: gids }); return r.value || []; },
@@ -2045,7 +2944,7 @@ function memoryBackend(seed) {
   const db = {}; let n = 1;
   const me = seed.users[0];
   for (const [k, rows] of Object.entries(seed.lists)) db[k] = rows.map(f => ({ id: String(n++), f: { ...f }, author: me, editor: me, at: Date.now() }));
-  const groups = clone(seed.groups);
+  const groups = clone(seed.groups); const files = {};
   const lag = () => new Promise(r => setTimeout(r, 40));
   return {
     async init() {}, has: k => !!db[k], hasCol: () => true, raw: async () => ({ value: [] }),
@@ -2053,6 +2952,9 @@ function memoryBackend(seed) {
     async create(k, f) { await lag(); const id = String(n++); (db[k] ||= []).push({ id, f: { ...f }, author: me, editor: me, at: Date.now() }); return id; },
     async patch(k, id, f) { await lag(); const r = (db[k] || []).find(x => x.id === id); if (!r) throw Object.assign(new Error('找不到資料'), { code: 'error' }); Object.assign(r.f, f); r.editor = me; r.at = Date.now(); },
     async remove(k, id) { await lag(); db[k] = (db[k] || []).filter(x => x.id !== id); },
+    async upload(lib, name, blob) { const id = 'f' + (n++); files[id] = URL.createObjectURL(blob); return id; },
+    async fileUrl(lib, id) { return files[id] || ''; },
+    async delFile(lib, id) { delete files[id]; },
     async me() { return { ...me, upn: me.mail }; },
     async myGroups(gids) { return gids.filter(g => (groups[g] || []).includes(me.id)); },
     async members(gid) { await lag(); return (groups[gid] || []).map(id => seed.users.find(u => u.id === id)).filter(Boolean).map(u => ({ ...u, upn: u.mail })); },
@@ -2082,16 +2984,16 @@ function demoSeed() {
   const days = [{ key: d(t), date: d(t), leave: '吳承恩', office: '劉育成' }, { key: d(t + 1), date: d(t + 1), leave: '李志豪', office: '' }];
   const users = [{ id: 'u-me', name: '管理員（示範）', mail: 'admin@example.com' }, ...reg.slice(0, 4).map((n, i) => ({ id: 'u' + i, name: n, mail: mail(n) })), { id: 'u-office', name: '行政 小美', mail: 'office@example.com' }];
   const all = users.map(u => u.id), reg4 = ['u0', 'u1', 'u2', 'u3'];
-  const groups = { 'g-team': all, 'g-edit': ['u-me'], 'g-self': reg4, 'g-sup': reg4, 'g-view': ['u-me', 'u-office'], 'g-km': ['u-me', ...reg4], 'g-export': ['u-me', 'u-office'], 'g-admin': ['u-me'] };
-  Object.assign(GID, { edit: 'g-edit', timeSelf: 'g-self', timeSupport: 'g-sup', viewTime: 'g-view', km: 'g-km', export: 'g-export', admin: 'g-admin' });
+  const groups = { 'g-team': all, 'g-edit': ['u-me'], 'g-self': reg4, 'g-sup': reg4, 'g-view': ['u-me', 'u-office'], 'g-km': ['u-me', ...reg4], 'g-export': ['u-me', 'u-office'], 'g-admin': ['u-me'], 'g-fleet': ['u-me', 'u-office'], 'g-priv': ['u-me'] };
+  Object.assign(GID, { edit: 'g-edit', timeSelf: 'g-self', timeSupport: 'g-sup', viewTime: 'g-view', km: 'g-km', export: 'g-export', admin: 'g-admin', fleet: 'g-fleet', private: 'g-priv' });
   SC.teamGroupId = 'g-team';
-  return { lists: { staff, options, jobs, ext, days, trash: [], times: [], mileage: [] }, users, groups };
+  return { lists: { staff, options, jobs, ext, days, trash: [], times: [], mileage: [], vrec: [], prec: [] }, users, groups };
 }
 
 /* ---------- 把清單包成畫面原本使用的資料介面（collection / doc / onSnapshot） ---------- */
 function makeDb(B, ME) {
-  const M = { jobs: new Map(), ext: new Map(), days: new Map(), trash: new Map(), times: new Map(), mileage: new Map(), staff: [], opts: [], accounts: [], myPerms: [] };
-  const subs = { jobs: [], days: [], trash: [], times: [], mileage: [], config: [] };
+  const M = { jobs: new Map(), ext: new Map(), days: new Map(), trash: new Map(), times: new Map(), mileage: new Map(), vrecords: new Map(), vinfo: {}, terms: null, termsItem: null, staff: [], opts: [], accounts: [], myPerms: [] };
+  const subs = { jobs: [], days: [], trash: [], times: [], mileage: [], vrecords: [], config: [] };
   const last = {};
   let gen = 0, busy = 0, syncT = null, syncing = null, accAt = 0;
   const textOf = s => { s = String(s ?? ''); return /^\s*</.test(s) ? new DOMParser().parseFromString(s, 'text/html').body.textContent : s; };
@@ -2106,7 +3008,14 @@ function makeDb(B, ME) {
   const cfg = () => {
     const c = { staff: M.staff.slice().sort(byOrder).map(s => ({ name: s.name, group: s.group || '正職', ...(s.leader ? { leader: s.leader } : {}), ...(s.active === false ? { active: false } : {}) })) };
     for (const [k, cat] of OPT_CATS) c[k] = M.opts.filter(o => o.cat === cat).sort(byOrder).map(o => o.name);
-    c.vehicleService = {}; for (const o of M.opts) if (o.cat === '公司車輛' && o.serviceKm) c.vehicleService[o.name] = o.serviceKm;
+    // 排班可選的車＝公司車輛＋開放排班的私人車（車輛選項的類別「私人車」）
+    c.vehicles = [...c.vehicles, ...M.opts.filter(o => o.cat === '私人車').sort(byOrder).map(o => o.name)];
+    c.vehicleService = {}; c.vehicleServiceDate = {};
+    for (const o of M.opts) if (o.cat === '公司車輛' || o.cat === '私人車') { if (o.serviceKm) c.vehicleService[o.name] = o.serviceKm; if (o.serviceDate) c.vehicleServiceDate[o.name] = o.serviceDate; }
+    c.vehicleInfo = {}; for (const [n, x] of Object.entries(M.vinfo)) c.vehicleInfo[n] = clone(x.info);
+    for (const o of M.opts) if (o.cat === '私人車') c.vehicleInfo[o.name] = { ...(c.vehicleInfo[o.name] || {}), private: true };
+    c.fleetTerms = clone(M.terms || {});
+    const tol = M.opts.find(o => o.cat === '設定' && o.name === '里程容忍值'); c.kmTol = tol && tol.serviceKm != null ? tol.serviceKm : 3;
     c.accounts = accountsView();
     return c;
   };
@@ -2146,7 +3055,7 @@ function makeDb(B, ME) {
 
   async function load() {
     const g = gen;
-    const [js, xs, dd, st, op, tr, tm, km] = await Promise.all(['jobs', 'ext', 'days', 'staff', 'options', 'trash', 'times', 'mileage'].map(k => B.items(k)));
+    const [js, xs, dd, st, op, tr, tm, km, vr, pr] = await Promise.all(['jobs', 'ext', 'days', 'staff', 'options', 'trash', 'times', 'mileage', 'vrec', 'prec'].map(k => B.items(k)));
     if (g !== gen || busy) return false; // 讀取途中有人存檔，這次的結果可能是舊的，丟掉等下一輪
     const ext = new Map();
     for (const r of xs) { const k = r.f.key; if (!k) continue; if (!ext.has(k)) ext.set(k, []); ext.get(k).push({ itemId: r.id, v: extOf(r) }); }
@@ -2154,7 +3063,7 @@ function makeDb(B, ME) {
     M.jobs = new Map(js.map(r => { const id = r.f.key || ('sp' + r.id); return [id, { itemId: r.id, data: jobOf(r.f, ext.get(id)) }]; }));
     M.days = new Map(dd.map(r => [r.f.key || r.f.date, { itemId: r.id, data: { leave: splitNames(r.f.leave), office: splitNames(r.f.office) } }]));
     M.staff = st.map(r => ({ itemId: r.id, name: String(r.f.name || '').trim(), group: r.f.group || '正職', order: r.f.order, active: r.f.active !== false, email: String(r.f.email || '').trim(), leader: String(r.f.leader || '').trim() })).filter(s => s.name);
-    M.opts = op.map(r => ({ itemId: r.id, name: String(r.f.name || '').trim(), cat: r.f.cat || '', order: r.f.order, serviceKm: num(r.f.serviceKm) })).filter(o => o.name);
+    M.opts = op.map(r => ({ itemId: r.id, name: String(r.f.name || '').trim(), cat: r.f.cat || '', order: r.f.order, serviceKm: num(r.f.serviceKm), serviceDate: r.f.serviceDate || '' })).filter(o => o.name);
     M.trash = new Map();
     for (const r of tr) { try { const t = JSON.parse(textOf(r.f.data)); if (t && t.id && t.job) M.trash.set(t.id, { itemId: r.id, data: { job: t.job, deletedAt: t.deletedAt, batch: t.batch } }); } catch (_) {} }
     // 工時：一人一場一筆。SharePoint 只會給你看得到的那幾筆（沒有「看大家時間」的人只拿得到自己建的）
@@ -2168,7 +3077,19 @@ function makeDb(B, ME) {
     }
     // 同一人同一場有好幾筆時（例如排班編輯改過別人填的），畫面挑最新、而且填寫人有資格的那筆
     for (const t of M.times.values()) { t.all.sort((a, b) => b.at - a.at); t.data = { ...t.all[0].data, alts: t.all.slice(1).map(x => x.data) }; }
-    M.mileage = new Map(km.map(r => { const f = r.f; return ['k' + r.id, { itemId: r.id, data: { kind: f.kind === 'misc' ? 'misc' : 'job', jobId: f.job || null, vehicle: f.vehicle || '', date: f.date || '', tStart: f.tStart || '', tEnd: f.tEnd || '', start: num(f.start), end: num(f.end), driver: f.driver || '', note: f.note || '', by: r.editor.name || r.author.name } }]; }));
+    // 里程紀錄：Kind＝check 是車輛管理的「里程盤點」，放到車輛紀錄那邊顯示
+    const gapOf = v => { const g = num(v); return g ? { gap: Math.abs(g), gapType: g < 0 ? 'back' : 'gap' } : {}; };
+    M.mileage = new Map(km.filter(r => r.f.kind !== 'check').map(r => { const f = r.f; return ['k' + r.id, { itemId: r.id, data: { kind: f.kind === 'misc' ? 'misc' : 'job', jobId: f.job || null, vehicle: f.vehicle || '', date: f.date || '', tStart: f.tStart || '', tEnd: f.tEnd || '', start: num(f.start), end: num(f.end), driver: f.driver || '', note: f.note || '', ...gapOf(f.gap), by: r.editor.name || r.author.name } }]; }));
+    // 車輛紀錄、私人車紀錄：Kind＝車輛 是基本資料，Kind＝設定 是常用項目，其他是紀錄
+    M.vinfo = {}; M.terms = null; M.termsItem = null; M.vrecords = new Map();
+    for (const [k, rows] of [['vrec', vr], ['prec', pr]]) for (const r of rows) {
+      const f = r.f; let d = {}; try { d = JSON.parse(textOf(f.data) || '{}') || {}; } catch (_) {}
+      const v = String(f.vehicle || '').trim();
+      if (f.kind === '車輛') { if (v) M.vinfo[v] = { itemId: r.id, k, info: k === 'prec' ? { ...d, private: true } : d }; continue; }
+      if (f.kind === '設定') { if (k === 'vrec' && v === '常用項目') { M.terms = d; M.termsItem = r.id; } continue; }
+      M.vrecords.set((k === 'vrec' ? 'v' : 'p') + r.id, { itemId: r.id, k, data: { ...d, vehicle: v, kind: f.kind || '', date: f.date || '', cost: num(f.cost), by: r.editor.name || r.author.name } });
+    }
+    for (const r of km.filter(r => r.f.kind === 'check')) { const f = r.f; M.vrecords.set('c' + r.id, { itemId: r.id, k: 'mileage', data: { vehicle: f.vehicle || '', kind: '里程', date: f.date || '', km: num(f.start), note: f.note || '', photos: [], ...gapOf(f.gap), by: r.editor.name || r.author.name } }); }
     if (Date.now() - accAt > 5 * 60e3) await loadAccounts();
     return true;
   }
@@ -2258,14 +3179,94 @@ function makeDb(B, ME) {
   /* 用車里程 */
   async function setKm(id, data) {
     const rec = M.mileage.get(id);
-    const f = { vehicle: data.vehicle || '', kind: data.kind === 'misc' ? 'misc' : 'job', job: data.jobId || '', date: data.date || '', tStart: data.tStart || '', tEnd: data.tEnd || '', start: data.start, end: data.end, driver: data.driver || '', note: data.note || '' };
+    const f = { vehicle: data.vehicle || '', kind: data.kind === 'misc' ? 'misc' : 'job', job: data.jobId || '', date: data.date || '', tStart: data.tStart || '', tEnd: data.tEnd || '', start: data.start, end: data.end, driver: data.driver || '', note: data.note || '', gap: data.gap ? (data.gapType === 'back' ? -data.gap : data.gap) : null };
     let itemId = rec?.itemId;
     if (itemId) await B.patch('mileage', itemId, f); else itemId = await B.create('mileage', f);
     M.mileage.delete(id); M.mileage.set('k' + itemId, { itemId, data: { ...clone(data), by: ME.name } }); emit('mileage');
   }
   async function delKm(id) { const rec = M.mileage.get(id); if (!rec) return; await B.remove('mileage', rec.itemId); M.mileage.delete(id); emit('mileage'); }
+  /* 車輛紀錄（車輛管理頁） */
+  const isPrivV = v => !!(M.vinfo[v]?.info?.private || M.opts.some(o => o.cat === '私人車' && o.name === v));
+  const safeName = s => String(s).replace(/[\\/:*?"<>|#%{}~&]/g, '_').slice(0, 120);
+  // 照片：新加的（data: 開頭）上傳到文件庫，拿掉的從文件庫刪除；紀錄裡只存檔案代碼
+  async function photosSync(data, old, lib) {
+    const out = [];
+    for (const p of (data.photos || [])) {
+      if (p.id) { out.push({ name: p.name || '', id: p.id, lib: p.lib || lib }); continue; }
+      if (!p.src || !p.src.startsWith('data:')) continue;
+      const blob = await (await fetch(p.src)).blob();
+      const fname = safeName(`${data.date || todayStr()}_${data.vehicle}_${data.kind}_${newId().slice(0, 6)}.jpg`);
+      const fid = await B.upload(lib, fname, blob);
+      PHOTO_URL.set(fid, p.src);
+      out.push({ name: p.name || fname, id: fid, lib });
+    }
+    const keep = new Set(out.map(p => p.id));
+    for (const p of (old?.photos || [])) if (p.id && !keep.has(p.id)) await B.delFile(p.lib || lib, p.id).catch(e => console.warn('刪除照片失敗', e));
+    return out;
+  }
+  // 保養紀錄改了：把下次保養里程、下次保養日寫回「車輛選項」，沒有車輛管理權限的同事班表上也看得到提醒
+  async function svcBack(v) {
+    const o = M.opts.find(x => (x.cat === '公司車輛' || x.cat === '私人車') && x.name === v); if (!o) return;
+    const recs = [...M.vrecords.values()].map(x => x.data).filter(r => r.vehicle === v && r.kind === '保養')
+      .sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')) || (+b.km || 0) - (+a.km || 0));
+    if (!recs.length) return;
+    const withKm = recs.find(r => r.nextKm != null && r.nextKm !== ''); const ch = {};
+    if (withKm && B.hasCol('options', 'serviceKm') && (o.serviceKm ?? null) !== +withKm.nextKm) ch.serviceKm = +withKm.nextKm;
+    if (B.hasCol('options', 'serviceDate') && (o.serviceDate || '') !== (recs[0].nextDate || '')) ch.serviceDate = recs[0].nextDate || '';
+    if (Object.keys(ch).length) { await B.patch('options', o.itemId, ch); Object.assign(o, ch); }
+  }
+  async function setVrec(id, data) {
+    const rec = M.vrecords.get(id);
+    const priv = isPrivV(data.vehicle);
+    // 公司車的「里程」寫進里程紀錄（Kind＝check），用車登記的人才看得到、容忍值才比得到
+    const k = data.kind === '里程' && !priv ? 'mileage' : priv ? 'prec' : 'vrec';
+    const d = clone(data); delete d.by; delete d.id;
+    d.photos = k === 'mileage' ? [] : await photosSync(d, rec?.data, k);
+    let f;
+    if (k === 'mileage') f = { vehicle: d.vehicle || '', kind: 'check', job: '', date: d.date || '', tStart: '', tEnd: '', start: d.km, end: d.km, driver: '', note: d.note || '', gap: d.gap ? (d.gapType === 'back' ? -d.gap : d.gap) : null };
+    else { const { vehicle, kind, date, cost, ...rest } = d; f = { vehicle: vehicle || '', kind: kind || '', date: date || '', cost: cost ?? null, data: JSON.stringify(rest) }; }
+    let itemId = rec && rec.k === k ? rec.itemId : null;
+    if (itemId) await B.patch(k, itemId, f); else itemId = await B.create(k, f);
+    if (rec && rec.k !== k) await B.remove(rec.k, rec.itemId).catch(() => {});
+    M.vrecords.delete(id); M.vrecords.set((k === 'vrec' ? 'v' : k === 'prec' ? 'p' : 'c') + itemId, { itemId, k, data: { ...d, by: ME.name } });
+    if (d.kind === '保養' || rec?.data.kind === '保養') { await svcBack(d.vehicle); if (rec && rec.data.vehicle !== d.vehicle) await svcBack(rec.data.vehicle); }
+    emit('vrecords'); emit('config');
+  }
+  async function delVrec(id) {
+    const rec = M.vrecords.get(id); if (!rec) return;
+    for (const p of (rec.data.photos || [])) if (p.id) await B.delFile(p.lib || rec.k, p.id).catch(e => console.warn('刪除照片失敗', e));
+    await B.remove(rec.k, rec.itemId); M.vrecords.delete(id);
+    if (rec.data.kind === '保養') await svcBack(rec.data.vehicle);
+    emit('vrecords'); emit('config');
+  }
+  // 車輛基本資料、常用項目：存在車輛紀錄（私人車存在私人車紀錄）
+  async function setVinfo(before, next) {
+    const nv = next.vehicleInfo || {}, bv = before.vehicleInfo || {};
+    const changed = Object.keys(nv).filter(n => JSON.stringify(nv[n]) !== JSON.stringify(bv[n]));
+    const removed = Object.keys(bv).filter(n => !(n in nv) && M.vinfo[n]);
+    const added = changed.filter(n => !M.vinfo[n]);
+    const body = (n, info) => ({ vehicle: n, kind: '車輛', date: '', cost: null, data: JSON.stringify(info) });
+    if (removed.length === 1 && added.length === 1) { // 改別名：沿用同一筆
+      const r = M.vinfo[removed[0]], n = added[0], info = nv[n], k = info.private ? 'prec' : 'vrec';
+      if (k === r.k) { await B.patch(k, r.itemId, body(n, info)); M.vinfo[n] = { itemId: r.itemId, k, info }; delete M.vinfo[removed[0]]; changed.splice(changed.indexOf(n), 1); removed.length = 0; }
+    }
+    for (const n of removed) { const r = M.vinfo[n]; await B.remove(r.k, r.itemId); delete M.vinfo[n]; }
+    for (const n of changed) {
+      const info = nv[n], k = info.private ? 'prec' : 'vrec', r = M.vinfo[n];
+      if (!r && info.private && Object.keys(info).length === 1) continue; // 只是「這台是私人車」的標記（沒有私人車權限的人看到的）
+      if (r && r.k === k) await B.patch(k, r.itemId, body(n, info));
+      else { const itemId = await B.create(k, body(n, info)); if (r) await B.remove(r.k, r.itemId).catch(() => {}); M.vinfo[n] = { itemId, k, info }; continue; }
+      M.vinfo[n] = { ...r, info };
+    }
+    if (next.fleetTerms && JSON.stringify(next.fleetTerms) !== JSON.stringify(before.fleetTerms || {})) {
+      const f = { vehicle: '常用項目', kind: '設定', date: '', cost: null, data: JSON.stringify(next.fleetTerms) };
+      if (M.termsItem) await B.patch('vrec', M.termsItem, f); else M.termsItem = await B.create('vrec', f);
+      M.terms = clone(next.fleetTerms);
+    }
+  }
   /* 人員名單與車輛選單：比對前後差異，只改有變的那幾筆 */
   async function setConfig(next) {
+    const before = cfg();
     const items = M.staff;
     const byName = new Map(items.map(s => [s.name, s]));
     const wantNames = (next.staff || []).map(p => p.name);
@@ -2291,25 +3292,36 @@ function makeDb(B, ME) {
       if (canLeader && (s.leader || '') !== leader) ch.leader = leader;
       if (Object.keys(ch).length) { await B.patch('staff', s.itemId, ch); Object.assign(s, ch); }
     }), 5);
-    const svc = next.vehicleService || {}, canSvc = B.hasCol('options', 'serviceKm');
-    for (const [k, cat] of OPT_CATS) {
-      const cur = M.opts.filter(o => o.cat === cat); const want = next[k] || [];
+    await setVinfo(before, next);
+    const svc = next.vehicleService || {}, sdt = next.vehicleServiceDate, canSvc = B.hasCol('options', 'serviceKm'), canSd = B.hasCol('options', 'serviceDate');
+    const privOf = n => !!(next.vehicleInfo?.[n]?.private);
+    const cats = [['公司車輛', (next.vehicles || []).filter(n => !privOf(n))], ['私人車', (next.vehicles || []).filter(privOf)], ['外調公司', next.extCompanies || []], ['車種', next.carTypes || []]];
+    for (const [cat, want] of cats) {
+      const cur = M.opts.filter(o => o.cat === cat);
       const gone = cur.filter(o => !want.includes(o.name)); const fresh = want.filter(n => !cur.some(o => o.name === n));
       if (gone.length === 1 && fresh.length === 1) { const o = gone[0]; await B.patch('options', o.itemId, { name: fresh[0] }); o.name = fresh[0]; gone.length = 0; }
       await pool(gone.map(o => async () => { await B.remove('options', o.itemId); M.opts = M.opts.filter(x => x !== o); }));
       await pool(want.map((n, i) => async () => {
         const o = M.opts.find(x => x.cat === cat && x.name === n), order = i + 1;
-        const sk = cat === '公司車輛' ? num(svc[n]) : null;
+        const isCar = cat === '公司車輛' || cat === '私人車'; const sk = isCar ? num(svc[n]) : null; const sd = isCar && sdt ? (sdt[n] || '') : null;
         if (sk && !canSvc) throw userErr('「車輛選項」清單還沒有 ServiceKm 欄位，保養里程存不進去。請管理員照設定紀錄新增欄位。');
-        if (!o) { const id = await B.create('options', { name: n, cat, order, ...(canSvc && sk ? { serviceKm: sk } : {}) }); M.opts.push({ itemId: id, name: n, cat, order, serviceKm: sk }); return; }
+        if (!o) { const id = await B.create('options', { name: n, cat, order, ...(canSvc && sk ? { serviceKm: sk } : {}), ...(canSd && sd ? { serviceDate: sd } : {}) }); M.opts.push({ itemId: id, name: n, cat, order, serviceKm: sk, serviceDate: sd || '' }); return; }
         const ch = {};
         if (o.order !== order) ch.order = order;
-        if (canSvc && cat === '公司車輛' && (o.serviceKm || null) !== sk) ch.serviceKm = sk;
+        if (canSvc && isCar && (o.serviceKm || null) !== sk) ch.serviceKm = sk;
+        if (canSd && sd !== null && (o.serviceDate || '') !== sd) ch.serviceDate = sd;
         if (Object.keys(ch).length) { await B.patch('options', o.itemId, ch); Object.assign(o, ch); }
       }), 5);
     }
+    // 用車里程容忍值：存在車輛選項（類別「設定」），用車登記的人都讀得到
+    if (next.kmTol != null && +next.kmTol !== +before.kmTol) {
+      if (!canSvc) throw userErr('「車輛選項」清單沒有 ServiceKm 欄位，容忍值存不進去。');
+      const o = M.opts.find(x => x.cat === '設定' && x.name === '里程容忍值');
+      if (o) { await B.patch('options', o.itemId, { serviceKm: +next.kmTol }); o.serviceKm = +next.kmTol; }
+      else { const id = await B.create('options', { name: '里程容忍值', cat: '設定', order: 1, serviceKm: +next.kmTol }); M.opts.push({ itemId: id, name: '里程容忍值', cat: '設定', order: 1, serviceKm: +next.kmTol, serviceDate: '' }); }
+    }
     if (next.accounts) await setAccountsReal(next.accounts);
-    emit('config');
+    emit('config'); emit('vrecords');
   }
   /* 權限管理頁：打勾＝加入群組；對應排班人員＝寫進人員清單的 Email 欄 */
   async function setAccountsReal(list) {
@@ -2344,6 +3356,7 @@ function makeDb(B, ME) {
     trash: { set: setTrash, update: (id, p) => setTrash(id, { ...(M.trash.get(id)?.data || {}), ...p }), delete: delTrash },
     times: { set: setTime, update: (id, p) => setTime(id, { ...(M.times.get(id)?.data || {}), ...p }), delete: delTime },
     mileage: { set: setKm, update: (id, p) => setKm(id, { ...(M.mileage.get(id)?.data || {}), ...p }), delete: delKm },
+    vrecords: { set: setVrec, update: (id, p) => { const r = M.vrecords.get(id); if (!r) throw Object.assign(new Error('找不到這筆紀錄，可能已被別人刪除'), { code: 'error' }); return setVrec(id, { ...r.data, ...p }); }, delete: delVrec },
     config: { set: (_, next) => setConfig(next), update: (_, p) => setConfig({ ...cfg(), ...p }), delete: async () => {} }
   };
   const docRef = (c, id) => ({
@@ -2353,6 +3366,7 @@ function makeDb(B, ME) {
     delete: () => w(() => handlers[c].delete(id)),
     onSnapshot: cb => { subs[c].push(cb); if (last[c] !== undefined) cb(snapOf(c)); return () => {}; }
   });
+  window.__loadPhoto = p => B.fileUrl(p.lib || 'vrec', p.id);
   return {
     collection: c => ({ doc: id => docRef(c, id || newId()), onSnapshot: cb => { subs[c].push(cb); if (last[c] !== undefined) cb(snapOf(c)); return () => {}; } }),
     doc: path => { const [c, id] = path.split('/'); return docRef(c, id); },
@@ -2392,7 +3406,7 @@ render();
       S.dbMsg = '正在用公司帳號登入…'; render();
       await initAuth();
       await getToken();
-      S.dbMsg = '正在讀取排班資料…'; render();
+      S.dbMsg = S.page === 'fleet' ? '正在讀取車輛資料…' : '正在讀取排班資料…'; render();
       B = graphBackend();
       await B.init();
     }
@@ -2403,6 +3417,7 @@ render();
     db.collection('days').onSnapshot(snap => { S.days = new Map(snap.docs.map(d => [d.id, d.data()])); S.loaded.days = true; refresh(); });
     db.collection('times').onSnapshot(snap => { S.times = new Map(snap.docs.map(d => [d.id, d.data()])); refresh(); });
     db.collection('mileage').onSnapshot(snap => { S.km = new Map(snap.docs.map(d => [d.id, { id: d.id, ...d.data() }])); refresh(); if (KML) openKmList(); else if (KM) kmInfo(); });
+    db.collection('vrecords').onSnapshot(snap => { S.vrec = new Map(snap.docs.map(d => [d.id, { id: d.id, ...d.data() }])); refresh(); });
     db.collection('trash').onSnapshot(snap => {
       S.trash = new Map(snap.docs.map(d => [d.id, { id: d.id, ...d.data() }]));
       const b = $('#trashbtn'); b.hidden = !S.trash.size || S.canWrite === false; b.textContent = `最近刪除 ${S.trash.size}`;
@@ -2410,7 +3425,7 @@ render();
     });
     db.doc('config/main').onSnapshot(snap => {
       const c = snap.exists ? snap.data() : {};
-      S.config = { staff: c.staff || [], vehicles: c.vehicles || [], extCompanies: c.extCompanies || [], carTypes: c.carTypes || [], vehicleService: c.vehicleService || {}, accounts: c.accounts || [] };
+      S.config = { staff: c.staff || [], vehicles: c.vehicles || [], extCompanies: c.extCompanies || [], carTypes: c.carTypes || [], vehicleService: c.vehicleService || {}, vehicleServiceDate: c.vehicleServiceDate || {}, vehicleInfo: c.vehicleInfo || {}, fleetTerms: c.fleetTerms || {}, kmTol: c.kmTol ?? 3, accounts: c.accounts || [] };
       applyMe(); fillMeSelect();
       S.loaded.config = true; refresh();
     });

@@ -3,29 +3,38 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>新增金星班表分頁</title>
+<title>新增金星工作站分頁</title>
 <script src="https://res.cdn.office.net/teams-js/2.58.0/js/MicrosoftTeams.min.js" integrity="sha384-sMo/EOqQPa1OCup2/VBRum7oFeOS22kvs8WGDc45xK53tUVZzFR5WwFYDUYN1LO4" crossorigin="anonymous"></script>
 <style>
   body { font-family: "Microsoft JhengHei", "PingFang TC", system-ui, sans-serif; margin: 24px; color: #1b2220; background: transparent; line-height: 1.6; }
-  @media (prefers-color-scheme: dark) { body { color: #e6ebe9; } }
+  @media (prefers-color-scheme: dark) { body { color: #e6ebe9; } label { border-color: #3a4240 !important; } }
   h1 { font-size: 18px; margin: 0 0 8px; }
-  p { margin: 0; font-size: 14px; }
+  p { margin: 0 0 14px; font-size: 14px; }
+  label { display: flex; gap: 10px; align-items: flex-start; border: 1px solid #d9dfdc; border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; cursor: pointer; max-width: 460px; }
+  label:has(input:checked) { border-color: #1d55b8; box-shadow: 0 0 0 1px #1d55b8; }
+  label b { display: block; font-size: 15px; }
+  label small { color: #5f6a66; font-size: 13px; }
+  input { margin-top: 5px; }
 </style>
 </head>
 <body>
-<h1>金星班表</h1>
-<p>按右下角的「儲存」，就會把金星班表加成這個頻道的分頁。</p>
+<h1>金星工作站</h1>
+<p>選擇這個頻道要放哪一個分頁，再按右下角的「儲存」。</p>
+<label><input type="radio" name="page" value="sched" checked><span><b>班表</b><small>排班、休假、工作時間、用車里程。放在一般頻道（例如「排班」）。</small></span></label>
+<label><input type="radio" name="page" value="fleet"><span><b>車輛管理</b><small>車輛資料、保險、保養、維修、驗車、費用。放在私人頻道「車輛管理」。</small></span></label>
 <script>
-  // Teams 新增頻道分頁時會開這一頁；按「儲存」後把排班表的網址交給 Teams
+  // Teams 新增頻道分頁時會開這一頁；按「儲存」後把網址交給 Teams
   const home = new URL('./', location.href).href;
-  microsoftTeams.app.initialize().then(() => {
+  const PAGES = {
+    sched: { entityId: 'schedule', contentUrl: home, websiteUrl: home, suggestedDisplayName: '排班' },
+    fleet: { entityId: 'fleet', contentUrl: home + '?page=fleet', websiteUrl: home + '?page=fleet', suggestedDisplayName: '車輛管理' }
+  };
+  const pick = () => document.querySelector('input[name=page]:checked').value;
+  microsoftTeams.app.initialize().then(async () => {
+    // 在私人頻道裡新增時，預先選好「車輛管理」
+    try { const c = await microsoftTeams.app.getContext(); if (c && c.channel && /private/i.test(c.channel.membershipType || '')) document.querySelector('input[value=fleet]').checked = true; } catch (_) {}
     microsoftTeams.pages.config.registerOnSaveHandler(ev => {
-      microsoftTeams.pages.config.setConfig({
-        entityId: 'schedule',
-        contentUrl: home,
-        websiteUrl: home,
-        suggestedDisplayName: '排班'
-      }).then(() => ev.notifySuccess()).catch(err => ev.notifyFailure(String(err)));
+      microsoftTeams.pages.config.setConfig(PAGES[pick()]).then(() => ev.notifySuccess()).catch(err => ev.notifyFailure(String(err)));
     });
     microsoftTeams.pages.config.setValidityState(true);
   });
