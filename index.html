@@ -56,6 +56,7 @@ main{padding-block:14px 80px;zoom:var(--zoom,1)}
 .zv:focus-within{border-color:var(--accent)}
 .zv input[type=text]{border:0;border-radius:0;background:none;width:2.2em;min-width:0;text-align:right;font-family:var(--font-num);font-size:13px;color:var(--ink);padding:1px 0;outline:none}
 #fullw[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+#rolebtn[aria-pressed="true"]{background:var(--warn-bg);border-color:var(--warn);color:var(--warn)}
 body.full .wrap{max-width:none}
 @media (max-width:1000px){.wideonly{display:none}}
 @media (max-width:480px){.zoomctl input[type=range]{width:90px}}
@@ -109,6 +110,12 @@ body.full .wrap{max-width:none}
 .chip.check{background:var(--warn-bg);color:var(--warn);border-color:color-mix(in srgb,var(--warn) 50%,transparent)}
 .chip sup{font-size:10px;font-family:var(--font-num)}
 .jsub{font-size:14px;font-weight:400;color:var(--muted)}
+.jaddr{display:inline-flex;align-items:center;gap:8px;margin-left:24px;font-size:13px;font-weight:400;color:var(--muted);min-width:0}
+.jaddr .addr{overflow-wrap:anywhere}
+.mapbtn{display:inline-flex;align-items:center;gap:3px;border:1px solid color-mix(in srgb,var(--accent) 40%,var(--line));border-radius:6px;padding:1px 8px;color:var(--accent);text-decoration:none;font-size:12px;white-space:nowrap;background:var(--surface)}
+.mapbtn:hover{background:var(--accent-soft)}
+@media (max-width:560px){.jaddr{margin-left:0;flex-basis:100%}}
+
 .unatt{font-size:12px;border:1px solid var(--line);border-radius:4px;padding:0 6px;color:var(--muted);font-weight:400}
 .note{margin:0;font-size:13px;color:var(--muted)}
 .emptymsg{color:var(--muted);font-size:13px}
@@ -135,7 +142,7 @@ table.pg{border-collapse:separate;border-spacing:0;font-size:13px;min-width:100%
 .set2{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:14px;align-items:start}
 .ph{margin-bottom:12px}
 .ph p{margin:2px 0 0}
-.scols{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.scols{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
 .scol{border:1px solid var(--line);border-radius:10px;padding:8px;background:var(--surface-2);min-width:0;transition:border-color .1s,background .1s}
 .scol.drop-col{border-color:var(--accent);background:var(--accent-soft)}
 .scol-h{display:flex;align-items:baseline;gap:8px;padding:2px 4px 8px}
@@ -209,7 +216,7 @@ table.pg{border-collapse:separate;border-spacing:0;font-size:13px;min-width:100%
 .grp{font-size:12px;color:var(--muted);margin:8px 0 4px;letter-spacing:.06em}
 .addrow{display:flex;gap:6px;flex-wrap:wrap}
 .addrow input{flex:1;min-width:100px}
-input[type=text],input[type=tel],input[type=date],input[type=time],textarea,select.inp{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 10px;min-width:0}
+input[type=text],input[type=date],input[type=time],textarea,select.inp{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 10px;min-width:0}
 textarea{width:100%;resize:vertical;min-height:56px}
 .btn{border:0;border-radius:8px;padding:8px 16px;font-weight:500;background:var(--accent);color:var(--accent-ink)}
 .btn.sec{background:var(--surface-2);color:var(--ink);border:1px solid var(--line)}
@@ -263,7 +270,7 @@ textarea{width:100%;resize:vertical;min-height:56px}
 .ext-row{display:grid;gap:6px;padding:6px 8px;border:1px solid var(--bad);background:var(--bad-bg);border-radius:8px}
 .ext-row.ok{border-color:var(--line);background:var(--surface-2)}
 .ext-sub{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
-.ext-sub input[type=text],.ext-sub input[type=tel],.ext-sub select{flex:0 1 7.5em;min-width:5.5em;padding:3px 8px;font-size:13px;height:30px;border:1px solid var(--line);background:var(--surface);border-radius:7px}
+.ext-sub input[type=text],.ext-sub select{flex:0 1 7.5em;min-width:5.5em;padding:3px 8px;font-size:13px;height:30px;border:1px solid var(--line);background:var(--surface);border-radius:7px}
 .ext-sub select.empty{color:var(--muted)}
 .ext-sub input.newopt{border-color:var(--accent)}
 .ext-sub .chk{font-size:13px;gap:4px;margin-left:auto}
@@ -305,6 +312,76 @@ textarea{width:100%;resize:vertical;min-height:56px}
 .exopt{display:inline-flex;gap:6px;align-items:center;border:1px solid var(--line);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:14px}
 .exopt:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
 .exopt input{margin:0}
+button.chip{font:inherit;font-size:14px;line-height:inherit;cursor:pointer}
+.chip.kmable:hover{border-color:var(--accent)}
+.chip.due{background:var(--bad-bg);color:var(--bad);border-color:var(--bad);font-weight:600}
+.kmd{font-size:11px;color:var(--muted);font-family:var(--font-num);margin-left:2px}
+.chip.due .kmd{color:inherit}
+.pick.due{border-color:var(--bad);color:var(--bad)}
+.pick.due i{color:var(--bad)}
+.pick.due[aria-pressed="true"]{background:var(--bad);border-color:var(--bad);color:#fff}
+.pick.due[aria-pressed="true"] i{color:#fff}
+.vlist{display:grid;gap:6px}
+.vrow{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--surface-2)}
+.vrow.due{border-color:var(--bad);background:var(--bad-bg)}
+.vrow.due .vkm b,.vrow.due .vname{color:var(--bad)}
+.vname{font-size:15px;min-width:4.5em}
+.vkm{font-size:12px;color:var(--muted);font-family:var(--font-num)}
+.vbtns{margin-left:auto;display:flex;gap:4px;align-items:center}
+.vrow.editing input[type=text]{padding:4px 8px}
+.vrow.editing #vn-input{width:8em}
+.vsv{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.vsv input{width:7em}
+.kminfo{margin:0}
+.bad{color:var(--bad)}
+.kmlist{display:grid;border-top:1px solid var(--line)}
+.kmrow{display:grid;grid-template-columns:88px 84px 1fr auto;gap:4px 10px;align-items:center;text-align:left;border:0;border-bottom:1px solid var(--line);background:none;padding:8px 4px;font-size:14px;color:inherit}
+.kmrow:hover{background:var(--surface-2)}
+.kmrow.due .kv{color:var(--bad)}
+.kd{font-family:var(--font-num);font-size:13px;color:var(--muted)}
+.kt{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kn{font-family:var(--font-num);font-size:13px;white-space:nowrap}
+.ktag{font-style:normal;font-size:11px;border:1px solid var(--line);border-radius:4px;padding:0 4px;margin-right:4px;color:var(--muted)}
+@media (max-width:560px){.kmrow{grid-template-columns:70px 1fr}.kmrow .kt,.kmrow .kn{grid-column:1/-1}}
+.mebox{display:inline-flex;align-items:center;gap:6px;font-weight:600}
+.mebox select{border:1px solid currentColor;background:var(--surface);color:var(--ink);border-radius:6px;padding:1px 6px;font-size:13px}
+.tmd{font-size:11px;font-family:var(--font-num);color:var(--muted);margin-left:2px;font-weight:400}
+.chip.me .tmd{color:inherit;opacity:.85}
+.chip.tmable{border-style:dashed;border-color:color-mix(in srgb,var(--accent) 45%,transparent)}
+.chip.tmable:hover{border-color:var(--accent);border-style:solid}
+.warn{color:var(--warn)}
+.permpanel{overflow:hidden}
+.permwrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px}
+table.permtbl{border-collapse:separate;border-spacing:0;font-size:13px;min-width:100%}
+.permtbl th,.permtbl td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:center;vertical-align:middle;white-space:nowrap}
+.permtbl thead th{background:var(--surface-2);font-weight:500;font-size:12px;white-space:normal;min-width:64px;max-width:90px;line-height:1.3}
+.permtbl .pname{position:sticky;left:0;background:var(--surface);text-align:left;font-weight:600;font-size:14px;z-index:1}
+.permtbl thead .pname{background:var(--surface-2)}
+.permtbl .pname small{display:block;font-weight:400;font-size:11px;color:var(--accent)}
+.permtbl tr.meRow td,.permtbl tr.meRow .pname{background:var(--accent-soft)}
+.permtbl .pc input{width:18px;height:18px;accent-color:var(--accent);cursor:pointer}
+.permtbl select.inp{padding:3px 6px;font-size:13px;max-width:9em}
+.chip.team{background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 35%,transparent)}
+.chip.team b{font-weight:600;margin-left:2px}
+.teamed{margin-top:8px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);display:grid;gap:6px}
+.teamed-h{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;font-size:14px}
+.teamed-h label{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+.teamed-h select{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:2px 6px}
+.tmembers{display:flex;flex-wrap:wrap;gap:6px}
+.tmembers input{width:7em;padding:4px 8px;font-size:13px}
+.tdnames{display:flex;flex-wrap:wrap;gap:6px}
+.tdtime{font-size:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.offlist{margin-top:12px;font-size:13px;color:var(--muted)}
+.offlist summary{cursor:pointer;padding:4px 0}
+.offlist .tchip small{margin-left:4px;color:var(--muted);font-size:11px}
+.offlist .tchip button{color:var(--accent)}
+.tdmlist{display:grid;border-top:1px solid var(--line)}
+.tdm{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;padding:6px 0;border-bottom:1px solid var(--line);font-size:14px}
+.tdmn{min-width:6em;font-weight:500}
+.tdmt{flex:1;font-family:var(--font-num);font-size:13px}
+.leadn{display:block;font-size:11px;font-weight:400;color:var(--muted)}
+.leadsel{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+.leadsel select{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:3px 6px}
 .notice{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;color:var(--muted)}
 .ro .mini.add,.ro .ownly{display:none}
 .ro .job,.ro .pg .cell-job{cursor:default}
@@ -321,6 +398,7 @@ textarea{width:100%;resize:vertical;min-height:56px}
         <button id="tab-day" data-view="day" aria-pressed="true">依日期</button>
         <button id="tab-person" data-view="person" aria-pressed="false">依人員</button>
         <button id="tab-set" data-view="set" aria-pressed="false">人員管理</button>
+        <button id="tab-perm" data-view="perm" aria-pressed="false" hidden>權限管理</button>
       </div>
       <div class="viewctl">
         <div class="zoomctl" role="group" aria-label="顯示大小">
@@ -342,6 +420,7 @@ textarea{width:100%;resize:vertical;min-height:56px}
       <select class="ghost" id="focus" aria-label="只看某人"><option value="">全部人員</option></select>
       <button class="ghost" id="trashbtn" data-act="trash" hidden>最近刪除</button>
       <button class="ghost" id="exportbtn" type="button">匯出</button>
+      <button class="ghost" id="kmbtn" type="button" data-act="kmlist">用車紀錄</button>
       <span class="status" id="status">連線中…</span>
     </div>
   </div>
@@ -364,8 +443,8 @@ const $ = s => document.querySelector(s);
 const md = s => { const d = parseD(s); return `${d.getMonth() + 1}/${d.getDate()}`; };
 
 const S = {
-  db: null, canWrite: true, jobs: new Map(), days: new Map(), trash: new Map(),
-  config: { staff: [], vehicles: [], extCompanies: [], carTypes: [] }, view: 'day',
+  db: null, canWrite: true, jobs: new Map(), days: new Map(), trash: new Map(), km: new Map(), times: new Map(), me: null, meId: '',
+  config: { staff: [], vehicles: [], extCompanies: [], carTypes: [], vehicleService: {}, accounts: [] }, view: 'day',
   month: (() => { const d = new Date(); return { y: d.getFullYear(), m: d.getMonth() }; })(),
   focus: '', loaded: { jobs: false, days: false, config: false }, scrolled: false
 };
@@ -375,8 +454,17 @@ try { S.focus = localStorage.getItem('focus') || ''; const v = localStorage.getI
 const jobsOn = date => [...S.jobs.values()].filter(j => j.date === date).sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || String(a.start || '99').localeCompare(String(b.start || '99')));
 const leaveOn = date => new Set(S.days.get(date)?.leave || []);
 const officeOn = date => new Set(S.days.get(date)?.office || []);
+/* 車輛里程：目前里程＝這台車所有用車登記中最大的里程數 */
+const kmFmt = n => n == null || n === '' || isNaN(n) ? '' : Number(n).toLocaleString('en-US');
+const kmLogs = v => [...S.km.values()].filter(r => r.vehicle === v);
+const odo = v => { let m = null; for (const r of kmLogs(v)) for (const x of [r.start, r.end]) if (x != null && x !== '' && !isNaN(x) && (m == null || +x > m)) m = +x; return m; };
+const serviceKm = v => { const s = (S.config.vehicleService || {})[v]; return s == null || s === '' ? null : +s; };
+const isDue = v => { const s = serviceKm(v), o = odo(v); return s != null && o != null && o >= s; };
+const jobKm = (jid, v) => [...S.km.values()].find(r => r.jobId === jid && r.vehicle === v);
+const isActive = p => p.active !== false;
+const activeStaff = () => S.config.staff.filter(isActive);
 const allNames = () => {
-  const s = new Set(S.config.staff.map(p => p.name));
+  const s = new Set(activeStaff().map(p => p.name));
   for (const j of S.jobs.values()) (j.people || []).forEach(p => s.add(p));
   return [...s];
 };
@@ -412,9 +500,18 @@ function analyze(date) {
     }
   };
   scan('people', 'p'); scan('vehicles', 'v');
+  // 同一場同一個人不要同時排成「個人」又排在團隊裡，時間會重複計算
+  list.forEach(j => { const mem = new Set((j.teams || []).flatMap(t => (t.members || []).filter(Boolean))); (j.people || []).filter(n => mem.has(n)).forEach(n => issues.push({ lv: 'check', t: `${n} 在「${j.title}」同時排成個人和團隊成員，請擇一` })); });
   [...officeOn(date)].filter(n => leave.has(n)).forEach(n => issues.push({ lv: 'bad', t: `${n} 這天同時排在公司和休假` }));
   jobsOn(date).forEach(j => (j.ext || []).filter(e => !e.ok && extFilled(e)).forEach(e => issues.push({ lv: 'bad', t: `「${j.title}」外調車輛「${extLabel(e)}」還沒確認` })));
   return { flags, issues };
+}
+// 地址：放在場次名稱右邊，地圖按鈕用 Google 地圖搜尋這個地址
+const mapUrl = a => 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(a);
+function addrHTML(j) {
+  const a = (j.address || '').trim(); if (!a) return '';
+  const pin = '<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>';
+  return `<span class="jaddr">${EXPORTING ? '' : `<a class="mapbtn" data-act="map" href="${esc(mapUrl(a))}" target="_blank" rel="noopener" title="在地圖上開啟">${pin}地圖</a>`}<span class="addr">${esc(a)}</span></span>`;
 }
 function timeHTML(j) {
   const t = j.start ? (j.end ? `${j.start}–${isOvernight(j) ? '隔天' : ''}${j.end}` : j.start) : '';
@@ -426,15 +523,16 @@ function timeHTML(j) {
 function render() {
   document.querySelectorAll('.tabs button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.view === S.view)));
   $('#mlabel').textContent = `${S.month.y}年${S.month.m + 1}月`;
-  const fs = $('#focus'); const names = S.config.staff.filter(p => (p.group || '正職') === '正職').map(p => p.name);
+  const fs = $('#focus'); const names = activeStaff().filter(p => (p.group || '正職') === '正職').map(p => p.name);
   if (S.focus && S.config.staff.length && !names.includes(S.focus)) S.focus = '';
   fs.innerHTML = '<option value="">全部人員</option>' + names.map(n => `<option ${n === S.focus ? 'selected' : ''}>${esc(n)}</option>`).join('');
   document.body.classList.toggle('ro', S.canWrite === false);
-  { const tb = $('#trashbtn'); if (tb) tb.hidden = !S.trash.size || S.canWrite === false; } { const eb = $('#exportbtn'); if (eb) eb.hidden = S.canWrite === false; } // 最近刪除、匯出只給有編輯權限的人
+  { const tb = $('#trashbtn'); if (tb) tb.hidden = !S.trash.size || S.canWrite === false; } { const eb = $('#exportbtn'); if (eb) eb.hidden = !can('export'); const kb = $('#kmbtn'); if (kb) kb.hidden = !can('km'); const pt = $('#tab-perm'); if (pt) pt.hidden = !can('admin'); } // 最近刪除、匯出只給有編輯權限的人
   const main = $('#main');
   if (!S.db) { main.innerHTML = `<div class="notice">${S.dbMsg || '正在連線排班資料…'}</div>`; return; }
   if (S.view === 'person') main.innerHTML = renderPerson();
   else if (S.view === 'set') main.innerHTML = renderSettings();
+  else if (S.view === 'perm') main.innerHTML = renderPerm();
   else main.innerHTML = renderDays();
   if (S.view === 'day' && !S.scrolled && S.loaded.jobs) {
     S.scrolled = true;
@@ -477,18 +575,43 @@ function jobRow(j, idx, f) {
   const has = S.focus && ((j.people || []).includes(S.focus));
   const dim = S.focus && !has ? 'dim' : '';
   const leads = new Set(j.leaders || []);
-  const pChip = n => { const st = f['p:' + n]; const me = n === S.focus ? 'me' : ''; const ld = leads.has(n) ? 'lead' : ''; return `<span class="chip ${st && st !== 'ok' ? st : ''} ${me} ${ld}" ${ld ? 'title="帶班"' : ''}>${esc(n)}${st === 'ok' ? '<sup>2</sup>' : ''}</span>`; };
-  const vChip = n => { const st = f['v:' + n]; return `<span class="chip v ${st && st !== 'ok' ? st : ''}">${esc(n)}</span>`; };
+  const pChip = n => {
+    const st = f['p:' + n]; const me = n === S.focus ? 'me' : ''; const ld = leads.has(n) ? 'lead' : '';
+    const tr = timeOf(j.id, n); const show = EXPORTING ? EXPORTING.times : true;
+    const tm = tr && show ? ` <small class="tmd">${esc(timeText(tr))}</small>` : '';
+    const inner = `${esc(n)}${st === 'ok' ? '<sup>2</sup>' : ''}${tm}`;
+    const cls = `chip ${st && st !== 'ok' ? st : ''} ${me} ${ld}`;
+    return !EXPORTING && !j.unattended && canFillTime(n)
+      ? `<button type="button" class="${cls} tmable" data-act="time" data-id="${esc(j.id)}" data-n="${esc(n)}" title="${ld ? '帶班・' : ''}點一下填工作時間">${inner}</button>`
+      : `<span class="${cls}" data-n="${esc(n)}" ${ld ? 'title="帶班"' : ''}>${inner}</span>`;
+  };
+  const vChip = n => {
+    const st = f['v:' + n]; const company = (S.config.vehicles || []).includes(n);
+    const r = company ? jobKm(j.id, n) : null; const due = company && isDue(n);
+    const km = r ? (r.start != null && r.end != null ? ` <small class="kmd">${kmFmt(r.end - r.start)}km</small>` : ' <small class="kmd">已登記</small>') : '';
+    const cls = `chip v ${st && st !== 'ok' ? st : ''} ${due ? 'due' : ''} ${company ? 'kmable' : ''}`;
+    return company && can('km') && !EXPORTING
+      ? `<button type="button" class="${cls}" data-act="km" data-id="${esc(j.id)}" data-v="${esc(n)}" title="${due ? '已到保養里程・' : ''}點一下登記用車里程">${esc(n)}${km}</button>`
+      : `<span class="${cls}" ${due ? 'title="已到保養里程"' : ''}>${esc(n)}${km}</span>`;
+  };
   const ppl = [...(j.people || [])].sort((a, b) => leads.has(b) - leads.has(a));
   const sup = new Set(S.config.staff.filter(p => p.group === '支援').map(p => p.name));
   const pReg = ppl.filter(n => !sup.has(n)).map(pChip).join('');
-  const pSup = ppl.filter(n => sup.has(n)).map(pChip).join('');
+  const tChip = t => {
+    const show = EXPORTING ? EXPORTING.times : true; const ts = teamTimeSummary(j, t);
+    const tm = ts && show ? ` <small class="tmd">${esc(ts)}</small>` : '';
+    const names = teamNames(t); const tip = names.length ? names.join('、') : '沒有填姓名';
+    return EXPORTING
+      ? `<span class="chip team" title="${esc(tip)}">${esc(t.name)} <b>${t.count || 0}人</b>${tm}</span>`
+      : `<button type="button" class="chip team" data-act="team" data-id="${esc(j.id)}" data-t="${esc(t.name)}" title="${esc(tip)}">${esc(t.name)} <b>${t.count || 0}人</b>${tm}</button>`;
+  };
+  const pSup = ppl.filter(n => sup.has(n)).map(pChip).join('') + (j.teams || []).filter(t => t && t.name).map(tChip).join('');
   const veh = (j.vehicles || []).map(vChip).join('');
   const ext = (j.ext || []).filter(extFilled).map(e => { const d = extDetail(e); const dt = d ? `<small class="exd">${esc(d)}</small>` : ''; return e.ok ? `<span class="chip v ext-ok">${esc(extLabel(e))}${dt} ✓</span>` : `<span class="chip leave">${esc(extLabel(e))}${dt}・未確認</span>`; }).join('');
   return `<article class="job ${dim}" data-act="edit" data-id="${esc(j.id)}" tabindex="0">
     ${timeHTML(j)}
     <div class="jm">
-      <h3><span class="num">${idx + 1}</span>${esc(j.title || '（未命名）')}${j.timeNote ? `<span class="jsub">${esc(j.timeNote)}</span>` : ''}${j.unattended ? '<span class="unatt">不留守</span>' : ''}</h3>
+      <h3><span class="num">${idx + 1}</span>${esc(j.title || '（未命名）')}${j.timeNote ? `<span class="jsub">${esc(j.timeNote)}</span>` : ''}${j.unattended ? '<span class="unatt">不留守</span>' : ''}${addrHTML(j)}</h3>
       ${pReg ? `<div class="chips"><span class="k">正職</span>${pReg}</div>` : ''}
       ${pSup ? `<div class="chips"><span class="k">支援</span>${pSup}</div>` : ''}
       ${veh ? `<div class="chips"><span class="k">車輛</span>${veh}</div>` : ''}
@@ -500,7 +623,7 @@ function jobRow(j, idx, f) {
 function renderPerson() {
   const dates = monthDates(); const today = todayStr();
   const ana = Object.fromEntries(dates.map(d => [d, analyze(d)]));
-  const names = allNames();
+  const mon = new Set(dates); const names = [...new Set([...allNames(), ...[...S.jobs.values()].filter(j => mon.has(j.date)).flatMap(j => [...(j.people || []), ...(j.teams || []).map(t => t.name)])])];
   if (!names.length) return '<div class="notice">還沒有人員名單，到「人員管理」新增。</div>';
   let h = '<div class="gridwrap"><table class="pg"><thead><tr><th class="name">人員</th><th>天數</th>';
   for (const d of dates) { const w = parseD(d).getDay(); h += `<th class="${d === today ? 'tcol' : ''}">${md(d)}<small style="${w === 0 || w === 6 ? 'color:var(--bad)' : ''}">${WD[w]}</small></th>`; }
@@ -508,11 +631,11 @@ function renderPerson() {
   for (const n of names) {
     let cnt = 0, cells = '';
     for (const d of dates) {
-      const js = jobsOn(d).filter(j => (j.people || []).includes(n));
+      const js = jobsOn(d).filter(j => (j.people || []).includes(n) || (j.teams || []).some(t => t.name === n));
       const off = leaveOn(d).has(n); const ofc = officeOn(d).has(n);
       if (js.length || ofc) cnt++;
       const fl = ana[d].flags;
-      cells += `<td class="${d === today ? 'tcol' : ''}">${off ? '<span class="off">休</span>' : ''}${ofc ? '<span class="ofc">公司</span>' : ''}${js.map(j => { const st = (fl.get(j.id) || {})['p:' + n]; const c = st === 'leave' || st === 'clash' ? 'bad' : st === 'check' ? 'check' : ''; const ld = (j.leaders || []).includes(n) ? 'lead' : ''; return `<button class="cell-job ${c} ${ld}" data-act="edit" data-id="${esc(j.id)}" title="${esc(j.title)}">${esc((j.start ? j.start + ' ' : '') + j.title)}</button>`; }).join('')}</td>`;
+      cells += `<td class="${d === today ? 'tcol' : ''}">${off ? '<span class="off">休</span>' : ''}${ofc ? '<span class="ofc">公司</span>' : ''}${js.map(j => { const st = (fl.get(j.id) || {})['p:' + n]; const c = st === 'leave' || st === 'clash' ? 'bad' : st === 'check' ? 'check' : ''; const ld = (j.leaders || []).includes(n) ? 'lead' : ''; const tt = (j.teams || []).find(t => t.name === n); return `<button class="cell-job ${c} ${ld}" data-act="edit" data-id="${esc(j.id)}" title="${esc(j.title)}">${esc((j.start ? j.start + ' ' : '') + j.title + (tt ? ` ${tt.count || 0}人` : ''))}</button>`; }).join('')}</td>`;
     }
     h += `<tr><th class="name">${esc(n)}</th><td class="cnt">${cnt}</td>${cells}</tr>`;
   }
@@ -520,10 +643,11 @@ function renderPerson() {
 }
 function renderSettings() {
   const tab = S.setTab || 'people';
-  const staffBy = g => S.config.staff.filter(p => (p.group || '正職') === g);
+  const staffBy = g => activeStaff().filter(p => (p.group || '正職') === g);
+  const off = S.config.staff.filter(p => !isActive(p));
   const col = g => { const list = staffBy(g); return `<div class="scol" data-group="${g}">
-      <div class="scol-h"><b>${g}</b><span>${list.length} 人</span></div>
-      <div class="scards">${list.map(staffCard).join('')}${addChip('staff', g, '＋ 新增' + g)}</div>
+      <div class="scol-h"><b>${GLABEL[g] || g}</b><span>${list.length} ${g === '團隊' ? '隊' : '人'}</span></div>
+      <div class="scards">${list.map(staffCard).join('')}${addChip('staff', g, '＋ 新增' + (g === '團隊' ? '團隊' : GLABEL[g] || g))}</div>
     </div>`; };
   return `<div class="settabs" role="group" aria-label="切換">
       <button data-act="settab" data-tab="people" aria-pressed="${tab === 'people'}">人員</button>
@@ -532,11 +656,12 @@ function renderSettings() {
     <div class="set2 show-${tab}">
       <section class="panel ppl">
         <div class="ph"><h2>人員</h2><p>拖曳 ⋮⋮ 調整順序，拖到另一欄就是換組。排班時依這個順序列出。改名會一併更新已排的場次和休假。</p></div>
-        <div class="scols">${col('正職')}${col('支援')}</div>
+        <div class="scols">${col('正職')}${col('支援')}${col('團隊')}</div>
+        ${off.length ? `<details class="offlist"><summary>已停用 ${off.length} 位（以前的場次與時間都保留）</summary><div class="chipsrow">${off.map(p => `<span class="tchip">${esc(p.name)}<small>${esc(GLABEL[p.group] || p.group || '')}</small>${S.canWrite === false ? '' : `<button data-act="restaff" data-name="${esc(p.name)}">恢復</button>`}</span>`).join('')}</div></details>` : ''}
       </section>
       <section class="panel veh">
         <div class="ph"><h2>車輛</h2></div>
-        ${chipList('vehicles', '公司車輛', '排班時勾選的自家車輛')}
+        ${vehicleList()}
         ${chipList('extCompanies', '外調公司', '外調車輛的公司選單')}
         ${chipList('carTypes', '車種', '外調車輛的車種選單')}
       </section>
@@ -560,7 +685,7 @@ function chipList(key, title, desc) {
 }
 function staffCount(name) {
   const dates = new Set(monthDates());
-  const ds2 = new Set([...S.jobs.values()].filter(j => dates.has(j.date) && (j.people || []).includes(name)).map(j => j.date));
+  const ds2 = new Set([...S.jobs.values()].filter(j => dates.has(j.date) && ((j.people || []).includes(name) || (j.teams || []).some(t => t.name === name))).map(j => j.date));
   return ds2.size;
 }
 function staffCard(p) {
@@ -569,29 +694,34 @@ function staffCard(p) {
       <input type="text" id="ren-input" value="${nm}" aria-label="新名字">
       <button class="btn sm" data-act="rensave" data-name="${nm}">儲存</button><button class="icon-btn sm" data-act="rencancel" aria-label="取消">×</button>
     </div>`;
+  if (S.leaderEdit === p.name) { const opts = activeStaff().filter(x => x.group === '支援');
+    return `<div class="scard editing"><span class="sname">${nm}</span><label class="leadsel">負責人 <select id="lead-sel" aria-label="${nm} 的負責人"><option value="">（沒有）</option>${opts.map(x => `<option ${x.name === p.leader ? 'selected' : ''}>${esc(x.name)}</option>`).join('')}</select></label>
+      <button class="btn sm" data-act="leadsave" data-name="${nm}">儲存</button><button class="icon-btn sm" data-act="leadcancel" aria-label="取消">×</button></div>`; }
   const open = S.menu === p.name; const armed = S.armed === 'staff:' + p.name;
   return `<div class="scard ${open ? 'open' : ''}" data-name="${nm}">
     ${S.canWrite === false ? '' : `<span class="handle" data-drag="${nm}" aria-hidden="true">⋮⋮</span>`}
-    <span class="sname">${nm}</span>
+    <span class="sname">${nm}${g === '團隊' && p.leader ? `<small class="leadn">負責人 ${esc(p.leader)}</small>` : ''}</span>
     <span class="scount">${staffCount(p.name)}天</span>
     ${S.canWrite === false ? '' : `<button class="more" data-act="menu" data-name="${nm}" aria-label="${nm} 的選項" aria-expanded="${open}">⋯</button>`}
     ${open ? `<div class="smenu" role="menu">
       <button data-act="renstart" data-name="${nm}">改名</button>
-      <button data-act="mvstaff" data-name="${nm}">改為${g === '正職' ? '支援' : '正職'}</button>
+      ${g === '團隊' ? `<button data-act="setlead" data-name="${nm}">設定負責人</button>` : ''}
+      ${['正職', '支援', '團隊'].filter(x => x !== g).map(x => `<button data-act="mvstaff" data-name="${nm}" data-to="${x}">移到${GLABEL[x]}</button>`).join('')}
       <button data-act="mvup" data-name="${nm}">往上移</button>
       <button data-act="mvdown" data-name="${nm}">往下移</button>
-      <button class="del ${armed ? 'armed' : ''}" data-act="rmstaff" data-name="${nm}">${armed ? '確定刪除？' : '刪除'}</button>
+      <button class="del ${armed ? 'armed' : ''}" data-act="rmstaff" data-name="${nm}">${armed ? '確定停用？' : '停用（資料保留）'}</button>
     </div>` : ''}
   </div>`;
 }
 async function renameStaff(oldN, newN) {
   if (!newN || newN === oldN) { S.renaming = null; render(); return; }
   if (S.config.staff.some(p => p.name === newN)) { toast(`名單裡已經有「${newN}」`); return; }
-  const jobs = [...S.jobs.values()].filter(j => (j.people || []).includes(oldN));
+  const jobs = [...S.jobs.values()].filter(j => (j.people || []).includes(oldN) || (j.teams || []).some(t => t.name === oldN));
   const dayList = [...S.days.entries()].filter(([, d]) => (d.leave || []).includes(oldN) || (d.office || []).includes(oldN));
   const ok = await write(async () => {
-    await S.db.doc('config/main').set({ ...S.config, staff: S.config.staff.map(p => p.name === oldN ? { ...p, name: newN } : p) });
-    for (const j of jobs) await S.db.doc('jobs/' + j.id).update({ people: j.people.map(x => x === oldN ? newN : x) });
+    await S.db.doc('config/main').set({ ...S.config, staff: S.config.staff.map(p => p.name === oldN ? { ...p, name: newN } : p.leader === oldN ? { ...p, leader: newN } : p), accounts: (S.config.accounts || []).map(a => a.staff === oldN ? { ...a, staff: newN } : a) });
+    for (const j of jobs) await S.db.doc('jobs/' + j.id).update({ people: (j.people || []).map(x => x === oldN ? newN : x), leaders: (j.leaders || []).map(x => x === oldN ? newN : x), teams: (j.teams || []).map(t => t.name === oldN ? { ...t, name: newN } : t) });
+    for (const r of [...S.times.values()].filter(r => r.name === oldN)) { await S.db.doc('times/' + timeKey(r.jobId, newN)).set({ ...r, name: newN }); await S.db.doc('times/' + timeKey(r.jobId, oldN)).delete(); }
     for (const [id, d] of dayList) await S.db.doc('days/' + id).update({ leave: (d.leave || []).map(x => x === oldN ? newN : x), office: (d.office || []).map(x => x === oldN ? newN : x) });
   }, `已改名為「${newN}」，更新 ${jobs.length} 個場次`);
   if (ok) { S.renaming = null; if (S.focus === oldN) S.focus = newN; render(); }
@@ -625,8 +755,10 @@ async function commitAdd() {
   const n = ($('#add-in')?.value || '').trim(); const ad = S.adding;
   if (!ad) return; if (!n) { $('#add-in')?.focus(); return; }
   if (ad.kind === 'staff') {
-    if (S.config.staff.some(p => p.name === n)) { toast(`名單裡已經有「${n}」`); return; }
-    await saveConfig({ ...S.config, staff: [...S.config.staff, { name: n, group: ad.key }] });
+    const old = S.config.staff.find(p => p.name === n);
+    if (old && isActive(old)) { toast(`名單裡已經有「${n}」`); return; }
+    if (old) { await saveConfig({ ...S.config, staff: S.config.staff.map(p => p.name === n ? { ...p, group: ad.key, active: true } : p) }); toast(`「${n}」以前停用過，已恢復`); }
+    else await saveConfig({ ...S.config, staff: [...S.config.staff, { name: n, group: ad.key }] });
   } else {
     const list = S.config[ad.key] || [];
     if (list.includes(n)) { toast(`已經有「${n}」`); return; }
@@ -681,7 +813,7 @@ document.addEventListener('pointercancel', () => { if (DR) { DR.target = null; e
 let F = null;
 function openEditor(job, date) {
   F = job ? JSON.parse(JSON.stringify(job)) : { id: null, date, title: '', start: '', end: '', timeNote: '', people: [], vehicles: [], ext: [], note: '', unattended: false };
-  F.people = F.people || []; F.vehicles = F.vehicles || []; F.ext = F.ext || []; F.leaders = F.leaders || [];
+  F.people = F.people || []; F.vehicles = F.vehicles || []; F.ext = F.ext || []; F.leaders = F.leaders || []; F.teams = JSON.parse(JSON.stringify(F.teams || []));
   const ro = S.canWrite === false;
   const sh = $('#sheet');
   sh.innerHTML = `<div class="card" role="dialog" aria-modal="true" aria-labelledby="ed-h">
@@ -692,6 +824,7 @@ function openEditor(job, date) {
       </div>
       <label class="field full"><span>場次 / 內容</span><input type="text" id="f-title" value="${esc(F.title)}"></label>
       <label class="field full"><span>說明（顯示在場次名稱右邊）</span><input type="text" id="f-tnote" value="${esc(F.timeNote)}"></label>
+      <label class="field full"><span>地址（填了會在場次名稱右邊顯示地址和地圖按鈕）</span><input type="text" id="f-addr" value="${esc(F.address || '')}" autocomplete="street-address"></label>
       <div class="field full"><span>時間（24 小時制，填起訖就能自動判斷一人兩場會不會撞）</span>
         <div class="tline">${timePick('f-start', F.start, '開始')}<span class="to">到</span>${timePick('f-end', F.end, '結束')}</div>
       </div>
@@ -700,6 +833,7 @@ function openEditor(job, date) {
       <div id="pick-p1"></div>
       <div class="leadbox"><div class="grp lead-h">帶班人員<small>從已勾選的正職裡點選，可複選，排班表上顯示紅字</small></div><div id="pick-l"></div></div>
       <div id="pick-p2"></div>
+      <div id="pick-t"></div>
     </div>
     <div class="field"><span>車輛</span><div id="pick-v"></div></div>
     <div class="field"><span>外調車輛（沒勾「已確認」的，排班表上會標紅）</span>
@@ -730,8 +864,9 @@ function readForm() {
   F.title = $('#f-title').value.trim();
   F.start = tpVal('f-start'); F.end = tpVal('f-end'); F.timeNote = $('#f-tnote').value.trim();
   F.note = $('#f-note').value.trim();
+  F.address = ($('#f-addr')?.value || '').trim();
   F.unattended = $('#f-un').checked;
-  readExt();
+  readExt(); readTeams();
 }
 /* 滾輪時間選擇：時、分兩欄，可用滑鼠滾輪、觸控滑動、點選或方向鍵 */
 const WI = 36;
@@ -791,7 +926,7 @@ function readExt() {
   const v = (r, k) => r.querySelector(`[data-f=${k}]`).value.trim();
   F.ext = [...rows].map((r, i) => {
     const sv = k => { const x = v(r, k); return x === '__new' ? '' : x; };
-    return { company: sv('company'), type: sv('type'), plate: v(r, 'plate'), driver: v(r, 'driver'), phone: v(r, 'phone'), ok: r.querySelector('input[type=checkbox]').checked, ...(F.ext[i]?.name ? { name: F.ext[i].name } : {}) };
+    return { company: sv('company'), type: sv('type'), plate: v(r, 'plate'), driver: v(r, 'driver'), ok: r.querySelector('input[type=checkbox]').checked, ...(F.ext[i]?.name ? { name: F.ext[i].name } : {}) };
   });
 }
 function extSelect(key, f, val, i, label) {
@@ -810,15 +945,14 @@ function renderExt() {
         ${extSelect('carTypes', 'type', e.type, i, '車種')}
         <input type="text" data-f="plate" id="ext-plate-${i}" value="${esc(e.plate)}" placeholder="車號" aria-label="車號">
         <input type="text" data-f="driver" id="ext-driver-${i}" value="${esc(e.driver)}" placeholder="姓名" aria-label="姓名">
-        <input type="tel" data-f="phone" id="ext-phone-${i}" value="${esc(e.phone)}" placeholder="電話" aria-label="電話">
         <label class="chk"><input type="checkbox" id="ext-c-${i}" ${e.ok ? 'checked' : ''}>已確認</label>
         <button type="button" class="icon-btn sm ownly" data-act="extrm" data-i="${i}" aria-label="移除這筆外調車輛">×</button>
       </div>
     </div>`).join('') : '<div class="hint">沒有外調車輛</div>';
 }
-const extLabel = e => [e.company, e.type].filter(Boolean).join(' ') || e.plate || e.driver || e.phone || e.name || '外調車輛';
-const extDetail = e => [(e.company || e.type) ? e.plate : '', (e.company || e.type || e.plate) ? e.driver : '', (e.company || e.type || e.plate || e.driver) ? e.phone : ''].filter(Boolean).join(' ');
-const extFilled = e => e && (e.company || e.type || e.plate || e.driver || e.phone || e.name);
+const extLabel = e => [e.company, e.type].filter(Boolean).join(' ') || e.plate || e.driver || e.name || '外調車輛';
+const extDetail = e => [(e.company || e.type) ? e.plate : '', (e.company || e.type || e.plate) ? e.driver : ''].filter(Boolean).join(' ');
+const extFilled = e => e && (e.company || e.type || e.plate || e.driver || e.name);
 // 排班時手動輸入的新公司、新車種，存檔時自動加進選單
 async function learnExt(ext) {
   const add = (k, f) => { const cur = S.config[k] || []; const nw = [...new Set(ext.map(e => e[f]).filter(x => x && !cur.includes(x)))]; return nw.length ? [...cur, ...nw] : null; };
@@ -848,20 +982,32 @@ function renderPicks() {
     const ofcDays = kind === 'p' ? dates.filter(d => officeOn(d).has(name)) : [];
     const hint = [...offDays.map(d => pre(d) + '休假'), ...ofcDays.map(d => pre(d) + '在公司'), ...oth.map(o => pre(o.date) + o.title + (o.start ? ' ' + o.start : ''))].join('、');
     const busy = !on && (off || oth.length) ? 'off' : '';
-    return `<button type="button" class="pick ${st} ${busy}" data-act="pick" data-kind="${kind}" data-name="${esc(name)}" aria-pressed="${on}"><b>${esc(name)}</b>${hint ? `<i>${esc(hint)}</i>` : ''}</button>`;
+    const due = kind === 'v' && isDue(name); // 到了保養里程還被選，亮紅色
+    const hint2 = [due ? `到保養 ${kmFmt(odo(name))}/${kmFmt(serviceKm(name))}km` : '', hint].filter(Boolean).join('、');
+    return `<button type="button" class="pick ${st} ${busy} ${due ? 'due' : ''}" data-act="pick" data-kind="${kind}" data-name="${esc(name)}" aria-pressed="${on}"><b>${esc(name)}</b>${hint2 ? `<i>${esc(hint2)}</i>` : ''}</button>`;
   };
   const staff = S.config.staff;
   const known = new Set(staff.map(p => p.name));
   const extraP = F.people.filter(n => !known.has(n));
-  const grp = g => staff.filter(p => (p.group || '正職') === g).map(p => p.name);
+  const grp = g => staff.filter(p => (p.group || '正職') === g && (isActive(p) || F.people.includes(p.name) || F.teams.some(t => t.name === p.name))).map(p => p.name);
   const block = (g, list) => list.length ? `<div class="grp">${g}</div><div class="picks">${list.map(n => pick('p', n)).join('')}</div>` : '';
   $('#pick-p1').innerHTML = block('正職', grp('正職')) || '<span class="hint">到「人員管理」新增人員名單。</span>';
   const ni = $('#f-newsup'), nv = ni ? ni.value : '', nf = ni && document.activeElement === ni;
   const addUI = S.canWrite === false ? '' : F.adding
     ? `<span class="newsup"><input type="text" id="f-newsup" value="${esc(nv)}" placeholder="姓名" aria-label="新增支援人員姓名"><button type="button" class="btn sm" data-act="addsupok">加入</button><button type="button" class="icon-btn sm" data-act="addsupx" aria-label="取消">×</button></span>`
     : `<button type="button" class="pick addp" data-act="addsup"><b>＋ 新增</b></button>`;
-  $('#pick-p2').innerHTML = `<div class="grp">支援</div><div class="picks">${grp('支援').map(n => pick('p', n)).join('')}${addUI}</div>` + block('其他', extraP);
+  $('#pick-p2').innerHTML = `<div class="grp">支援・個人</div><div class="picks">${grp('支援').map(n => pick('p', n)).join('')}${addUI}</div>` + block('其他', extraP);
   if (nf && $('#f-newsup')) $('#f-newsup').focus();
+  // 支援・團隊：勾選後填人數和姓名（姓名可以不填）
+  const teamsAll = [...new Set([...grp('團隊'), ...F.teams.map(t => t.name)])];
+  const ti = $('#f-newteam'), tv = ti ? ti.value : '', tf = ti && document.activeElement === ti;
+  const addT = S.canWrite === false ? '' : F.addingTeam
+    ? `<span class="newsup"><input type="text" id="f-newteam" value="${esc(tv)}" placeholder="團隊名稱" aria-label="新增團隊名稱"><button type="button" class="btn sm" data-act="addteamok">加入</button><button type="button" class="icon-btn sm" data-act="addteamx" aria-label="取消">×</button></span>`
+    : `<button type="button" class="pick addp" data-act="addteam"><b>＋ 新增團隊</b></button>`;
+  $('#pick-t').innerHTML = `<div class="grp">支援・團隊</div><div class="picks">${teamsAll.map(n => { const on = F.teams.some(t => t.name === n); const t = F.teams.find(t => t.name === n);
+      return `<button type="button" class="pick" data-act="pickteam" data-name="${esc(n)}" aria-pressed="${on}"><b>${esc(n)}</b>${on ? `<i>${t.count || 0}人</i>` : ''}</button>`; }).join('')}${addT}</div>
+    ${F.teams.map(t => teamEditor(t)).join('')}${supDatalist()}`;
+  if (tf && $('#f-newteam')) $('#f-newteam').focus();
   const vk = new Set(S.config.vehicles);
   const vl = [...S.config.vehicles, ...F.vehicles.filter(v => !vk.has(v))];
   $('#pick-v').innerHTML = `<div class="picks">${vl.map(v => pick('v', v)).join('')}</div>`;
@@ -878,20 +1024,23 @@ async function addSupport() {
   if (!n) { $('#f-newsup')?.focus(); return; }
   if (!F.people.includes(n)) F.people = [...F.people, n];
   F.adding = false;
-  if (!S.config.staff.some(p => p.name === n)) {
+  const old = S.config.staff.find(p => p.name === n);
+  if (old && !isActive(old)) await saveConfig({ ...S.config, staff: S.config.staff.map(p => p.name === n ? { ...p, active: true } : p) });
+  if (!old) {
     await saveConfig({ ...S.config, staff: [...S.config.staff, { name: n, group: '支援' }] });
     toast(`已把「${n}」加進支援名單`);
   }
   if (F) renderPicks();
 }
-function closeEditor() { TR = false; $('#sheet').hidden = true; $('#sheet').innerHTML = ''; F = null; }
+function closeEditor() { TR = false; KML = false; KM = null; TM = null; $('#sheet').hidden = true; $('#sheet').innerHTML = ''; F = null; }
 function jobBody(f) {
-  return { date: f.date, order: f.order ?? Date.now(), title: f.title, start: f.start, end: f.end, timeNote: f.timeNote, people: f.people, leaders: (f.leaders || []).filter(n => f.people.includes(n)), vehicles: f.vehicles, ext: (f.ext || []).filter(extFilled), note: f.note, unattended: !!f.unattended };
+  return { address: (f.address || '').trim(), teams: (f.teams || []).filter(t => t && t.name).map(t => ({ name: t.name, count: +t.count || 0, members: (t.members || []).slice(0, +t.count || 0).map(x => String(x || '').trim()) })), date: f.date, order: f.order ?? Date.now(), title: f.title, start: f.start, end: f.end, timeNote: f.timeNote, people: f.people, leaders: (f.leaders || []).filter(n => f.people.includes(n)), vehicles: f.vehicles, ext: (f.ext || []).filter(extFilled), note: f.note, unattended: !!f.unattended };
 }
 async function write(fn, okMsg) {
   try { await fn(); if (okMsg) toast(okMsg); return true; }
   catch (e) {
-    if (e && e.code === 'invalid_argument') { S.canWrite = false; toast('沒有編輯權限，請找管理員把你加進「排班編輯」群組'); render(); }
+    if (e && e.userMsg) toast(e.userMsg);
+    else if (e && e.code === 'invalid_argument') { S.canWrite = false; toast('沒有編輯權限，請找管理員把你加進「排班編輯」群組'); render(); }
     else if (e && e.code === 'unavailable') toast('連線不穩，請再按一次');
     else toast('儲存失敗：' + (e?.message || e));
     return false;
@@ -921,7 +1070,7 @@ async function saveJob() {
       const isSelf = i === 0 && F.id;
       const body = i === 0
         ? jobBody({ ...F, date: d, order: isSelf ? F.order : nextOrder(d) })
-        : jobBody({ date: d, title: F.title, order: nextOrder(d), start: '', end: '', timeNote: '', people: [], leaders: [], vehicles: [], ext: [], note: '', unattended: false }); // 其他天只建場次，人和車每天不同
+        : jobBody({ date: d, title: F.title, address: F.address, order: nextOrder(d), start: '', end: '', timeNote: '', people: [], leaders: [], vehicles: [], ext: [], note: '', unattended: false }); // 其他天只建場次，人和車每天不同
       await (isSelf ? S.db.doc('jobs/' + F.id) : S.db.collection('jobs').doc()).set(body);
     }
   }, dates.length > 1 ? `已建立 ${md(dates[0])}–${md(dates.at(-1))} 共 ${dates.length} 天的場次，其他天的人員和車輛請各自排` : '已儲存');
@@ -947,7 +1096,7 @@ let L = null;
 function openLeave(date, kind = 'leave') {
   const label = kind === 'office' ? '在公司' : '休假';
   L = { date, kind, leave: [...(kind === 'office' ? officeOn(date) : leaveOn(date))] };
-  const regular = S.config.staff.filter(p => (p.group || '正職') === '正職').map(p => p.name);
+  const regular = activeStaff().filter(p => (p.group || '正職') === '正職').map(p => p.name);
   const names = regular; // 休假和公司都只從正職挑選（以前選過的支援人員仍會列出，方便取消）
   const sh = $('#sheet');
   const draw = () => {
@@ -978,7 +1127,7 @@ async function saveConfig(next) {
 
 /* ---------- events ---------- */
 document.addEventListener('click', async e => {
-  if ((S.menu || S.armed) && !e.target.closest('.smenu,[data-act=menu],[data-act=rmlist]')) { S.menu = null; S.armed = null; if (S.view === 'set') render(); }
+  if ((S.menu || S.armed) && !e.target.closest('.smenu,[data-act=menu],[data-act=rmlist],[data-act=pdel]')) { S.menu = null; S.armed = null; if (S.view === 'set' || S.view === 'perm') render(); }
   const t = e.target.closest('[data-act],[data-view]');
   if (!t) { if (e.target.id === 'sheet') closeEditor(); return; }
   if (t.dataset.view) { S.view = t.dataset.view; try { localStorage.setItem('view', S.view); } catch (_) {} render(); return; }
@@ -986,15 +1135,23 @@ document.addEventListener('click', async e => {
   if (a === 'new') openEditor(null, t.dataset.date);
   else if (a === 'edit') { if (S.canWrite === false) return; const j = S.jobs.get(t.dataset.id); if (j) openEditor(j); } // 沒有編輯權限的人點場次不跳視窗
   else if (a === 'close') { closeEditor(); L = null; }
+  else if (a === 'addteam') { readForm(); F.addingTeam = true; renderPicks(); $('#f-newteam')?.focus(); }
+  else if (a === 'addteamx') { readForm(); F.addingTeam = false; renderPicks(); }
+  else if (a === 'addteamok') addTeam();
+  else if (a === 'mtime') { const tt = TD; closeEditor(); openTime(tt.jobId, tt.name, +t.dataset.i); }
+  else if (a === 'map') { return; } // 地圖連結：直接開新分頁，不打開場次
+  else if (a === 'pickteam') { readForm(); const n = t.dataset.name; F.teams = F.teams.some(x => x.name === n) ? F.teams.filter(x => x.name !== n) : [...F.teams, { name: n, count: 1, members: leaderOf(n) ? [leaderOf(n)] : [] }]; renderPicks(); }
+  else if (a === 'team') openTeam(t.dataset.id, t.dataset.t);
+  else if (a === 'teamsave') saveTeam();
   else if (a === 'pick') { const f = t.dataset.kind === 'p' ? 'people' : 'vehicles'; const n = t.dataset.name; F[f] = F[f].includes(n) ? F[f].filter(x => x !== n) : [...F[f], n]; renderPicks(); }
   else if (a === 'save') saveJob();
   else if (a === 'addsup') { F.adding = true; renderPicks(); $('#f-newsup')?.focus(); }
   else if (a === 'addsupx') { F.adding = false; renderPicks(); }
   else if (a === 'addsupok') addSupport();
   else if (a === 'lead') { const n = t.dataset.name; F.leaders = F.leaders.includes(n) ? F.leaders.filter(x => x !== n) : [...F.leaders, n]; renderPicks(); }
-  else if (a === 'extadd') { readExt(); F.ext.push({ company: '', type: '', plate: '', driver: '', phone: '', ok: false }); renderExt(); $('#ext-company-' + (F.ext.length - 1))?.focus(); }
+  else if (a === 'extadd') { readExt(); F.ext.push({ company: '', type: '', plate: '', driver: '', ok: false }); renderExt(); $('#ext-company-' + (F.ext.length - 1))?.focus(); }
   else if (a === 'extrm') { readExt(); F.ext.splice(+t.dataset.i, 1); renderExt(); }
-  else if (a === 'tpclear') { const el = document.getElementById(t.dataset.id); wheelTo(el.querySelector('[data-tp=h]'), 0, true); wheelTo(el.querySelector('[data-tp=m]'), 0, true); }
+  else if (a === 'tpclear') { if (TM) setTimeout(tmInfo, 400); const el = document.getElementById(t.dataset.id); wheelTo(el.querySelector('[data-tp=h]'), 0, true); wheelTo(el.querySelector('[data-tp=m]'), 0, true); }
   else if (a === 'copynext') {
     readForm(); const body = jobBody({ ...F, date: addDays(F.date, 1) });
     body.order = Math.max(0, ...jobsOn(body.date).map(j => j.order || 0)) + 1;
@@ -1026,6 +1183,22 @@ document.addEventListener('click', async e => {
     const ok = await trashJobs(run, `已刪除「${F.title}」共 ${new Set(run.map(j => j.date)).size} 天`);
     if (ok) closeEditor(); else t.disabled = false;
   }
+  else if (a === 'time') openTime(t.dataset.id, t.dataset.n);
+  else if (a === 'tmsave') saveTime();
+  else if (a === 'tmok') { TM.ok = tpVal('tm-s') + '-' + tpVal('tm-e'); const acts = t.closest('.acts'); acts.innerHTML = '<span class="sp"></span><button class="btn" data-act="tmsave" id="b-tm">儲存</button>'; saveTime(); }
+  else if (a === 'tmback') openTime(TM.jobId, TM.name, TM.slot);
+  else if (a === 'tmdel') delTime(t);
+  else if (a === 'padd') { const n = ($('#padd').value || '').trim(); if (!n) { $('#padd').focus(); return; } const list = [...(S.config.accounts || [])]; if (list.some(x => x.name === n)) { toast(`已經有「${n}」`); return; } const st = S.config.staff.find(p => p.name === n); list.push({ id: 'a-' + Date.now().toString(36), name: n, staff: st ? n : '', perms: [] }); setAccounts(list, `已新增「${n}」，請勾選他的權限`); }
+  else if (a === 'pdel') { const id = t.dataset.aid; if (S.armed !== 'acc:' + id) { S.armed = 'acc:' + id; render(); return; } S.armed = null; setAccounts((S.config.accounts || []).filter(x => x.id !== id), '已移除'); }
+  else if (a === 'km') openKm(t.dataset.id, t.dataset.v);
+  else if (a === 'kmlist') openKmList();
+  else if (a === 'kmnew') openKmForm({ kind: 'misc', back: true });
+  else if (a === 'kmedit') { const r = S.km.get(t.dataset.kid); if (r) openKmForm({ ...r, back: true }); }
+  else if (a === 'kmback') openKmList();
+  else if (a === 'kmsave') saveKm();
+  else if (a === 'kmdel') delKm(t);
+  else if (a === 'vedit') { S.editing = 'veh:' + t.dataset.name; S.armed = null; render(); $('#vs-input')?.focus(); }
+  else if (a === 'vsave') saveVehicle(t.dataset.name);
   else if (a === 'ovok') { readForm(); F.overnightOk = F.start + '-' + F.end; const acts = t.closest('.acts'); if (acts && OV_ACTS != null) acts.innerHTML = OV_ACTS; OV_ACTS = null; saveJob(); }
   else if (a === 'ovback') { const acts = t.closest('.acts'); if (acts && OV_ACTS != null) acts.innerHTML = OV_ACTS; OV_ACTS = null; }
   else if (a === 'delcancel') { const j = S.jobs.get(F.id); if (j) openEditor(j); }
@@ -1044,15 +1217,20 @@ document.addEventListener('click', async e => {
     const n = t.dataset.name;
     if (S.armed !== 'staff:' + n) { S.armed = 'staff:' + n; render(); return; }
     S.armed = null; S.menu = null;
-    saveConfig({ ...S.config, staff: S.config.staff.filter(p => p.name !== n) });
-    toast(`已從名單移除「${n}」，已排的場次保留不變`);
+    // 不真的刪除：標成停用，以前排過的場次、時間都保留，名單和排班選單不再出現
+    saveConfig({ ...S.config, staff: S.config.staff.map(p => p.name === n ? { ...p, active: false } : p) });
+    toast(`已停用「${n}」，以前的資料都保留，可在下方「已停用」恢復`);
   }
+  else if (a === 'restaff') { saveConfig({ ...S.config, staff: S.config.staff.map(p => p.name === t.dataset.name ? { ...p, active: true } : p) }); toast(`已恢復「${t.dataset.name}」`); }
+  else if (a === 'setlead') { S.leaderEdit = t.dataset.name; S.menu = null; render(); $('#lead-sel')?.focus(); }
+  else if (a === 'leadcancel') { S.leaderEdit = null; render(); }
+  else if (a === 'leadsave') { const v = $('#lead-sel').value; S.leaderEdit = null; saveConfig({ ...S.config, staff: S.config.staff.map(p => p.name === t.dataset.name ? { ...p, leader: v } : p) }); toast(v ? `已設定 ${t.dataset.name} 的負責人：${v}` : '已清除負責人'); }
   else if (a === 'renstart') { S.renaming = t.dataset.name; S.menu = null; render(); const i = $('#ren-input'); if (i) { i.focus(); i.select(); } }
   else if (a === 'rencancel') { S.renaming = null; render(); }
   else if (a === 'rensave') renameStaff(t.dataset.name, $('#ren-input').value.trim());
   else if (a === 'mvup') moveStaff(t.dataset.name, -1);
   else if (a === 'mvdown') moveStaff(t.dataset.name, 1);
-  else if (a === 'mvstaff') { S.menu = null; saveConfig({ ...S.config, staff: S.config.staff.map(p => p.name === t.dataset.name ? { ...p, group: (p.group || '正職') === '正職' ? '支援' : '正職' } : p) }); }
+  else if (a === 'mvstaff') { S.menu = null; saveConfig({ ...S.config, staff: S.config.staff.map(p => p.name === t.dataset.name ? { ...p, group: t.dataset.to } : p) }); }
   else if (a === 'addstart') { S.adding = { kind: t.dataset.kind, key: t.dataset.key }; S.menu = null; render(); $('#add-in')?.focus(); }
   else if (a === 'addx') { S.adding = null; render(); }
   else if (a === 'addok') commitAdd();
@@ -1066,21 +1244,26 @@ document.addEventListener('click', async e => {
   }
 });
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && !$('#sheet').hidden && e.target.id !== 'f-newsup') closeEditor();
+  if (e.key === 'Escape' && !$('#sheet').hidden && e.target.id !== 'f-newsup' && e.target.id !== 'f-newteam') closeEditor();
   if (e.key === 'Enter' && e.target.matches('.job')) e.target.click();
   if (e.target.id === 'ls-input' && e.key === 'Enter') { e.preventDefault(); document.querySelector('[data-act=lssave]')?.click(); }
   if (e.target.id === 'ls-input' && e.key === 'Escape') { S.editing = null; render(); }
   if (e.target.id === 'add-in' && e.key === 'Enter') { e.preventDefault(); commitAdd(); }
   if (e.target.id === 'add-in' && e.key === 'Escape') { S.adding = null; render(); }
   if (e.key === 'Enter' && e.target.id === 'f-newsup') { e.preventDefault(); addSupport(); }
+  if (e.key === 'Enter' && e.target.id === 'f-newteam') { e.preventDefault(); addTeam(); }
+  if (e.key === 'Escape' && e.target.id === 'f-newteam') { e.stopPropagation(); F.addingTeam = false; renderPicks(); return; }
   if (e.key === 'Escape' && e.target.id === 'f-newsup') { e.stopPropagation(); F.adding = false; renderPicks(); return; }
+  if (e.key === 'Enter' && (e.target.id === 'vs-input' || e.target.id === 'vn-input')) document.querySelector('[data-act=vsave]')?.click();
   if (e.key === 'Enter' && e.target.id === 'ren-input') document.querySelector('[data-act=rensave]').click();
   if (e.key === 'Escape' && e.target.id === 'ren-input') { S.renaming = null; render(); }
 });
 document.addEventListener('change', e => {
+  if (e.target.matches('[data-act=pcheck]')) { permCheck(e.target); return; }
+  if (e.target.matches('[data-act=pstaff]')) { const list = (S.config.accounts || []).map(a => a.id === e.target.dataset.aid ? { ...a, staff: e.target.value } : a); setAccounts(list); return; }
   if (!F) return;
   if (e.target.id === 'f-un' && e.target.checked) { F.people = []; F.leaders = []; }
-  if (['f-date', 'f-date2', 'f-un'].includes(e.target.id)) renderPicks();
+  if (['f-date', 'f-date2', 'f-un'].includes(e.target.id) || e.target.matches('[data-tc]')) renderPicks();
   if (e.target.matches('#ext-list select')) {
     const s = e.target;
     if (s.value === '__new') {
@@ -1156,6 +1339,369 @@ function openTrash() {
 }
 function setStatus(msg, err) { const s = $('#status'); s.textContent = msg; s.classList.toggle('err', !!err); }
 
+/* ---------- 支援・團隊：人數與姓名 ---------- */
+function teamEditor(t) {
+  const n = Math.max(1, Math.min(50, +t.count || 1));
+  return `<div class="teamed" data-team="${esc(t.name)}">
+    <div class="teamed-h"><b>${esc(t.name)}</b><label>人數 <select data-tc aria-label="${esc(t.name)} 人數">${Array.from({ length: 50 }, (_, i) => `<option ${i + 1 === n ? 'selected' : ''}>${i + 1}</option>`).join('')}</select></label><span class="hint">姓名可以不填</span></div>
+    <div class="tmembers">${Array.from({ length: n }, (_, i) => `<input type="text" data-tm list="sup-names" value="${esc((t.members || [])[i] || '')}" placeholder="第 ${i + 1} 位" aria-label="${esc(t.name)} 第 ${i + 1} 位姓名">`).join('')}</div>
+  </div>`;
+}
+function readTeams() {
+  if (!F || !document.querySelector('#pick-t')) return;
+  document.querySelectorAll('#pick-t .teamed').forEach(el => {
+    const t = F.teams.find(x => x.name === el.dataset.team); if (!t) return;
+    t.count = +el.querySelector('[data-tc]').value || 1;
+    const vals = [...el.querySelectorAll('[data-tm]')].map(i => i.value.trim());
+    t.members = Array.from({ length: t.count }, (_, i) => vals[i] ?? (t.members || [])[i] ?? '');
+  });
+}
+function teamTimeSummary(j, t) {
+  const n = +t.count || 0; if (!n) return '';
+  const rs = Array.from({ length: n }, (_, i) => timeOf(j.id, t.name + '#' + i));
+  const got = rs.filter(Boolean); if (!got.length) return '';
+  const txt = got.map(r => timeText(r));
+  if (got.length === n && txt.every(x => x === txt[0])) return txt[0];
+  return got.length === n ? '時間各不同' : `已填 ${got.length}/${n}`;
+}
+function memberTimes(j, t) {
+  const n = +t.count || 0; const fill = canFillTeam(t.name);
+  const rows = Array.from({ length: n }, (_, i) => { const r = timeOf(j.id, t.name + '#' + i); const nm = (t.members || [])[i] || `第 ${i + 1} 位`;
+    return (r || fill) ? `<div class="tdm"><span class="tdmn">${esc(nm)}</span><span class="tdmt">${r ? esc(timeText(r, true)) : '<span class="hint">還沒填</span>'}</span>${fill ? `<button class="mini" data-act="mtime" data-i="${i}">${r ? '修改' : '填時間'}</button>` : ''}</div>` : ''; }).join('');
+  return rows ? `<div class="field"><span>每個人的工作時間</span><div class="tdmlist">${rows}</div></div>` : '';
+}
+// 姓名提示：支援個人 + 以前在團隊填過的姓名（人可以換團隊，所以不綁死在某個團隊）
+function supDatalist() {
+  const names = new Set(activeStaff().filter(p => p.group === '支援').map(p => p.name));
+  for (const j of S.jobs.values()) for (const t of (j.teams || [])) for (const m of (t.members || [])) if (m) names.add(m);
+  return `<datalist id="sup-names">${[...names].map(n => `<option value="${esc(n)}">`).join('')}</datalist>`;
+}
+async function addTeam() {
+  const n = ($('#f-newteam')?.value || '').trim(); if (!n) { $('#f-newteam')?.focus(); return; }
+  readForm(); F.addingTeam = false;
+  if (!F.teams.some(t => t.name === n)) F.teams = [...F.teams, { name: n, count: 1, members: [] }];
+  const old = S.config.staff.find(p => p.name === n);
+  if (old && old.group !== '團隊' && isActive(old)) { toast(`「${n}」已經是${GLABEL[old.group] || old.group}，請換一個團隊名稱`); F.teams = F.teams.filter(t => t.name !== n); renderPicks(); return; }
+  if (!old) { await saveConfig({ ...S.config, staff: [...S.config.staff, { name: n, group: '團隊' }] }); toast(`已把「${n}」加進支援・團隊`); }
+  else if (!isActive(old)) await saveConfig({ ...S.config, staff: S.config.staff.map(p => p.name === n ? { ...p, active: true } : p) });
+  if (F) renderPicks();
+}
+let TD = null;
+function openTeam(jobId, name) {
+  const j = S.jobs.get(jobId); if (!j) return; const t = (j.teams || []).find(x => x.name === name); if (!t) return;
+  TD = { jobId, name };
+  const ed = can('edit'); const names = teamNames(t); 
+  const sh = $('#sheet');
+  sh.innerHTML = `<div class="card" role="dialog" aria-modal="true" aria-labelledby="td-h">
+    <h2 id="td-h">${esc(t.name)}・${t.count || 0} 人<button class="icon-btn x" data-act="close" aria-label="關閉">×</button></h2>
+    <p class="hint" style="margin:0">${md(j.date)} 週${WD[parseD(j.date).getDay()]}「${esc(j.title || '')}」${leaderOf(name) ? `・負責人 ${esc(leaderOf(name))}` : ''}${isMyTeam(name) ? '（你）' : ''}</p>
+    <div id="pick-t" class="tdbox">${ed ? teamEditor(t) : `<div class="tdnames">${names.length ? names.map(x => `<span class="chip">${esc(x)}</span>`).join('') : '<span class="hint">沒有填姓名</span>'}</div>`}</div>
+    ${memberTimes(j, t)}${ed ? supDatalist() : ''}
+    ${ed ? '<div class="acts"><span class="sp"></span><button class="btn" data-act="teamsave" id="b-td">儲存</button></div>' : ''}
+  </div>`;
+  sh.hidden = false;
+  if (ed) sh.querySelector('.tdbox').addEventListener('change', e => { if (!e.target.matches('[data-tc]')) return; e.stopPropagation(); const cur = teamFromBox(); sh.querySelector('.tdbox').innerHTML = teamEditor(cur); });
+}
+function teamFromBox() {
+  const el = document.querySelector('.tdbox .teamed'); const count = +el.querySelector('[data-tc]').value || 1;
+  const vals = [...el.querySelectorAll('[data-tm]')].map(i => i.value.trim());
+  return { name: el.dataset.team, count, members: Array.from({ length: count }, (_, i) => vals[i] || '') };
+}
+async function saveTeam() {
+  const j = S.jobs.get(TD.jobId); if (!j) return; const cur = teamFromBox();
+  const teams = (j.teams || []).map(t => t.name === cur.name ? cur : t);
+  $('#b-td').disabled = true;
+  const ok = await write(() => S.db.doc('jobs/' + j.id).update({ teams }), `已更新 ${cur.name}`);
+  if (ok) closeEditor(); else if ($('#b-td')) $('#b-td').disabled = false;
+}
+
+/* ---------- 權限：以人為主，每個人勾選可以做的事 ---------- */
+const PERMS = [
+  ['edit', '排班編輯', '新增修改場次、休假、人員與車輛，可改任何人的時間'],
+  ['timeSelf', '填自己的時間', '要先對應到排班人員'],
+  ['timeSupport', '填支援人員時間', '可以幫任一位支援人員填'],
+  ['viewTime', '看大家的時間', '班表上看得到所有人填的時間'],
+  ['editTime', '改大家的時間', '看得到也能修改任何人填的時間（不用有排班編輯）'],
+  ['km', '登記用車里程', '點車輛登記里程、事務用車'],
+  ['export', '匯出班表', 'PNG／PDF'],
+  ['admin', '權限管理', '打開這一頁設定大家的權限']
+];
+const can = p => !!(S.me && S.me.perms && S.me.perms.includes(p));
+const isSupport = n => S.config.staff.some(p => p.name === n && (p.group === '支援' || p.group === '團隊'));
+const isTeam = n => S.config.staff.some(p => p.name === n && p.group === '團隊');
+const GLABEL = { '正職': '正職', '支援': '支援・個人', '團隊': '支援・團隊' };
+const teamText = t => `${t.name} ${t.count || 0}人`;
+const teamNames = t => (t.members || []).filter(Boolean);
+const canFillTime = n => can('edit') || can('editTime') || (can('timeSelf') && !!S.me.staff && S.me.staff === n) || (can('timeSupport') && isSupport(n));
+// 跟正式版 SharePoint 的規則一樣：沒有「看大家的時間」的人，只看得到自己建立的紀錄
+const canSeeRec = r => !!r && (can('viewTime') || can('editTime') || can('edit') || (S.me && r.byId === S.me.id));
+// 正職的時間只採用本人或排班編輯填的（防止有人繞過 App 幫別的正職亂填）
+const leaderOf = team => (S.config.staff.find(p => p.name === team) || {}).leader || '';
+// 團隊負責人：可以幫自己團隊的每個人填時間（只限有排到這個團隊的場次）
+const isMyTeam = team => !!(S.me && S.me.staff && can('timeSelf') && leaderOf(team) === S.me.staff);
+const canFillTeam = team => canFillTime(team) || isMyTeam(team);
+const validRec = r => {
+  if (!r) return false; const a = (S.config.accounts || []).find(x => x.id === r.byId);
+  if (r.slot != null) return !!a && (a.perms.includes('edit') || a.perms.includes('editTime') || a.perms.includes('timeSupport') || (a.perms.includes('timeSelf') && a.staff && a.staff === leaderOf(r.name)));
+  if (isSupport(r.name)) return true;
+  return !!a && (a.staff === r.name || a.perms.includes('edit') || a.perms.includes('editTime'));
+};
+const timeKey = (jobId, n) => jobId + '__' + n;
+// 同一格有好幾筆時（正式版的 alts），用最新而且有效的那筆
+const timeOf = (jobId, n) => { const r = S.times.get(timeKey(jobId, n)); if (!r) return null; return [r, ...(r.alts || [])].find(x => validRec(x) && canSeeRec(x)) || null; };
+const nextDay = d => md(addDays(d, 1));
+// 時間顯示：同一天「08:30–17:00」；跨夜「22:00–11/15 02:00」
+const timeText = (r, full) => {
+  if (!r || !r.start) return '';
+  const on = r.end && toMin(r.end) < toMin(r.start);
+  if (full) return `${md(r.date)} ${r.start} – ${r.end ? (on ? nextDay(r.date) + ' ' : md(r.date) + ' ') + r.end : '（未填結束）'}`;
+  return `${r.start}–${r.end ? (on ? nextDay(r.date) + ' ' : '') + r.end : ''}`;
+};
+function defaultAccounts() {
+  return [
+    { id: 'owner', name: '管理員（你）', staff: '', perms: PERMS.map(p => p[0]) },
+    ...S.config.staff.filter(p => (p.group || '正職') === '正職').map(p => ({ id: 'a-' + p.name, name: p.name, staff: p.name, perms: ['timeSelf', 'timeSupport', 'km'] })),
+    { id: 'office-1', name: '行政 小美', staff: '', perms: ['viewTime', 'editTime', 'export'] }
+  ];
+}
+function applyMe() {
+  const list = S.config.accounts || [];
+  let me = list.find(a => a.id === S.meId) || null;
+  S.me = me; S.meId = me ? me.id : '';
+  S.canWrite = can('edit');
+  if (S.view === 'perm' && !can('admin')) S.view = 'day';
+  if (S.view === 'set' && !can('edit')) { /* 人員管理沒權限的人只能看 */ }
+}
+
+/* 填工作時間 */
+let TM = null, TMT = null;
+// 時間滾輪轉動時更新下方的說明（只綁一次，避免重複）
+document.getElementById('sheet').addEventListener('scroll', () => { if (!TM) return; clearTimeout(TMT); TMT = setTimeout(tmInfo, 160); }, true);
+function openTime(jobId, n, slot) {
+  const hasSlot = slot != null && !isNaN(slot);
+  const j = S.jobs.get(jobId); if (!j || !(hasSlot ? canFillTeam(n) : canFillTime(n))) return; const key = hasSlot ? n + '#' + slot : n;
+  const r = timeOf(jobId, key) || {};
+  const tm = hasSlot ? ((j.teams || []).find(t => t.name === n) || {}) : null; const member = hasSlot ? ((tm.members || [])[slot] || '') : '';
+  TM = { jobId, name: n, key, slot: hasSlot ? slot : null, member, date: j.date, ok: '' };
+  const sh = $('#sheet');
+  sh.innerHTML = `<div class="card" role="dialog" aria-modal="true" aria-labelledby="tm-h">
+    <h2 id="tm-h">${hasSlot ? `${esc(member || '第 ' + (slot + 1) + ' 位')}（${esc(n)}）` : esc(n)} 的工作時間<button class="icon-btn x" data-act="close" aria-label="關閉">×</button></h2>
+    <p class="hint" style="margin:0">${md(j.date)} 週${WD[parseD(j.date).getDay()]}「${esc(j.title || '')}」${isSupport(n) ? '・支援' : ''}</p>
+    <div class="field"><span>時間（24 小時制，結束比開始早就是隔天）</span>
+      <div class="tline">${timePick('tm-s', r.start || '', '開始')}<span class="to">到</span>${timePick('tm-e', r.end || '', '結束')}</div>
+    </div>
+    <p class="hint tminfo" id="tm-info"></p>
+    ${r.by ? `<p class="hint" style="margin:0">上次由 ${esc(r.by)} 填寫</p>` : ''}
+    <div class="acts">${r.start ? '<button class="btn danger" data-act="tmdel">清除</button>' : ''}<span class="sp"></span><button class="btn" data-act="tmsave" id="b-tm">儲存</button></div>
+  </div>`;
+  sh.hidden = false;
+  initWheels(sh);
+  tmInfo();
+}
+function tmInfo() {
+  const el = $('#tm-info'); if (!el || !TM) return; const s = tpVal('tm-s'), e = tpVal('tm-e');
+  if (!s || !e) { el.textContent = ''; return; }
+  if (s === e) { el.innerHTML = '<span class="bad">開始和結束時間不能一樣</span>'; return; }
+  const on = toMin(e) < toMin(s); const mins = (toMin(e) + (on ? 1440 : 0)) - toMin(s);
+  el.innerHTML = `${md(TM.date)} ${esc(s)} – ${on ? '<b class="warn">' + nextDay(TM.date) + '（隔天）</b>' : md(TM.date)} ${esc(e)}・共 ${Math.floor(mins / 60)} 小時${mins % 60 ? ' ' + (mins % 60) + ' 分' : ''}`;
+}
+async function saveTime() {
+  const s = tpVal('tm-s'), e = tpVal('tm-e');
+  if (!s) { toast('請選開始時間'); return; }
+  if (!e) { toast('請選結束時間'); return; }
+  if (s === e) { toast('開始和結束時間不能一樣'); return; }
+  if (toMin(e) < toMin(s) && TM.ok !== s + '-' + e) {
+    const acts = $('#b-tm').closest('.acts');
+    acts.innerHTML = `<span class="delq ovq">結束 ${esc(e)} 比開始 ${esc(s)} 早，會記成<b>跨夜到 ${nextDay(TM.date)} ${esc(e)}</b>。確定嗎？</span><span class="sp"></span>
+      <button class="btn sec" data-act="tmback">改時間</button><button class="btn" data-act="tmok">確定跨夜，儲存</button>`;
+    return;
+  }
+  const rec = { jobId: TM.jobId, date: TM.date, name: TM.name, ...(TM.slot != null ? { slot: TM.slot, member: TM.member } : {}), start: s, end: e, by: S.me ? S.me.name : '', byId: S.me ? S.me.id : '', at: Date.now() };
+  const back = TM.slot != null ? { jobId: TM.jobId, name: TM.name } : null;
+  const ok = await write(() => S.db.doc('times/' + timeKey(TM.jobId, TM.key)).set(rec), `已儲存 ${TM.member || TM.name} 的時間`);
+  if (ok) { S.times.set(timeKey(rec.jobId, TM.key), rec); closeEditor(); if (back) openTeam(back.jobId, back.name); }
+}
+async function delTime(t) {
+  if (!t.dataset.armed) { t.dataset.armed = '1'; t.textContent = '確定清除？'; return; }
+  const back = TM.slot != null ? { jobId: TM.jobId, name: TM.name } : null;
+  const ok = await write(() => S.db.doc('times/' + timeKey(TM.jobId, TM.key)).delete(), '已清除時間');
+  if (ok) { S.times.delete(timeKey(TM.jobId, TM.key)); closeEditor(); if (back) openTeam(back.jobId, back.name); }
+}
+
+/* 權限管理頁 */
+function renderPerm() {
+  if (!can('admin')) return '<div class="notice">你沒有權限管理的權限。</div>';
+  const acc = S.config.accounts || [];
+  const staffOpts = (cur) => `<option value="">（不對應）</option>` + S.config.staff.filter(p => isActive(p) || p.name === cur).map(p => `<option ${p.name === cur ? 'selected' : ''} value="${esc(p.name)}">${esc(p.name)}・${esc(p.group || '正職')}</option>`).join('');
+  return `<section class="panel permpanel">
+    <div class="ph"><h2>權限管理</h2><p>每一列是一位有公司帳號的同事，勾選他可以做的事。「對應排班人員」是他在班表上的名字，「填自己的時間」要靠這一欄知道誰是他自己。</p></div>
+    <div class="permwrap"><table class="permtbl">
+      <thead><tr><th class="pname">同事</th><th>對應排班人員</th>${PERMS.map(p => `<th title="${esc(p[2])}">${esc(p[1])}</th>`).join('')}</tr></thead>
+      <tbody>${acc.map(a => `<tr class="${a.id === S.meId ? 'meRow' : ''}">
+        <th class="pname">${esc(a.name)}${a.id === S.meId ? '<small>你自己</small>' : ''}</th>
+        <td><select class="inp pstaff" data-act="pstaff" data-aid="${esc(a.id)}" aria-label="${esc(a.name)} 對應的排班人員">${staffOpts(a.staff)}</select></td>
+        ${PERMS.map(p => `<td class="pc"><input type="checkbox" data-act="pcheck" data-aid="${esc(a.id)}" data-p="${p[0]}" ${a.perms.includes(p[0]) ? 'checked' : ''} aria-label="${esc(a.name)} ${esc(p[1])}"></td>`).join('')}
+        
+      </tr>`).join('')}</tbody>
+    </table></div>
+    <p class="hint" style="margin:10px 0 0">名單是「金星視覺-工作」團隊成員。要新增同事，請在 Teams 把他加入團隊，重新整理這一頁就會出現。<br>打勾會直接把他加入 Microsoft 365 裡對應的「班表-」群組，SharePoint 清單的權限也跟著生效；同事重新整理後就是新權限。</p>
+  </section>`;
+}
+async function setAccounts(list, msg) {
+  await saveConfig({ ...S.config, accounts: list });
+  applyMe(); fillMeSelect(); render(); if (msg) toast(msg);
+}
+function permCheck(t) {
+  const list = (S.config.accounts || []).map(a => ({ ...a, perms: [...a.perms] }));
+  const a = list.find(x => x.id === t.dataset.aid); if (!a) return;
+  const p = t.dataset.p;
+  if (!t.checked && p === 'admin' && a.id === S.meId) { t.checked = true; toast('不能拿掉自己的權限管理，請先給別人再由他拿掉'); return; }
+  a.perms = t.checked ? [...new Set([...a.perms, p])] : a.perms.filter(x => x !== p);
+  if (t.checked && p === 'timeSelf' && !a.staff) toast(`記得幫 ${a.name} 選「對應排班人員」，不然他找不到自己`);
+  setAccounts(list);
+}
+function fillMeSelect() {
+  const sel = $('#mesel');
+  if (sel) sel.innerHTML = (S.config.accounts || []).map(a => `<option value="${esc(a.id)}" ${a.id === S.meId ? 'selected' : ''}>${esc(a.name)}</option>`).join('');
+  const tab = $('#tab-perm'); if (tab) tab.hidden = !can('admin');
+}
+
+/* ---------- 用車里程登記與保養提醒 ---------- */
+let KM = null, KML = false;
+function openKm(jobId, v) {
+  const j = S.jobs.get(jobId); if (!j) return;
+  const r = jobKm(jobId, v);
+  openKmForm(r ? { ...r } : { kind: 'job', jobId, vehicle: v, date: j.date });
+}
+function openKmForm(rec) {
+  if (!can('km')) return;
+  KML = false;
+  KM = { id: rec.id || null, kind: rec.kind || 'misc', jobId: rec.jobId || null, vehicle: rec.vehicle || '', date: rec.date || todayStr(), back: !!rec.back };
+  const j = KM.jobId ? S.jobs.get(KM.jobId) : null;
+  const vs = [...new Set([...(S.config.vehicles || []), ...(KM.vehicle ? [KM.vehicle] : [])])];
+  const v0 = KM.vehicle || vs[0] || '';
+  const names = j ? [...(j.people || [])] : S.config.staff.map(p => p.name);
+  if (rec.driver && !names.includes(rec.driver)) names.push(rec.driver);
+  const startVal = rec.start != null && rec.start !== '' ? rec.start : (rec.id ? '' : (odo(v0) ?? ''));
+  const sh = $('#sheet');
+  sh.innerHTML = `<div class="card" role="dialog" aria-modal="true" aria-labelledby="km-h">
+    <h2 id="km-h">${KM.kind === 'job' ? esc(KM.vehicle) + ' 用車里程' : (KM.id ? '修改事務用車' : '事務用車登記')}<button class="icon-btn x" data-act="close" aria-label="關閉">×</button></h2>
+    ${j ? `<p class="hint" style="margin:0">${md(j.date)} 週${WD[parseD(j.date).getDay()]}「${esc(j.title || '')}」</p>` : ''}
+    <div class="fgrid">
+      ${KM.kind === 'misc' ? `<label class="field"><span>車輛</span><select class="inp" id="km-v">${vs.map(v => `<option ${v === v0 ? 'selected' : ''}>${esc(v)}</option>`).join('')}</select></label>
+      <label class="field"><span>日期</span><input type="date" id="km-d" value="${esc(KM.date)}"></label>
+      <label class="field"><span>開始時間</span><input type="time" id="km-ts" value="${esc(rec.tStart || '')}"></label>
+      <label class="field"><span>結束時間</span><input type="time" id="km-te" value="${esc(rec.tEnd || '')}"></label>` : ''}
+      <label class="field"><span>起始里程（km）</span><input type="text" inputmode="numeric" id="km-s" value="${esc(startVal)}"></label>
+      <label class="field"><span>完成里程（km）</span><input type="text" inputmode="numeric" id="km-e" value="${esc(rec.end ?? '')}"></label>
+      <label class="field"><span>駕駛</span><select class="inp" id="km-dr"><option value="">（不填）</option>${names.map(n => `<option ${n === rec.driver ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select></label>
+      <label class="field"><span>${KM.kind === 'misc' ? '事由' : '備註'}</span><input type="text" id="km-n" value="${esc(rec.note || '')}"></label>
+    </div>
+    <p class="hint kminfo" id="km-info"></p>
+    <div class="acts">${KM.id ? '<button class="btn danger" data-act="kmdel">刪除</button>' : ''}<span class="sp"></span>${KM.back ? '<button class="btn sec" data-act="kmback">返回紀錄</button>' : ''}<button class="btn" data-act="kmsave" id="b-km">儲存</button></div>
+  </div>`;
+  sh.hidden = false;
+  kmInfo();
+  $('#km-v')?.addEventListener('change', () => { if (!KM.id) { const o = odo($('#km-v').value); $('#km-s').value = o ?? ''; } kmInfo(); });
+  ['km-s', 'km-e'].forEach(id => $('#' + id).addEventListener('input', kmInfo));
+  setTimeout(() => (KM && KM.kind === 'job' && !KM.id ? $('#km-e') : null)?.focus(), 30);
+}
+function kmInfo() {
+  const el = $('#km-info'); if (!el || !KM) return;
+  const v = KM.kind === 'misc' ? $('#km-v')?.value : KM.vehicle; if (!v) { el.textContent = ''; return; }
+  const o = odo(v), s = serviceKm(v);
+  const num = id => { const x = ($('#' + id)?.value || '').replace(/[^\d.]/g, ''); return x === '' ? null : +x; };
+  const sv = num('km-s'), ev = num('km-e');
+  const parts = [`${esc(v)} 目前里程 ${o != null ? kmFmt(o) + ' km' : '尚無紀錄'}`];
+  if (s != null) parts.push(`保養里程 ${kmFmt(s)} km`);
+  if (sv != null && ev != null) parts.push(ev >= sv ? `本次 ${kmFmt(ev - sv)} km` : '<span class="bad">完成里程小於起始里程</span>');
+  const reach = Math.max(o ?? -Infinity, ev ?? -Infinity);
+  el.innerHTML = parts.join('・') + (s != null && reach >= s ? '　<b class="bad">已到保養里程</b>' : '');
+}
+async function saveKm() {
+  const num = id => { const x = ($('#' + id)?.value || '').replace(/[^\d.]/g, ''); return x === '' ? null : Math.round(+x); };
+  const misc = KM.kind === 'misc';
+  const rec = {
+    kind: KM.kind, jobId: KM.jobId || null,
+    vehicle: misc ? $('#km-v').value : KM.vehicle, date: misc ? $('#km-d').value : KM.date,
+    tStart: misc ? $('#km-ts').value : '', tEnd: misc ? $('#km-te').value : '',
+    start: num('km-s'), end: num('km-e'), driver: $('#km-dr').value, note: $('#km-n').value.trim()
+  };
+  if (!rec.vehicle) { toast('請選車輛'); return; }
+  if (!rec.date) { toast('請選日期'); return; }
+  if (rec.start == null) { toast('請填起始里程'); $('#km-s').focus(); return; }
+  if (rec.end != null && rec.end < rec.start) { toast('完成里程不能小於起始里程'); $('#km-e').focus(); return; }
+  $('#b-km').disabled = true; const back = KM.back;
+  const ok = await write(() => (KM.id ? S.db.doc('mileage/' + KM.id) : S.db.collection('mileage').doc()).set(rec), '已登記里程');
+  if (ok) { if (back) openKmList(); else closeEditor(); } else if ($('#b-km')) $('#b-km').disabled = false;
+}
+async function delKm(t) {
+  if (!t.dataset.armed) { t.dataset.armed = '1'; t.textContent = '確定刪除？'; return; }
+  const back = KM.back;
+  const ok = await write(() => S.db.doc('mileage/' + KM.id).delete(), '已刪除里程紀錄');
+  if (ok) { if (back) openKmList(); else closeEditor(); }
+}
+function openKmList() {
+  if (!can('km')) return;
+  KM = null; KML = true;
+  const dates = new Set(monthDates());
+  const rows = [...S.km.values()].filter(r => dates.has(r.date))
+    .sort((a, b) => a.date.localeCompare(b.date) || String(a.tStart || '').localeCompare(String(b.tStart || '')) || String(a.vehicle).localeCompare(String(b.vehicle)));
+  const dist = r => r.start != null && r.end != null ? r.end - r.start : null;
+  const tot = {}; rows.forEach(r => { const d = dist(r); if (d != null) tot[r.vehicle] = (tot[r.vehicle] || 0) + d; });
+  const { y, m } = S.month;
+  const sh = $('#sheet');
+  sh.innerHTML = `<div class="card" role="dialog" aria-modal="true" aria-labelledby="kml-h">
+    <h2 id="kml-h">${y}年${m + 1}月 用車紀錄<button class="icon-btn x" data-act="close" aria-label="關閉">×</button></h2>
+    <div class="acts"><button class="btn sm" data-act="kmnew">＋ 事務用車登記</button><span class="hint">場次用車：在排班表上點那台車登記</span></div>
+    ${Object.keys(tot).length ? `<p class="hint" style="margin:0">本月合計：${Object.entries(tot).map(([v, k]) => `${esc(v)} ${kmFmt(k)} km`).join('、')}</p>` : ''}
+    ${rows.length ? `<div class="kmlist">${rows.map(r => {
+      const j = r.jobId ? S.jobs.get(r.jobId) : null; const d = dist(r);
+      const what = j ? j.title : (r.note || (r.kind === 'job' ? '（場次已刪除）' : ''));
+      return `<button type="button" class="kmrow ${isDue(r.vehicle) ? 'due' : ''}" data-act="kmedit" data-kid="${esc(r.id)}">
+        <span class="kd">${md(r.date)}${r.tStart ? ' ' + esc(r.tStart) : ''}</span>
+        <b class="kv">${esc(r.vehicle)}</b>
+        <span class="kt">${r.kind === 'misc' ? '<i class="ktag">事務</i>' : ''}${esc(what)}${r.driver ? '・' + esc(r.driver) : ''}</span>
+        <span class="kn">${kmFmt(r.start)} → ${r.end != null ? kmFmt(r.end) : '未填'}${d != null ? `　<b>${kmFmt(d)} km</b>` : ''}</span>
+      </button>`; }).join('')}</div>` : '<p class="emptymsg">這個月還沒有用車紀錄。</p>'}
+  </div>`;
+  sh.hidden = false;
+}
+function vehicleList() {
+  const list = S.config.vehicles || []; const ro = S.canWrite === false;
+  return `<div class="clist"><div class="clist-h"><b>公司車輛</b><span>目前里程取自用車登記；到了保養里程，排班選車時會亮紅色</span></div>
+    <div class="vlist">${list.map(v => {
+      const o = odo(v), s = serviceKm(v), due = isDue(v), left = s != null && o != null ? s - o : null;
+      if (S.editing === 'veh:' + v) return `<div class="vrow editing">
+          <input type="text" id="vn-input" value="${esc(v)}" aria-label="車輛名稱">
+          <label class="vsv">保養里程<input type="text" inputmode="numeric" id="vs-input" value="${s ?? ''}" placeholder="未設定"> km</label>
+          <span class="vbtns"><button class="btn sm" data-act="vsave" data-name="${esc(v)}">儲存</button><button class="icon-btn sm" data-act="lscancel" aria-label="取消">×</button></span>
+        </div>`;
+      const armed = S.armed === 'vehicles:' + v;
+      return `<div class="vrow ${due ? 'due' : ''}"><b class="vname">${esc(v)}</b>
+        <span class="vkm">目前 ${o != null ? kmFmt(o) + ' km' : '—'}</span>
+        <span class="vkm">保養 ${s != null ? kmFmt(s) + ' km' : '未設定'}${due ? '・<b>已到保養</b>' : left != null ? `・還有 ${kmFmt(left)} km` : ''}</span>
+        ${ro ? '' : `<span class="vbtns"><button class="mini" data-act="vedit" data-name="${esc(v)}">修改</button><button class="mini del ${armed ? 'armed' : ''}" data-act="rmlist" data-key="vehicles" data-name="${esc(v)}">${armed ? '確定刪除？' : '刪除'}</button></span>`}
+      </div>`;
+    }).join('')}</div>
+    <div class="chipsrow" style="margin-top:8px">${addChip('list', 'vehicles', '＋ 新增車輛')}</div></div>`;
+}
+async function saveVehicle(oldN) {
+  const newN = ($('#vn-input')?.value || '').trim(); const raw = ($('#vs-input')?.value || '').replace(/[^\d]/g, '');
+  if (!newN) { toast('請填車輛名稱'); return; }
+  const list = S.config.vehicles || [];
+  if (newN !== oldN && list.includes(newN)) { toast(`已經有「${newN}」`); return; }
+  const svc = { ...(S.config.vehicleService || {}) }; delete svc[oldN]; if (raw) svc[newN] = +raw;
+  const jobs = newN === oldN ? [] : [...S.jobs.values()].filter(j => (j.vehicles || []).includes(oldN));
+  const logs = newN === oldN ? [] : kmLogs(oldN);
+  const ok = await write(async () => {
+    await S.db.doc('config/main').set({ ...S.config, vehicles: list.map(x => x === oldN ? newN : x), vehicleService: svc });
+    for (const j of jobs) await S.db.doc('jobs/' + j.id).update({ vehicles: j.vehicles.map(x => x === oldN ? newN : x) });
+    for (const r of logs) await S.db.doc('mileage/' + r.id).update({ vehicle: newN });
+  }, newN !== oldN && (jobs.length || logs.length) ? `已更新，連同 ${jobs.length} 個場次、${logs.length} 筆里程` : '已更新車輛');
+  if (ok) { S.editing = null; render(); }
+}
+
 /* ---------- 匯出整月／半月為 PNG 或 PDF ---------- */
 const EXPORT_LIBS = {
   img: 'https://cdn.jsdelivr.net/npm/html-to-image@1.11.13/dist/html-to-image.js',
@@ -1169,20 +1715,22 @@ const loadScript = src => new Promise((ok, no) => {
   s.onerror = () => { s.remove(); no(new Error('匯出元件載入失敗，請確認網路後再試一次')); };
   document.head.appendChild(s);
 });
-const EX = { range: 'all', fmt: 'png' };
+const EX = { range: 'all', fmt: 'png', times: false };
+let EXPORTING = null;
 function openExport() {
-  if (S.canWrite === false) return;
+  if (!can('export')) return;
   const sh = $('#sheet'); const { y, m } = S.month; const last = new Date(y, m + 1, 0).getDate();
   const opt = (name, val, label, cur) => `<label class="exopt"><input type="radio" name="${name}" value="${val}" ${cur === val ? 'checked' : ''}><span>${label}</span></label>`;
   sh.innerHTML = `<div class="card" role="dialog" aria-modal="true" aria-labelledby="ex-h">
     <h2 id="ex-h">匯出 ${y}年${m + 1}月<button class="icon-btn x" data-act="close" aria-label="關閉">×</button></h2>
     <div class="field"><span>範圍</span><div class="exopts">${opt('exr', 'all', `整個月（1–${last}日）`, EX.range)}${opt('exr', 'h1', '上半月（1–15日）', EX.range)}${opt('exr', 'h2', `下半月（16–${last}日）`, EX.range)}</div></div>
     <div class="field"><span>格式</span><div class="exopts">${opt('exf', 'png', '圖片 PNG', EX.fmt)}${opt('exf', 'pdf', 'PDF（A4，可列印）', EX.fmt)}</div></div>
+    ${can('viewTime') || can('editTime') ? `<div class="field"><span>工作時間</span><div class="exopts"><label class="exopt"><input type="checkbox" id="ex-tm" ${EX.times ? 'checked' : ''}><span>在人名旁顯示大家填的時間</span></label></div></div>` : ''}
     <p class="hint" style="margin:0">匯出「依日期」的排班內容，不含按鈕。要看其他月份，先用上方的 ‹ › 切換月份再匯出。</p>
     <div class="acts"><span class="sp"></span><button class="btn" id="b-ex" type="button">下載</button></div>
   </div>`;
   sh.hidden = false;
-  $('#b-ex').onclick = () => { EX.range = sh.querySelector('[name=exr]:checked').value; EX.fmt = sh.querySelector('[name=exf]:checked').value; doExport(); };
+  $('#b-ex').onclick = () => { EX.range = sh.querySelector('[name=exr]:checked').value; EX.fmt = sh.querySelector('[name=exf]:checked').value; EX.times = !!((can('viewTime') || can('editTime')) && $('#ex-tm')?.checked); doExport(); };
 }
 async function saveBlob(blob, name) {
   // 在 claude.ai 的預覽裡要透過它的下載功能；在 GitHub／Teams 用一般下載
@@ -1202,7 +1750,7 @@ async function doExport() {
   const box = document.createElement('div'); box.className = 'exportbox'; wrap.appendChild(box);
   try {
     await loadScript(EXPORT_LIBS.img); if (EX.fmt === 'pdf') await loadScript(EXPORT_LIBS.pdf);
-    root.setAttribute('data-theme', 'light'); S.focus = '';
+    root.setAttribute('data-theme', 'light'); S.focus = ''; EXPORTING = { times: EX.times };
     const stamp = new Date().toLocaleString('zh-TW', { hour12: false, month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
     box.innerHTML = `<div class="exhead"><b>金星班表</b><span>${y}年${m + 1}月　${md(dates[0])}–${md(dates.at(-1))}</span><small>${stamp} 匯出</small></div>` + renderDays(dates);
     box.querySelectorAll('.day.today').forEach(d => d.classList.remove('today'));
@@ -1237,7 +1785,7 @@ async function doExport() {
     console.error(e); toast(e.message || '匯出失敗，請再試一次');
     if ($('#b-ex')) { $('#b-ex').disabled = false; $('#b-ex').textContent = '下載'; }
   } finally {
-    wrap.remove(); S.focus = prevFocus;
+    wrap.remove(); S.focus = prevFocus; EXPORTING = null;
     if (prevTheme === null) root.removeAttribute('data-theme'); else root.setAttribute('data-theme', prevTheme);
   }
 }
@@ -1269,32 +1817,43 @@ try { applyZoom(localStorage.getItem('zoom') || 100); applyFull(localStorage.get
 
 /* ====================================================================
    Microsoft 365 資料層
-   用公司帳號登入（在 Teams 裡自動登入），讀寫 SharePoint 上的 5 張清單。
-   上面的畫面程式完全沒改，只把資料來源換成這一層。
+   用公司帳號登入（在 Teams 裡自動登入），讀寫 SharePoint 上的清單。
+   上面的畫面程式跟測試版相同，只把資料來源換成這一層。
+   權限：真正把關的是 SharePoint 清單權限和 Microsoft 365 群組；
+   畫面上的按鈕只是配合顯示，不能靠它擋人。
    ==================================================================== */
 const SC = window.SCHEDULE_CONFIG || {};
 const DEMO = new URLSearchParams(location.search).has('demo');
-const LIST_NAMES = Object.assign({ staff: '人員', options: '車輛選項', jobs: '場次', ext: '外調車輛', days: '每日狀態', trash: '最近刪除' }, SC.lists || {});
-// 每個欄位：[內部名稱（匯入 Excel 時的英文標題）, 中文顯示名稱]。內部名稱找不到時，改用中文名稱對應。
+const LIST_NAMES = Object.assign({ staff: '人員', options: '車輛選項', jobs: '場次', ext: '外調車輛', days: '每日狀態', trash: '最近刪除', times: '工時', mileage: '里程紀錄' }, SC.lists || {});
+const OPTIONAL_LISTS = ['trash', 'times', 'mileage']; // 還沒建立也能開，只是那個功能不能用
+// 每個欄位：[英文名稱, 中文名稱]。程式會比對內部名稱、英文顯示名稱、中文顯示名稱。
 const FIELD_DEFS = {
-  staff: { name: ['Title', '姓名'], group: ['Group', '組別'], order: ['SortOrder', '排序'], active: ['Active', '啟用'] },
-  options: { name: ['Title', '名稱'], cat: ['Category', '類別'], order: ['SortOrder', '排序'] },
-  jobs: { title: ['Title', '場次名稱'], key: ['JobKey', '場次代碼'], date: ['JobDate', '日期'], start: ['StartTime', '開始時間'], end: ['EndTime', '結束時間'], timeNote: ['TimeNote', '時間說明'], people: ['Staff', '人員'], leaders: ['Leaders', '帶班'], vehicles: ['Vehicles', '車輛'], unattended: ['Unattended', '不留守'], note: ['Note', '備註'], order: ['SortOrder', '排序'] },
+  staff: { name: ['Title', '姓名'], group: ['Group', '組別'], order: ['SortOrder', '排序'], active: ['Active', '啟用'], email: ['Email', '電子郵件'], leader: ['Leader', '負責人'] },
+  options: { name: ['Title', '名稱'], cat: ['Category', '類別'], order: ['SortOrder', '排序'], serviceKm: ['ServiceKm', '保養里程'] },
+  jobs: { title: ['Title', '場次名稱'], key: ['JobKey', '場次代碼'], date: ['JobDate', '日期'], start: ['StartTime', '開始時間'], end: ['EndTime', '結束時間'], timeNote: ['TimeNote', '時間說明'], people: ['Staff', '人員'], leaders: ['Leaders', '帶班'], vehicles: ['Vehicles', '車輛'], unattended: ['Unattended', '不留守'], note: ['Note', '備註'], order: ['SortOrder', '排序'], address: ['Address', '地址'], teams: ['Teams', '團隊'] },
   ext: { company: ['Title', '公司'], key: ['JobKey', '場次代碼'], date: ['JobDate', '日期'], type: ['CarType', '車種'], plate: ['Plate', '車號'], driver: ['Driver', '司機姓名'], phone: ['Phone', '電話'], ok: ['Confirmed', '已確認'] },
   days: { key: ['Title', '日期代碼'], date: ['DayDate', '日期'], leave: ['Leave', '休假'], office: ['Office', '公司'] },
-  trash: { title: ['Title', '場次名稱'], data: ['Data', '資料'] }
+  trash: { title: ['Title', '場次名稱'], data: ['Data', '資料'] },
+  times: { name: ['Title', '姓名'], job: ['JobKey', '場次代碼'], date: ['JobDate', '日期'], slot: ['Slot', '團隊序號'], member: ['Member', '團隊成員'], start: ['StartTime', '開始時間'], end: ['EndTime', '結束時間'] },
+  mileage: { vehicle: ['Title', '車輛'], kind: ['Kind', '類型'], job: ['JobKey', '場次代碼'], date: ['KmDate', '日期'], tStart: ['TimeStart', '出發時間'], tEnd: ['TimeEnd', '回來時間'], start: ['StartKm', '起始里程'], end: ['EndKm', '完成里程'], driver: ['Driver', '駕駛'], note: ['Note', '備註'] }
 };
-const DATE_KEYS = { jobs: ['date'], ext: ['date'], days: ['date'] };
+const DATE_KEYS = { jobs: ['date'], ext: ['date'], days: ['date'], times: ['date'], mileage: ['date'] };
 // 是/否欄位：匯入時若被設成數字或文字（1/0、是/否），讀寫時自動轉換
 const BOOL_KEYS = { staff: ['active'], jobs: ['unattended'], ext: ['ok'] };
 const toBool = v => (v === null || v === undefined || v === '') ? undefined : v === true || v === 1 || /^(1|true|yes|y|是)$/i.test(String(v).trim());
-const OPTIONAL_FIELDS = { ext: ['phone'] }; // 清單沒有這欄也能用，只是不顯示
+// 清單沒有這欄也能用，只是那項資料不會存
+const OPTIONAL_FIELDS = { ext: ['phone'], staff: ['email', 'leader'], options: ['serviceKm'], jobs: ['address', 'teams'], times: ['slot', 'member'] };
 const OPT_CATS = [['vehicles', '公司車輛'], ['extCompanies', '外調公司'], ['carTypes', '車種']];
+// 權限對應的群組（config.js 的 groups）。「排班編輯」沿用原本的 editorGroupId。
+const PERM_LABEL = { edit: '排班編輯', timeSelf: '班表-填自己時間', timeSupport: '班表-填支援時間', viewTime: '班表-看大家時間', editTime: '班表-改大家時間', km: '班表-登記里程', export: '班表-匯出', admin: '班表-權限管理' };
+const isBlank = v => !v || /請填/.test(v);
+const GID = (() => { const g = Object.assign({}, SC.groups || {}); if (isBlank(g.edit)) g.edit = SC.editorGroupId; for (const k of Object.keys(g)) if (isBlank(g[k])) delete g[k]; return g; })();
 const splitNames = s => String(s ?? '').split(/[;；]/).map(x => x.trim()).filter(Boolean);
 const joinNames = a => (a || []).map(x => String(x).trim()).filter(Boolean).join(';');
 const newId = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2)).replace(/-/g, '').slice(0, 20);
 const userErr = (msg, extra) => Object.assign(new Error(msg), { userMsg: msg }, extra || {});
-const clone = o => JSON.parse(JSON.stringify(o));
+const clone = o => o === undefined ? undefined : JSON.parse(JSON.stringify(o));
+const lc = s => String(s || '').trim().toLowerCase();
 async function pool(tasks, n = 4) {
   const out = []; let i = 0;
   await Promise.all(Array.from({ length: Math.min(n, tasks.length) }, async () => { while (i < tasks.length) { const k = i++; out[k] = await tasks[k](); } }));
@@ -1303,7 +1862,9 @@ async function pool(tasks, n = 4) {
 
 /* ---------- 登入：在 Teams 裡用 Teams 的帳號（NAA），在瀏覽器裡轉到微軟登入頁 ---------- */
 const SCOPES = ['User.Read', 'Sites.ReadWrite.All', 'GroupMember.Read.All'];
-let PCA = null, IN_TEAMS = false, TEAMS_HINT = '', TOKEN = { v: '', exp: 0, p: null };
+const ADMIN_SCOPES = ['GroupMember.ReadWrite.All']; // 只有在權限管理頁打勾時才會要
+let PCA = null, IN_TEAMS = false, TEAMS_HINT = '';
+const TOKENS = {};
 const redirectUri = () => SC.redirectUri || (location.origin + location.pathname.replace(/index\.html$/, ''));
 async function initAuth() {
   if (!window.msal) throw userErr('登入元件載入失敗，請確認網路後重新整理頁面。');
@@ -1322,38 +1883,40 @@ async function initAuth() {
   if (!IN_TEAMS) { const r = await PCA.handleRedirectPromise(); if (r && r.account) PCA.setActiveAccount(r.account); }
   if (!PCA.getActiveAccount() && PCA.getAllAccounts().length) PCA.setActiveAccount(PCA.getAllAccounts()[0]);
 }
-function getToken() {
-  if (TOKEN.v && Date.now() < TOKEN.exp - 120e3) return Promise.resolve(TOKEN.v);
-  if (TOKEN.p) return TOKEN.p;
-  TOKEN.p = (async () => {
+function getToken(scopes = SCOPES) {
+  const k = scopes.join(' '); const T = TOKENS[k] ||= { v: '', exp: 0, p: null };
+  if (T.v && Date.now() < T.exp - 120e3) return Promise.resolve(T.v);
+  if (T.p) return T.p;
+  T.p = (async () => {
     const account = PCA.getActiveAccount() || undefined;
     let r = null;
-    try { if (account || IN_TEAMS) r = await PCA.acquireTokenSilent({ scopes: SCOPES, account }); } catch (_) {}
+    try { if (account || IN_TEAMS) r = await PCA.acquireTokenSilent({ scopes, account }); } catch (_) {}
     if (!r && IN_TEAMS) {
-      try { r = await PCA.ssoSilent({ scopes: SCOPES, loginHint: TEAMS_HINT || undefined }); } catch (_) {}
-      if (!r) r = await PCA.acquireTokenPopup({ scopes: SCOPES, loginHint: TEAMS_HINT || undefined });
+      try { r = await PCA.ssoSilent({ scopes, loginHint: TEAMS_HINT || undefined }); } catch (_) {}
+      if (!r) r = await PCA.acquireTokenPopup({ scopes, loginHint: TEAMS_HINT || undefined });
     }
-    if (!r) { await PCA.acquireTokenRedirect({ scopes: SCOPES }); await new Promise(() => {}); }
+    if (!r && scopes !== SCOPES) r = await PCA.acquireTokenPopup({ scopes, account });
+    if (!r) { await PCA.acquireTokenRedirect({ scopes }); await new Promise(() => {}); }
     if (r.account) PCA.setActiveAccount(r.account);
-    TOKEN.v = r.accessToken; TOKEN.exp = r.expiresOn ? +new Date(r.expiresOn) : Date.now() + 30 * 60e3;
-    return TOKEN.v;
-  })().finally(() => { TOKEN.p = null; });
-  return TOKEN.p;
+    T.v = r.accessToken; T.exp = r.expiresOn ? +new Date(r.expiresOn) : Date.now() + 30 * 60e3;
+    return T.v;
+  })().finally(() => { T.p = null; });
+  return T.p;
 }
 
-/* ---------- SharePoint 清單（Microsoft Graph） ---------- */
+/* ---------- SharePoint 清單與群組（Microsoft Graph） ---------- */
 function graphBackend() {
   const G = 'https://graph.microsoft.com/v1.0';
   let site = null; const ids = {}, cols = {}, kinds = {};
-  async function call(method, url, body, tries = 0) {
+  async function call(method, url, body, opt = {}, tries = 0) {
     let r;
     try {
-      r = await fetch(url.startsWith('http') ? url : G + url, { method, headers: { Authorization: 'Bearer ' + await getToken(), 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
+      r = await fetch(url.startsWith('http') ? url : G + url, { method, headers: { Authorization: 'Bearer ' + await getToken(opt.scopes), 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
     } catch (e) { if (e && e.userMsg) throw e; throw Object.assign(new Error('網路連線失敗'), { code: 'unavailable' }); }
     if ((r.status === 429 || r.status === 503 || r.status === 504) && tries < 4) {
       const s = Math.min(+(r.headers.get('Retry-After') || 2) || 2, 30);
       await new Promise(z => setTimeout(z, s * 1000));
-      return call(method, url, body, tries + 1);
+      return call(method, url, body, opt, tries + 1);
     }
     if (!r.ok) {
       let m = ''; try { m = (await r.json()).error?.message || ''; } catch (_) {}
@@ -1376,13 +1939,22 @@ function graphBackend() {
     const o = {};
     for (const [lk, v] of Object.entries(f)) {
       const n = cols[k][lk]; if (!n || v === undefined) continue;
+      const t = kinds[k][lk];
       if (DATE_KEYS[k]?.includes(lk)) o[n] = v ? midnight(v) : null;
-      else if (BOOL_KEYS[k]?.includes(lk)) { const t = kinds[k][lk]; o[n] = t === 'number' ? (v ? 1 : 0) : t === 'text' ? (v ? '1' : '0') : !!v; }
+      else if (BOOL_KEYS[k]?.includes(lk)) o[n] = t === 'number' ? (v ? 1 : 0) : t === 'text' ? (v ? '1' : '0') : !!v;
+      else if (t === 'number') o[n] = (v === null || v === '' || isNaN(+v)) ? null : +v;
+      else if (t === 'text') o[n] = v === null ? '' : String(v);
       else o[n] = v;
     }
     return o;
   };
   const L = k => `/sites/${site.id}/lists/${ids[k]}`;
+  const listMsg = k => `沒有權限寫入「${LIST_NAMES[k]}」清單`;
+  const guard = (k, p) => p.catch(e => {
+    if (e.status === 403 && !['jobs', 'ext', 'days', 'staff', 'options', 'trash'].includes(k)) throw userErr(listMsg(k) + '，請管理員檢查你的群組。');
+    throw e;
+  });
+  const userOf = u => u?.user ? { id: u.user.id || '', name: u.user.displayName || '', mail: u.user.email || '' } : { id: '', name: '', mail: '' };
   return {
     raw: call,
     async init() {
@@ -1397,12 +1969,14 @@ function graphBackend() {
       const missing = [];
       for (const [k, name] of Object.entries(LIST_NAMES)) {
         const l = lists.find(x => x.displayName === name) || lists.find(x => x.name === name);
-        if (l) ids[k] = l.id; else if (k !== 'trash') missing.push('「' + name + '」');
+        if (l) ids[k] = l.id; else if (!OPTIONAL_LISTS.includes(k)) missing.push('「' + name + '」');
       }
       if (missing.length) throw userErr(`在網站「${site.displayName}」找不到清單 ${missing.join('、')}。請確認清單名稱和指南一致。`);
       const bad = [];
       await pool(Object.keys(ids).map(k => async () => {
-        const cs = await all(`${L(k)}/columns?$top=200`);
+        let cs;
+        try { cs = await all(`${L(k)}/columns?$top=200`); }
+        catch (e) { if (OPTIONAL_LISTS.includes(k) && (e.status === 403 || e.status === 404)) { delete ids[k]; return; } throw e; }
         cols[k] = {}; kinds[k] = {};
         for (const [lk, [internal, disp]] of Object.entries(FIELD_DEFS[k])) {
           const custom = SC.fields?.[k]?.[lk];
@@ -1411,39 +1985,62 @@ function graphBackend() {
           const c = (custom && cs.find(x => x.name === custom)) || usable.find(x => x.name === internal) || usable.find(x => x.displayName === internal) || usable.find(x => x.displayName === disp)
             || usable.find(x => String(x.displayName || '').toLowerCase() === internal.toLowerCase());
           if (!c && OPTIONAL_FIELDS[k]?.includes(lk)) continue;
-          if (c) { cols[k][lk] = c.name; kinds[k][lk] = c.boolean ? 'boolean' : c.number ? 'number' : (c.text || c.choice) ? 'text' : 'other'; } else bad.push(`${LIST_NAMES[k]} 的「${disp}」`);
+          if (c) { cols[k][lk] = c.name; kinds[k][lk] = c.boolean ? 'boolean' : c.number ? 'number' : (c.text || c.choice) ? 'text' : 'other'; } else bad.push(`${LIST_NAMES[k]} 的「${internal}」`);
         }
       }));
       if (bad.length) throw userErr('清單裡找不到這些欄位：' + bad.join('、') + '。請對照指南的清單設計檢查。');
     },
     has: k => !!ids[k],
+    hasCol: (k, f) => !!(cols[k] && cols[k][f]),
     async items(k) {
       if (!ids[k]) return [];
       const sel = Object.values(cols[k]).join(',');
-      const rows = await all(`${L(k)}/items?$expand=fields($select=${sel})&$top=999`);
+      const rows = await all(`${L(k)}/items?$select=id,createdBy,lastModifiedBy,lastModifiedDateTime&$expand=fields($select=${sel})&$top=999`);
       return rows.map(r => {
         const f = {};
         for (const [lk, n] of Object.entries(cols[k])) { let v = r.fields?.[n]; if (DATE_KEYS[k]?.includes(lk)) v = toDs(v); else if (BOOL_KEYS[k]?.includes(lk)) v = toBool(v); f[lk] = v; }
-        return { id: r.id, f };
+        return { id: r.id, f, author: userOf(r.createdBy), editor: userOf(r.lastModifiedBy), at: Date.parse(r.lastModifiedDateTime || '') || 0 };
       });
     },
-    async create(k, f) { const r = await call('POST', `${L(k)}/items`, { fields: out(k, f) }); return r.id; },
-    async patch(k, id, f) { await call('PATCH', `${L(k)}/items/${id}/fields`, out(k, f)); },
-    async remove(k, id) { await call('DELETE', `${L(k)}/items/${id}`); }
+    async create(k, f) { if (!ids[k]) throw userErr(`還沒建立「${LIST_NAMES[k]}」清單，請管理員照設定紀錄建立。`); const r = await guard(k, call('POST', `${L(k)}/items`, { fields: out(k, f) })); return r.id; },
+    async patch(k, id, f) { await guard(k, call('PATCH', `${L(k)}/items/${id}/fields`, out(k, f))); },
+    async remove(k, id) { await guard(k, call('DELETE', `${L(k)}/items/${id}`)); },
+    /* 帳號與群組 */
+    async me() { const u = await call('GET', '/me?$select=id,displayName,mail,userPrincipalName'); return { id: u.id, name: u.displayName || '', mail: u.mail || '', upn: u.userPrincipalName || '' }; },
+    async myGroups(gids) { if (!gids.length) return []; const r = await call('POST', '/me/checkMemberGroups', { groupIds: gids }); return r.value || []; },
+    async members(gid) {
+      const rows = await all(`/groups/${gid}/members?$select=id,displayName,mail,userPrincipalName&$top=999`);
+      return rows.filter(x => !x['@odata.type'] || /user$/i.test(x['@odata.type'])).map(x => ({ id: x.id, name: x.displayName || '', mail: x.mail || '', upn: x.userPrincipalName || '' }));
+    },
+    async addMember(gid, uid) {
+      try { await call('POST', `/groups/${gid}/members/$ref`, { '@odata.id': `https://graph.microsoft.com/v1.0/directoryObjects/${uid}` }, { scopes: ADMIN_SCOPES }); }
+      catch (e) { if (e.status === 400 && /already exist/i.test(e.message)) return; throw e; }
+    },
+    async removeMember(gid, uid) {
+      try { await call('DELETE', `/groups/${gid}/members/${uid}/$ref`, null, { scopes: ADMIN_SCOPES }); }
+      catch (e) { if (e.status === 404) return; throw e; }
+    }
   };
 }
 
 /* ---------- 示範模式（網址加 ?demo）：資料只在這個分頁，不會存到任何地方 ---------- */
 function memoryBackend(seed) {
   const db = {}; let n = 1;
-  for (const [k, rows] of Object.entries(seed)) db[k] = rows.map(f => ({ id: String(n++), f: { ...f } }));
+  const me = seed.users[0];
+  for (const [k, rows] of Object.entries(seed.lists)) db[k] = rows.map(f => ({ id: String(n++), f: { ...f }, author: me, editor: me, at: Date.now() }));
+  const groups = clone(seed.groups);
   const lag = () => new Promise(r => setTimeout(r, 40));
   return {
-    async init() {}, has: k => !!db[k], raw: async () => ({ value: [] }),
-    async items(k) { await lag(); return (db[k] || []).map(r => ({ id: r.id, f: { ...r.f } })); },
-    async create(k, f) { await lag(); const id = String(n++); (db[k] ||= []).push({ id, f: { ...f } }); return id; },
-    async patch(k, id, f) { await lag(); const r = (db[k] || []).find(x => x.id === id); if (!r) throw Object.assign(new Error('找不到資料'), { code: 'error' }); Object.assign(r.f, f); },
-    async remove(k, id) { await lag(); db[k] = (db[k] || []).filter(x => x.id !== id); }
+    async init() {}, has: k => !!db[k], hasCol: () => true, raw: async () => ({ value: [] }),
+    async items(k) { await lag(); return (db[k] || []).map(r => ({ ...r, f: { ...r.f } })); },
+    async create(k, f) { await lag(); const id = String(n++); (db[k] ||= []).push({ id, f: { ...f }, author: me, editor: me, at: Date.now() }); return id; },
+    async patch(k, id, f) { await lag(); const r = (db[k] || []).find(x => x.id === id); if (!r) throw Object.assign(new Error('找不到資料'), { code: 'error' }); Object.assign(r.f, f); r.editor = me; r.at = Date.now(); },
+    async remove(k, id) { await lag(); db[k] = (db[k] || []).filter(x => x.id !== id); },
+    async me() { return { ...me, upn: me.mail }; },
+    async myGroups(gids) { return gids.filter(g => (groups[g] || []).includes(me.id)); },
+    async members(gid) { await lag(); return (groups[gid] || []).map(id => seed.users.find(u => u.id === id)).filter(Boolean).map(u => ({ ...u, upn: u.mail })); },
+    async addMember(gid, uid) { await lag(); (groups[gid] ||= []); if (!groups[gid].includes(uid)) groups[gid].push(uid); },
+    async removeMember(gid, uid) { await lag(); groups[gid] = (groups[gid] || []).filter(x => x !== uid); }
   };
 }
 function demoSeed() {
@@ -1451,13 +2048,14 @@ function demoSeed() {
   const d = n => ds(y, m, n);
   const reg = ['王大明', '李志豪', '陳建宏', '林俊傑', '張家豪', '黃信宏', '吳承恩', '劉育成'];
   const sup = ['小安', '阿凱', '小豪'];
-  const staff = [...reg.map((name, i) => ({ name, group: '正職', order: i + 1, active: true })), ...sup.map((name, i) => ({ name, group: '支援', order: 20 + i, active: true }))];
-  const options = [...['7111', '7222', '3.5噸 A', '3.5噸 B'].map((name, i) => ({ name, cat: '公司車輛', order: i + 1 })),
+  const mail = n => 'demo' + reg.indexOf(n) + '@example.com';
+  const staff = [...reg.map((name, i) => ({ name, group: '正職', order: i + 1, active: true, email: mail(name) })), ...sup.map((name, i) => ({ name, group: '支援', order: 20 + i, active: true })), { name: '小安團隊', group: '團隊', order: 30, active: true, leader: '小安' }];
+  const options = [...['7111', '7222', '3.5噸 A', '3.5噸 B'].map((name, i) => ({ name, cat: '公司車輛', order: i + 1, serviceKm: i === 0 ? 80000 : null })),
     ...['順發', '大華'].map((name, i) => ({ name, cat: '外調公司', order: 10 + i })), ...['3.5噸', '11噸', '小貨車'].map((name, i) => ({ name, cat: '車種', order: 20 + i }))];
-  const J = (n, title, start, end, people, leaders, vehicles, extra) => ({ key: 'demo' + n + title.length, date: d(n), title, start, end, timeNote: '', people: people.join(';'), leaders: leaders.join(';'), vehicles: vehicles.join(';'), unattended: false, note: '', order: 1, ...(extra || {}) });
+  const J = (n, title, start, end, people, leaders, vehicles, extra) => ({ key: 'demo' + n + title.length, date: d(n), title, start, end, timeNote: '', people: people.join(';'), leaders: leaders.join(';'), vehicles: vehicles.join(';'), unattended: false, note: '', order: 1, address: '', teams: '', ...(extra || {}) });
   const t = Math.min(now.getDate(), 26);
   const jobs = [
-    J(t, '淡江校慶', '08:00', '17:00', ['王大明', '李志豪', '小安'], ['王大明'], ['7111']),
+    J(t, '淡江校慶', '08:00', '17:00', ['王大明', '李志豪', '小安'], ['王大明'], ['7111'], { address: '新北市淡水區英專路151號', teams: JSON.stringify([{ name: '小安團隊', count: 3, members: ['小安', '阿明', ''] }]) }),
     J(t, '台大活動中心', '13:00', '20:00', ['陳建宏', '李志豪'], ['陳建宏'], ['7222'], { order: 2 }),
     J(t + 1, '世貿展覽 進場', '07:00', '', ['林俊傑', '張家豪', '阿凱'], ['林俊傑'], ['3.5噸 A'], { timeNote: '疊車' }),
     J(t + 2, '世貿展覽 撤場', '18:00', '23:00', ['林俊傑', '黃信宏'], [], ['3.5噸 A']),
@@ -1465,24 +2063,36 @@ function demoSeed() {
   ];
   const ext = [{ key: jobs[2].key, date: jobs[2].date, company: '順發', type: '11噸', plate: 'KLA-1234', driver: '陳先生', ok: false }];
   const days = [{ key: d(t), date: d(t), leave: '吳承恩', office: '劉育成' }, { key: d(t + 1), date: d(t + 1), leave: '李志豪', office: '' }];
-  return { staff, options, jobs, ext, days, trash: [] };
+  const users = [{ id: 'u-me', name: '管理員（示範）', mail: 'admin@example.com' }, ...reg.slice(0, 4).map((n, i) => ({ id: 'u' + i, name: n, mail: mail(n) })), { id: 'u-office', name: '行政 小美', mail: 'office@example.com' }];
+  const all = users.map(u => u.id), reg4 = ['u0', 'u1', 'u2', 'u3'];
+  const groups = { 'g-team': all, 'g-edit': ['u-me'], 'g-self': reg4, 'g-sup': reg4, 'g-view': ['u-me', 'u-office'], 'g-km': ['u-me', ...reg4], 'g-export': ['u-me', 'u-office'], 'g-admin': ['u-me'] };
+  Object.assign(GID, { edit: 'g-edit', timeSelf: 'g-self', timeSupport: 'g-sup', viewTime: 'g-view', km: 'g-km', export: 'g-export', admin: 'g-admin' });
+  SC.teamGroupId = 'g-team';
+  return { lists: { staff, options, jobs, ext, days, trash: [], times: [], mileage: [] }, users, groups };
 }
 
 /* ---------- 把清單包成畫面原本使用的資料介面（collection / doc / onSnapshot） ---------- */
-function makeDb(B) {
-  const M = { jobs: new Map(), ext: new Map(), days: new Map(), trash: new Map(), staff: [], opts: [] };
-  const subs = { jobs: [], days: [], trash: [], config: [] };
+function makeDb(B, ME) {
+  const M = { jobs: new Map(), ext: new Map(), days: new Map(), trash: new Map(), times: new Map(), mileage: new Map(), staff: [], opts: [], accounts: [], myPerms: [] };
+  const subs = { jobs: [], days: [], trash: [], times: [], mileage: [], config: [] };
   const last = {};
-  let gen = 0, busy = 0, syncT = null, syncing = null;
+  let gen = 0, busy = 0, syncT = null, syncing = null, accAt = 0;
+  const textOf = s => { s = String(s ?? ''); return /^\s*</.test(s) ? new DOMParser().parseFromString(s, 'text/html').body.textContent : s; };
+  const parseTeams = s => { try { const a = JSON.parse(textOf(s) || '[]'); return Array.isArray(a) ? a.filter(t => t && t.name).map(t => ({ name: String(t.name), count: +t.count || 0, members: (t.members || []).map(x => String(x || '')) })) : []; } catch (_) { return []; } };
   const extOf = r => ({ company: r.f.company || '', type: r.f.type || '', plate: r.f.plate || '', driver: r.f.driver || '', phone: r.f.phone || '', ok: !!r.f.ok });
-  const jobOf = (f, exts) => ({ date: f.date || '', order: f.order ?? 0, title: f.title || '', start: f.start || '', end: f.end || '', timeNote: f.timeNote || '', people: splitNames(f.people), leaders: splitNames(f.leaders), vehicles: splitNames(f.vehicles), ext: (exts || []).map(e => ({ ...e.v })), note: f.note || '', unattended: !!f.unattended });
+  const jobOf = (f, exts) => ({ date: f.date || '', order: f.order ?? 0, title: f.title || '', start: f.start || '', end: f.end || '', timeNote: f.timeNote || '', address: f.address || '', teams: parseTeams(f.teams), people: splitNames(f.people), leaders: splitNames(f.leaders), vehicles: splitNames(f.vehicles), ext: (exts || []).map(e => ({ ...e.v })), note: f.note || '', unattended: !!f.unattended });
   const byOrder = (a, b) => (a.order ?? 9999) - (b.order ?? 9999);
+  const num = v => (v === null || v === undefined || v === '' || isNaN(+v)) ? null : +v;
+  // 帳號對應的排班人員：人員清單的 Email 欄 = 公司帳號
+  const staffOfMail = (...mails) => { const ms = mails.map(lc).filter(Boolean); const s = M.staff.find(p => p.email && ms.includes(lc(p.email))); return s ? s.name : ''; };
+  const accountsView = () => M.accounts.map(a => ({ id: a.id, name: a.name, staff: staffOfMail(a.mail, a.upn), perms: [...a.perms] }));
   const cfg = () => {
-    const c = { staff: M.staff.filter(s => s.active !== false).sort(byOrder).map(s => ({ name: s.name, group: s.group || '正職' })) };
+    const c = { staff: M.staff.slice().sort(byOrder).map(s => ({ name: s.name, group: s.group || '正職', ...(s.leader ? { leader: s.leader } : {}), ...(s.active === false ? { active: false } : {}) })) };
     for (const [k, cat] of OPT_CATS) c[k] = M.opts.filter(o => o.cat === cat).sort(byOrder).map(o => o.name);
+    c.vehicleService = {}; for (const o of M.opts) if (o.cat === '公司車輛' && o.serviceKm) c.vehicleService[o.name] = o.serviceKm;
+    c.accounts = accountsView();
     return c;
   };
-  const textOf = s => { s = String(s ?? ''); return /^\s*</.test(s) ? new DOMParser().parseFromString(s, 'text/html').body.textContent : s; };
   const snapOf = c => c === 'config'
     ? { exists: true, data: () => clone(cfg()), metadata: { fromCache: false } }
     : { docs: [...M[c].entries()].map(([id, r]) => ({ id, data: () => clone(r.data) })), metadata: { fromCache: false } };
@@ -1493,19 +2103,55 @@ function makeDb(B) {
   };
   const emitAll = force => Object.keys(subs).forEach(c => emit(c, force));
 
+  /* 誰有哪些權限：讀群組成員（同事名單＝Teams 團隊成員＋各權限群組的成員） */
+  async function loadAccounts() {
+    const users = new Map();
+    const touch = u => { if (!users.has(u.id)) users.set(u.id, { id: u.id, name: u.name, mail: u.mail, upn: u.upn, perms: new Set() }); return users.get(u.id); };
+    if (!isBlank(SC.teamGroupId)) { try { (await B.members(SC.teamGroupId)).forEach(touch); } catch (e) { console.warn('讀不到團隊成員', e); } }
+    await pool(Object.entries(GID).map(([p, gid]) => async () => {
+      try { (await B.members(gid)).forEach(u => touch(u).perms.add(p)); } catch (e) { console.warn('讀不到群組成員', PERM_LABEL[p], e); }
+    }));
+    const me = touch(ME); me.perms = new Set(M.myPerms);
+    // 還沒設定群組的權限：先給排班編輯
+    for (const u of users.values()) for (const p of Object.keys(PERM_LABEL)) if (!GID[p] && (p === 'edit' ? !GID.edit : u.perms.has('edit'))) u.perms.add(p);
+    const rank = a => { const s = M.staff.find(x => x.name === staffOfMail(a.mail, a.upn)); return s ? (s.order ?? 9999) : 99999; };
+    M.accounts = [...users.values()].map(u => ({ ...u, perms: [...u.perms] }))
+      .sort((a, b) => (b.id === ME.id) - (a.id === ME.id) || rank(a) - rank(b) || a.name.localeCompare(b.name, 'zh-Hant'));
+    accAt = Date.now();
+  }
+  async function loadMyPerms() {
+    const gids = [...new Set(Object.values(GID))];
+    let mine = [];
+    try { mine = await B.myGroups(gids); } catch (e) { console.warn('無法確認群組', e); }
+    M.myPerms = Object.entries(GID).filter(([, g]) => mine.includes(g)).map(([p]) => p);
+  }
+
   async function load() {
     const g = gen;
-    const [js, xs, dd, st, op, tr] = await Promise.all(['jobs', 'ext', 'days', 'staff', 'options', 'trash'].map(k => B.items(k)));
+    const [js, xs, dd, st, op, tr, tm, km] = await Promise.all(['jobs', 'ext', 'days', 'staff', 'options', 'trash', 'times', 'mileage'].map(k => B.items(k)));
     if (g !== gen || busy) return false; // 讀取途中有人存檔，這次的結果可能是舊的，丟掉等下一輪
     const ext = new Map();
     for (const r of xs) { const k = r.f.key; if (!k) continue; if (!ext.has(k)) ext.set(k, []); ext.get(k).push({ itemId: r.id, v: extOf(r) }); }
     M.ext = ext;
     M.jobs = new Map(js.map(r => { const id = r.f.key || ('sp' + r.id); return [id, { itemId: r.id, data: jobOf(r.f, ext.get(id)) }]; }));
     M.days = new Map(dd.map(r => [r.f.key || r.f.date, { itemId: r.id, data: { leave: splitNames(r.f.leave), office: splitNames(r.f.office) } }]));
-    M.staff = st.map(r => ({ itemId: r.id, name: String(r.f.name || '').trim(), group: r.f.group || '正職', order: r.f.order, active: r.f.active !== false })).filter(s => s.name);
-    M.opts = op.map(r => ({ itemId: r.id, name: String(r.f.name || '').trim(), cat: r.f.cat || '', order: r.f.order })).filter(o => o.name);
+    M.staff = st.map(r => ({ itemId: r.id, name: String(r.f.name || '').trim(), group: r.f.group || '正職', order: r.f.order, active: r.f.active !== false, email: String(r.f.email || '').trim(), leader: String(r.f.leader || '').trim() })).filter(s => s.name);
+    M.opts = op.map(r => ({ itemId: r.id, name: String(r.f.name || '').trim(), cat: r.f.cat || '', order: r.f.order, serviceKm: num(r.f.serviceKm) })).filter(o => o.name);
     M.trash = new Map();
     for (const r of tr) { try { const t = JSON.parse(textOf(r.f.data)); if (t && t.id && t.job) M.trash.set(t.id, { itemId: r.id, data: { job: t.job, deletedAt: t.deletedAt, batch: t.batch } }); } catch (_) {} }
+    // 工時：一人一場一筆。SharePoint 只會給你看得到的那幾筆（沒有「看大家時間」的人只拿得到自己建的）
+    M.times = new Map();
+    for (const r of tm) {
+      const f = r.f; if (!f.job || !f.name) continue;
+      const slot = num(f.slot); const id = f.job + '__' + (slot != null ? f.name + '#' + slot : f.name);
+      const data = { jobId: f.job, date: f.date || '', name: f.name, ...(slot != null ? { slot, member: f.member || '' } : {}), start: f.start || '', end: f.end || '', by: r.editor.name || r.author.name, byId: r.author.id, at: r.at };
+      if (!M.times.has(id)) M.times.set(id, { all: [] });
+      M.times.get(id).all.push({ itemId: r.id, authorId: r.author.id, at: r.at, data });
+    }
+    // 同一人同一場有好幾筆時（例如排班編輯改過別人填的），畫面挑最新、而且填寫人有資格的那筆
+    for (const t of M.times.values()) { t.all.sort((a, b) => b.at - a.at); t.data = { ...t.all[0].data, alts: t.all.slice(1).map(x => x.data) }; }
+    M.mileage = new Map(km.map(r => { const f = r.f; return ['k' + r.id, { itemId: r.id, data: { kind: f.kind === 'misc' ? 'misc' : 'job', jobId: f.job || null, vehicle: f.vehicle || '', date: f.date || '', tStart: f.tStart || '', tEnd: f.tEnd || '', start: num(f.start), end: num(f.end), driver: f.driver || '', note: f.note || '', by: r.editor.name || r.author.name } }]; }));
+    if (Date.now() - accAt > 5 * 60e3) await loadAccounts();
     return true;
   }
   async function sync() {
@@ -1537,7 +2183,9 @@ function makeDb(B) {
   }
   async function setJob(id, data) {
     const rec = M.jobs.get(id);
-    const f = { title: data.title || '', key: id, date: data.date || '', start: data.start || '', end: data.end || '', timeNote: data.timeNote || '', people: joinNames(data.people), leaders: joinNames(data.leaders), vehicles: joinNames(data.vehicles), unattended: !!data.unattended, note: data.note || '', order: data.order ?? 0 };
+    const teams = (data.teams || []).filter(t => t && t.name);
+    const f = { title: data.title || '', key: id, date: data.date || '', start: data.start || '', end: data.end || '', timeNote: data.timeNote || '', address: data.address || '', teams: teams.length ? JSON.stringify(teams) : '', people: joinNames(data.people), leaders: joinNames(data.leaders), vehicles: joinNames(data.vehicles), unattended: !!data.unattended, note: data.note || '', order: data.order ?? 0 };
+    if (teams.length && !B.hasCol('jobs', 'teams')) throw userErr('「場次」清單還沒有 Teams 欄位，團隊存不進去。請管理員照設定紀錄新增欄位。');
     let itemId = rec?.itemId;
     if (itemId) await B.patch('jobs', itemId, f); else itemId = await B.create('jobs', f);
     await syncExt(id, f.date, data.ext);
@@ -1568,27 +2216,64 @@ function makeDb(B) {
     M.trash.set(id, { itemId, data: clone(data) }); emit('trash');
   }
   async function delTrash(id) { const rec = M.trash.get(id); if (!rec) return; await B.remove('trash', rec.itemId); M.trash.delete(id); emit('trash'); }
+  /* 工時 */
+  async function setTime(id, data) {
+    const rec = M.times.get(id), mine = rec?.all.find(x => x.authorId === ME.id);
+    const f = { name: data.name || '', job: data.jobId || '', date: data.date || '', slot: data.slot != null ? data.slot : null, member: data.member || '', start: data.start || '', end: data.end || '' };
+    if (data.slot != null && !B.hasCol('times', 'slot')) throw userErr('「工時」清單還沒有 Slot 欄位，團隊成員的時間存不進去。');
+    // 只改自己建的那筆；別人建的不動，另外新增一筆自己的（SharePoint 記錄的建立者才會是自己）
+    let itemId = mine?.itemId;
+    if (itemId) {
+      try { await B.patch('times', itemId, f); }
+      catch (e) { if (e.status === 404) itemId = null; else throw e; }
+    }
+    if (!itemId) itemId = await B.create('times', f);
+    const d = { ...clone(data), by: ME.name, byId: ME.id, at: Date.now() }; delete d.alts;
+    const others = (rec?.all || []).filter(x => x.itemId !== itemId);
+    M.times.set(id, { all: [{ itemId, authorId: ME.id, at: d.at, data: d }, ...others], data: { ...d, alts: others.map(x => x.data) } }); emit('times');
+  }
+  async function delTime(id) {
+    const rec = M.times.get(id); if (!rec) return;
+    await pool(rec.all.map(x => () => B.remove('times', x.itemId).catch(e => { if (e.status !== 404) throw e; })));
+    M.times.delete(id); emit('times');
+  }
+  /* 用車里程 */
+  async function setKm(id, data) {
+    const rec = M.mileage.get(id);
+    const f = { vehicle: data.vehicle || '', kind: data.kind === 'misc' ? 'misc' : 'job', job: data.jobId || '', date: data.date || '', tStart: data.tStart || '', tEnd: data.tEnd || '', start: data.start, end: data.end, driver: data.driver || '', note: data.note || '' };
+    let itemId = rec?.itemId;
+    if (itemId) await B.patch('mileage', itemId, f); else itemId = await B.create('mileage', f);
+    M.mileage.delete(id); M.mileage.set('k' + itemId, { itemId, data: { ...clone(data), by: ME.name } }); emit('mileage');
+  }
+  async function delKm(id) { const rec = M.mileage.get(id); if (!rec) return; await B.remove('mileage', rec.itemId); M.mileage.delete(id); emit('mileage'); }
   /* 人員名單與車輛選單：比對前後差異，只改有變的那幾筆 */
   async function setConfig(next) {
     const items = M.staff;
     const byName = new Map(items.map(s => [s.name, s]));
     const wantNames = (next.staff || []).map(p => p.name);
-    const removed = items.filter(s => s.active !== false && !wantNames.includes(s.name));
+    const removed = items.filter(s => !wantNames.includes(s.name));
     const added = wantNames.filter(n => !byName.has(n));
-    if (removed.length === 1 && added.length === 1) { // 改名：沿用同一筆，保留公司帳號等其他欄位
+    if (removed.length === 1 && added.length === 1) { // 改名：沿用同一筆，保留 Email 等其他欄位
       const s = removed[0]; await B.patch('staff', s.itemId, { name: added[0] });
       byName.delete(s.name); s.name = added[0]; byName.set(s.name, s); removed.length = 0;
     }
-    await pool(removed.map(s => async () => { await B.patch('staff', s.itemId, { active: false }); s.active = false; })); // 移除＝停用，舊班表的名字照留
+    await pool(removed.filter(s => s.active !== false).map(s => async () => { await B.patch('staff', s.itemId, { active: false }); s.active = false; })); // 停用，舊班表的名字照留
+    const canLeader = B.hasCol('staff', 'leader');
+    if (!canLeader && (next.staff || []).some(p => p.leader && p.leader !== (byName.get(p.name)?.leader || ''))) throw userErr('「人員」清單還沒有 Leader 欄位，負責人存不進去。請管理員照設定紀錄新增欄位。');
     await pool((next.staff || []).map((p, i) => async () => {
-      const group = p.group || '正職', order = i + 1, s = byName.get(p.name);
-      if (!s) { const id = await B.create('staff', { name: p.name, group, order, active: true }); items.push({ itemId: id, name: p.name, group, order, active: true }); return; }
+      const group = p.group || '正職', order = i + 1, active = p.active !== false, leader = p.leader || '', s = byName.get(p.name);
+      if (!s) {
+        const f = { name: p.name, group, order, active, ...(canLeader && leader ? { leader } : {}) };
+        const id = await B.create('staff', f); items.push({ itemId: id, email: '', leader, ...f }); return;
+      }
       const ch = {};
-      if (s.active === false) ch.active = true;
+      if (s.active !== active) ch.active = active;
       if (s.group !== group) ch.group = group;
       if (s.order !== order) ch.order = order;
+      if (canLeader && (s.leader || '') !== leader) ch.leader = leader;
       if (Object.keys(ch).length) { await B.patch('staff', s.itemId, ch); Object.assign(s, ch); }
     }), 5);
+    const svc = next.vehicleService || {}, canSvc = B.hasCol('options', 'serviceKm');
     for (const [k, cat] of OPT_CATS) {
       const cur = M.opts.filter(o => o.cat === cat); const want = next[k] || [];
       const gone = cur.filter(o => !want.includes(o.name)); const fresh = want.filter(n => !cur.some(o => o.name === n));
@@ -1596,16 +2281,51 @@ function makeDb(B) {
       await pool(gone.map(o => async () => { await B.remove('options', o.itemId); M.opts = M.opts.filter(x => x !== o); }));
       await pool(want.map((n, i) => async () => {
         const o = M.opts.find(x => x.cat === cat && x.name === n), order = i + 1;
-        if (!o) { const id = await B.create('options', { name: n, cat, order }); M.opts.push({ itemId: id, name: n, cat, order }); }
-        else if (o.order !== order) { await B.patch('options', o.itemId, { order }); o.order = order; }
+        const sk = cat === '公司車輛' ? num(svc[n]) : null;
+        if (sk && !canSvc) throw userErr('「車輛選項」清單還沒有 ServiceKm 欄位，保養里程存不進去。請管理員照設定紀錄新增欄位。');
+        if (!o) { const id = await B.create('options', { name: n, cat, order, ...(canSvc && sk ? { serviceKm: sk } : {}) }); M.opts.push({ itemId: id, name: n, cat, order, serviceKm: sk }); return; }
+        const ch = {};
+        if (o.order !== order) ch.order = order;
+        if (canSvc && cat === '公司車輛' && (o.serviceKm || null) !== sk) ch.serviceKm = sk;
+        if (Object.keys(ch).length) { await B.patch('options', o.itemId, ch); Object.assign(o, ch); }
       }), 5);
     }
+    if (next.accounts) await setAccountsReal(next.accounts);
     emit('config');
+  }
+  /* 權限管理頁：打勾＝加入群組；對應排班人員＝寫進人員清單的 Email 欄 */
+  async function setAccountsReal(list) {
+    let changed = false;
+    for (const a of list) {
+      const o = M.accounts.find(x => x.id === a.id); if (!o) continue;
+      const curStaff = staffOfMail(o.mail, o.upn);
+      if ((a.staff || '') !== curStaff) {
+        if (!B.hasCol('staff', 'email')) throw userErr('「人員」清單還沒有 Email 欄位，沒辦法對應排班人員。請管理員照設定紀錄新增欄位。');
+        const mail = o.mail || o.upn;
+        if (!mail) throw userErr(`${o.name} 的帳號沒有電子郵件，沒辦法對應。`);
+        for (const s of M.staff.filter(s => s.email && [lc(o.mail), lc(o.upn)].includes(lc(s.email)))) { await B.patch('staff', s.itemId, { email: '' }); s.email = ''; }
+        const s = M.staff.find(x => x.name === a.staff);
+        if (s) { await B.patch('staff', s.itemId, { email: mail }); s.email = mail; }
+        changed = true;
+      }
+      const add = a.perms.filter(p => !o.perms.includes(p)), del = o.perms.filter(p => !a.perms.includes(p));
+      for (const p of [...add, ...del]) if (!GID[p]) throw userErr(`config.js 還沒填「${PERM_LABEL[p]}」群組的識別碼，這一格暫時不能改。`);
+      try {
+        for (const p of add) { await B.addMember(GID[p], a.id); changed = true; }
+        for (const p of del) { await B.removeMember(GID[p], a.id); changed = true; }
+      } catch (e) {
+        if (e.status === 403 || e.status === 401) throw userErr('沒有修改群組的權限。要在這一頁改權限，帳號必須是 Microsoft 365 管理員，或是這些「班表-」群組的擁有者。');
+        throw e;
+      }
+    }
+    if (changed) { await loadMyPerms(); await loadAccounts(); }
   }
   const handlers = {
     jobs: { set: setJob, update: (id, p) => { const r = M.jobs.get(id); if (!r) throw Object.assign(new Error('找不到這個場次，可能已被別人刪除'), { code: 'error' }); return setJob(id, { ...r.data, ...p }); }, delete: delJob },
     days: { set: setDay, update: (id, p) => setDay(id, { ...(M.days.get(id)?.data || {}), ...p }), delete: async () => {} },
     trash: { set: setTrash, update: (id, p) => setTrash(id, { ...(M.trash.get(id)?.data || {}), ...p }), delete: delTrash },
+    times: { set: setTime, update: (id, p) => setTime(id, { ...(M.times.get(id)?.data || {}), ...p }), delete: delTime },
+    mileage: { set: setKm, update: (id, p) => setKm(id, { ...(M.mileage.get(id)?.data || {}), ...p }), delete: delKm },
     config: { set: (_, next) => setConfig(next), update: (_, p) => setConfig({ ...cfg(), ...p }), delete: async () => {} }
   };
   const docRef = (c, id) => ({
@@ -1619,7 +2339,9 @@ function makeDb(B) {
     collection: c => ({ doc: id => docRef(c, id || newId()), onSnapshot: cb => { subs[c].push(cb); if (last[c] !== undefined) cb(snapOf(c)); return () => {}; } }),
     doc: path => { const [c, id] = path.split('/'); return docRef(c, id); },
     async start() {
+      await loadMyPerms();
       if (!(await load())) await load();
+      if (!accAt) await loadAccounts();
       emitAll(true);
       setInterval(() => { if (document.visibilityState === 'visible' && !busy) sync(); }, Math.max(15, +SC.pollSeconds || 30) * 1000);
       document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') sync(); });
@@ -1641,12 +2363,11 @@ function explain(e) {
 /* ---------- boot ---------- */
 render();
 (async () => {
-  const blank = v => !v || /請填/.test(v);
   try {
     let B;
     if (DEMO) B = memoryBackend(demoSeed());
     else {
-      if (blank(SC.tenantId) || blank(SC.clientId) || blank(SC.siteUrl)) {
+      if (isBlank(SC.tenantId) || isBlank(SC.clientId) || isBlank(SC.siteUrl)) {
         S.dbMsg = '還沒設定連線資訊。請照指南填好 config.js 的 tenantId、clientId、siteUrl。<br>想先看看畫面，可以在網址最後加上 <b>?demo</b>。';
         setStatus('未設定', true); render(); return;
       }
@@ -1656,14 +2377,14 @@ render();
       S.dbMsg = '正在讀取排班資料…'; render();
       B = graphBackend();
       await B.init();
-      if (!blank(SC.editorGroupId)) {
-        try { const r = await B.raw('POST', '/me/checkMemberGroups', { groupIds: [SC.editorGroupId] }); S.canWrite = (r.value || []).includes(SC.editorGroupId); }
-        catch (e) { console.warn('無法確認編輯群組', e); }
-      }
     }
-    const db = makeDb(B);
+    const me = await B.me();
+    S.meId = me.id;
+    const db = makeDb(B, me);
     db.collection('jobs').onSnapshot(snap => { S.jobs = new Map(snap.docs.map(d => [d.id, { id: d.id, ...d.data() }])); S.loaded.jobs = true; refresh(); });
     db.collection('days').onSnapshot(snap => { S.days = new Map(snap.docs.map(d => [d.id, d.data()])); S.loaded.days = true; refresh(); });
+    db.collection('times').onSnapshot(snap => { S.times = new Map(snap.docs.map(d => [d.id, d.data()])); refresh(); });
+    db.collection('mileage').onSnapshot(snap => { S.km = new Map(snap.docs.map(d => [d.id, { id: d.id, ...d.data() }])); refresh(); if (KML) openKmList(); else if (KM) kmInfo(); });
     db.collection('trash').onSnapshot(snap => {
       S.trash = new Map(snap.docs.map(d => [d.id, { id: d.id, ...d.data() }]));
       const b = $('#trashbtn'); b.hidden = !S.trash.size || S.canWrite === false; b.textContent = `最近刪除 ${S.trash.size}`;
@@ -1671,7 +2392,8 @@ render();
     });
     db.doc('config/main').onSnapshot(snap => {
       const c = snap.exists ? snap.data() : {};
-      S.config = { staff: c.staff || [], vehicles: c.vehicles || [], extCompanies: c.extCompanies || [], carTypes: c.carTypes || [] };
+      S.config = { staff: c.staff || [], vehicles: c.vehicles || [], extCompanies: c.extCompanies || [], carTypes: c.carTypes || [], vehicleService: c.vehicleService || {}, accounts: c.accounts || [] };
+      applyMe(); fillMeSelect();
       S.loaded.config = true; refresh();
     });
     S.db = db;
