@@ -1948,6 +1948,38 @@ function graphBackend() {
     return o;
   };
   const L = k => `/sites/${site.id}/lists/${ids[k]}`;
+  const why = {}, tried = {};
+  // 讀一張清單的欄位；選用清單讀不到時記下原因，之後會自動再試
+  async function loadCols(k, bad) {
+    let cs;
+    try { cs = await all(`${L(k)}/columns?$top=200`); }
+    catch (e) { if (OPTIONAL_LISTS.includes(k)) { why[k] = `讀取欄位失敗（${e.status || ''} ${e.message || ''}）`; delete ids[k]; return; } throw e; }
+    const c2 = {}, k2 = {};
+    for (const [lk, [internal, disp]] of Object.entries(FIELD_DEFS[k])) {
+      const custom = SC.fields?.[k]?.[lk];
+      const usable = cs.filter(x => !x.readOnly || x.name === 'Title');
+      // 從 Excel 匯入的清單，內部名稱常是 field_1、field_2…，所以也比對顯示名稱（英文標題或改過的中文名）
+      const c = (custom && cs.find(x => x.name === custom)) || usable.find(x => x.name === internal) || usable.find(x => x.displayName === internal) || usable.find(x => x.displayName === disp)
+        || usable.find(x => String(x.displayName || '').toLowerCase() === internal.toLowerCase());
+      if (!c && OPTIONAL_FIELDS[k]?.includes(lk)) continue;
+      if (c) { c2[lk] = c.name; k2[lk] = c.boolean ? 'boolean' : c.number ? 'number' : (c.text || c.choice) ? 'text' : 'other'; } else bad.push(`${LIST_NAMES[k]} 的「${internal}」`);
+    }
+    cols[k] = c2; kinds[k] = k2; delete why[k];
+  }
+  // 選用清單（工時、里程紀錄）一開始讀不到時，隔一段時間再找一次（剛加權限時 SharePoint 可能還沒同步）
+  async function ensure(k, force) {
+    if (ids[k] || !OPTIONAL_LISTS.includes(k)) return !!ids[k];
+    if (!force && Date.now() - (tried[k] || 0) < 60e3) return false;
+    tried[k] = Date.now();
+    try {
+      const lists = await all(`/sites/${site.id}/lists?$select=id,displayName,name&$top=200`);
+      const l = lists.find(x => x.displayName === LIST_NAMES[k]) || lists.find(x => x.name === LIST_NAMES[k]);
+      if (!l) { why[k] = '網站上的清單列表裡沒有它（你的帳號看不到）'; return false; }
+      ids[k] = l.id; const bad = []; await loadCols(k, bad);
+      if (bad.length) { why[k] = '缺少欄位：' + bad.join('、'); delete ids[k]; }
+    } catch (e) { why[k] = `${e.status || ''} ${e.message || ''}`; }
+    return !!ids[k];
+  }
   const listMsg = k => `沒有權限寫入「${LIST_NAMES[k]}」清單`;
   const guard = (k, p) => p.catch(e => {
     if (e.status === 403 && !['jobs', 'ext', 'days', 'staff', 'options', 'trash'].includes(k)) throw userErr(listMsg(k) + '，請管理員檢查你的群組。');
@@ -1968,31 +2000,17 @@ function graphBackend() {
       const missing = [];
       for (const [k, name] of Object.entries(LIST_NAMES)) {
         const l = lists.find(x => x.displayName === name) || lists.find(x => x.name === name);
-        if (l) ids[k] = l.id; else if (!OPTIONAL_LISTS.includes(k)) missing.push('「' + name + '」');
+        if (l) ids[k] = l.id; else if (!OPTIONAL_LISTS.includes(k)) missing.push('「' + name + '」'); else why[k] = '網站上的清單列表裡沒有它（你的帳號看不到，或清單還沒建立）';
       }
       if (missing.length) throw userErr(`在網站「${site.displayName}」找不到清單 ${missing.join('、')}。請確認清單名稱和指南一致。`);
       const bad = [];
-      await pool(Object.keys(ids).map(k => async () => {
-        let cs;
-        try { cs = await all(`${L(k)}/columns?$top=200`); }
-        catch (e) { if (OPTIONAL_LISTS.includes(k) && (e.status === 403 || e.status === 404)) { delete ids[k]; return; } throw e; }
-        cols[k] = {}; kinds[k] = {};
-        for (const [lk, [internal, disp]] of Object.entries(FIELD_DEFS[k])) {
-          const custom = SC.fields?.[k]?.[lk];
-          const usable = cs.filter(x => !x.readOnly || x.name === 'Title');
-          // 從 Excel 匯入的清單，內部名稱常是 field_1、field_2…，所以也比對顯示名稱（英文標題或改過的中文名）
-          const c = (custom && cs.find(x => x.name === custom)) || usable.find(x => x.name === internal) || usable.find(x => x.displayName === internal) || usable.find(x => x.displayName === disp)
-            || usable.find(x => String(x.displayName || '').toLowerCase() === internal.toLowerCase());
-          if (!c && OPTIONAL_FIELDS[k]?.includes(lk)) continue;
-          if (c) { cols[k][lk] = c.name; kinds[k][lk] = c.boolean ? 'boolean' : c.number ? 'number' : (c.text || c.choice) ? 'text' : 'other'; } else bad.push(`${LIST_NAMES[k]} 的「${internal}」`);
-        }
-      }));
+      await pool(Object.keys(ids).map(k => () => loadCols(k, bad)));
       if (bad.length) throw userErr('清單裡找不到這些欄位：' + bad.join('、') + '。請對照指南的清單設計檢查。');
     },
     has: k => !!ids[k],
     hasCol: (k, f) => !!(cols[k] && cols[k][f]),
     async items(k) {
-      if (!ids[k]) return [];
+      if (!ids[k] && !(await ensure(k))) return [];
       const sel = Object.values(cols[k]).join(',');
       const rows = await all(`${L(k)}/items?$select=id,createdBy,lastModifiedBy,lastModifiedDateTime&$expand=fields($select=${sel})&$top=999`);
       return rows.map(r => {
@@ -2001,7 +2019,7 @@ function graphBackend() {
         return { id: r.id, f, author: userOf(r.createdBy), editor: userOf(r.lastModifiedBy), at: Date.parse(r.lastModifiedDateTime || '') || 0 };
       });
     },
-    async create(k, f) { if (!ids[k]) throw userErr(`還沒建立「${LIST_NAMES[k]}」清單，請管理員照設定紀錄建立。`); const r = await guard(k, call('POST', `${L(k)}/items`, { fields: out(k, f) })); return r.id; },
+    async create(k, f) { if (!ids[k] && !(await ensure(k, true))) throw userErr(`讀不到「${LIST_NAMES[k]}」清單：${why[k] || ''}。如果剛加權限，SharePoint 可能要幾分鐘到一小時才會生效，請稍後重新整理再試。`); const r = await guard(k, call('POST', `${L(k)}/items`, { fields: out(k, f) })); return r.id; },
     async patch(k, id, f) { await guard(k, call('PATCH', `${L(k)}/items/${id}/fields`, out(k, f))); },
     async remove(k, id) { await guard(k, call('DELETE', `${L(k)}/items/${id}`)); },
     /* 帳號與群組 */
