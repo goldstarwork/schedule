@@ -656,7 +656,7 @@ function renderSettings() {
     <div class="set2 show-${tab}">
       <section class="panel ppl">
         <div class="ph"><h2>人員</h2><p>拖曳 ⋮⋮ 調整順序，拖到另一欄就是換組。排班時依這個順序列出。改名會一併更新已排的場次和休假。</p></div>
-        <div class="scols">${col('正職')}${col('支援')}${col('團隊')}</div>
+        <div class="scols">${col('正職')}${col('行政')}${col('支援')}${col('團隊')}</div>
         ${off.length ? `<details class="offlist"><summary>已停用 ${off.length} 位（以前的場次與時間都保留）</summary><div class="chipsrow">${off.map(p => `<span class="tchip">${esc(p.name)}<small>${esc(GLABEL[p.group] || p.group || '')}</small>${S.canWrite === false ? '' : `<button data-act="restaff" data-name="${esc(p.name)}">恢復</button>`}</span>`).join('')}</div></details>` : ''}
       </section>
       <section class="panel veh">
@@ -706,7 +706,7 @@ function staffCard(p) {
     ${open ? `<div class="smenu" role="menu">
       <button data-act="renstart" data-name="${nm}">改名</button>
       ${g === '團隊' ? `<button data-act="setlead" data-name="${nm}">設定負責人</button>` : ''}
-      ${['正職', '支援', '團隊'].filter(x => x !== g).map(x => `<button data-act="mvstaff" data-name="${nm}" data-to="${x}">移到${GLABEL[x]}</button>`).join('')}
+      ${['正職', '行政', '支援', '團隊'].filter(x => x !== g).map(x => `<button data-act="mvstaff" data-name="${nm}" data-to="${x}">移到${GLABEL[x]}</button>`).join('')}
       <button data-act="mvup" data-name="${nm}">往上移</button>
       <button data-act="mvdown" data-name="${nm}">往下移</button>
       <button class="del ${armed ? 'armed' : ''}" data-act="rmstaff" data-name="${nm}">${armed ? '確定停用？' : '停用（資料保留）'}</button>
@@ -1096,8 +1096,8 @@ let L = null;
 function openLeave(date, kind = 'leave') {
   const label = kind === 'office' ? '在公司' : '休假';
   L = { date, kind, leave: [...(kind === 'office' ? officeOn(date) : leaveOn(date))] };
-  const regular = activeStaff().filter(p => (p.group || '正職') === '正職').map(p => p.name);
-  const names = regular; // 休假和公司都只從正職挑選（以前選過的支援人員仍會列出，方便取消）
+  // 休假從正職和行政挑選，公司只從正職挑選（行政本來就在公司）；以前選過的人仍會列出，方便取消
+  const names = activeStaff().filter(p => { const g = p.group || '正職'; return g === '正職' || (kind !== 'office' && g === '行政'); }).map(p => p.name);
   const sh = $('#sheet');
   const draw = () => {
     const assigned = new Set(jobsOn(date).flatMap(j => j.unattended ? [] : (j.people || [])));
@@ -1429,7 +1429,7 @@ const PERMS = [
 const can = p => !!(S.me && S.me.perms && S.me.perms.includes(p));
 const isSupport = n => S.config.staff.some(p => p.name === n && (p.group === '支援' || p.group === '團隊'));
 const isTeam = n => S.config.staff.some(p => p.name === n && p.group === '團隊');
-const GLABEL = { '正職': '正職', '支援': '支援・個人', '團隊': '支援・團隊' };
+const GLABEL = { '正職': '正職', '行政': '行政', '支援': '支援・個人', '團隊': '支援・團隊' };
 const teamText = t => `${t.name} ${t.count || 0}人`;
 const teamNames = t => (t.members || []).filter(Boolean);
 const canFillTime = n => can('edit') || can('editTime') || (can('timeSelf') && !!S.me.staff && S.me.staff === n) || (can('timeSupport') && isSupport(n));
