@@ -137,6 +137,13 @@ table.pg{border-collapse:separate;border-spacing:0;font-size:13px;min-width:100%
 .pg .cell-job.check{background:var(--warn-bg);color:var(--warn)}
 .pg .off{color:var(--muted);font-size:12px}
 .pg .cnt{font-family:var(--font-num);color:var(--muted);text-align:center}
+.pg tr.pgsec th,.pg tr.pgsec td{background:var(--surface-2);border-bottom:1px solid var(--line);padding:6px 8px}
+.pg tr.pgsec th{font-size:13px;font-weight:700;text-align:left;white-space:nowrap}
+.pg tr.pgsec th small{display:inline;margin-left:8px;font-weight:400;color:var(--muted);font-family:var(--font-body)}
+.pg .cell-job .cj-n{display:block}
+.pg .cell-job .cj-t{display:block;font-family:var(--font-num);font-size:11px;color:var(--muted);line-height:1.3}
+.pg .cell-job.bad .cj-t,.pg .cell-job.check .cj-t{color:inherit;opacity:.85}
+.pg .cj-tent{font-style:normal;font-size:10px;border:1px dashed var(--warn);color:var(--warn);border-radius:3px;padding:0 2px;margin-right:3px}
 
 /* settings v2: 人員（寬）+ 車輛（窄）兩區；手機用上方切換 */
 .settabs{display:none;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:2px;margin-bottom:12px;width:max-content}
@@ -436,6 +443,27 @@ table.permtbl{border-collapse:separate;border-spacing:0;font-size:13px;min-width
 .permtbl select.inp{padding:3px 6px;font-size:13px;max-width:9em}
 .chip.team{background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 35%,transparent)}
 .chip.team b{font-weight:600;margin-left:2px}
+button.chip{cursor:pointer;font:inherit;font-size:14px}
+.chip.x{font-size:14px}
+.tchip .trost{color:var(--accent);font-size:12px;border:1px solid color-mix(in srgb,var(--accent) 40%,var(--line));border-radius:999px;padding:0 7px;margin:0 2px;height:20px}
+.tchip .trost:hover{background:var(--accent-soft);color:var(--accent)}
+.ext-sub select.platesel{flex:0 1 13em;min-width:9em}
+.rolist{display:grid;gap:6px}
+.ro-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2)}
+.ro-row input[type=text],.ro-row select{flex:1 1 6.5em;min-width:5.5em;padding:3px 8px;font-size:13px;height:30px;border:1px solid var(--line);background:var(--surface);border-radius:7px}
+.ro-row .chk{font-size:13px;white-space:nowrap}
+.ro-row.off{opacity:.5}
+.ro-view{gap:14px;font-size:14px}.ro-view a{color:var(--accent)}
+.ralist{display:grid;gap:8px}
+#hovtip{position:fixed;z-index:25;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 24px rgb(0 0 0 / .18);padding:8px 10px;min-width:180px;max-width:300px;font-size:13px;pointer-events:none}
+.tiph{font-weight:700;font-size:14px;display:flex;align-items:baseline;gap:8px;margin-bottom:4px}
+.tiph small{font-weight:400;color:var(--muted);font-size:12px}
+.tipst.leave{color:var(--bad)} .tipst.check{color:var(--warn)} .tipst.v{color:var(--accent)}
+.tipr{display:flex;gap:10px;justify-content:space-between;padding:2px 0;border-top:1px dashed var(--line)}
+.tipr span{color:var(--muted)} .tipr b{font-weight:500;text-align:right;font-family:var(--font-body)}
+.tipr a{color:var(--accent)}
+.tipbox{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--surface-2);font-size:15px}
+.tipbox .tipr{padding:5px 0}
 .teamed{margin-top:8px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);display:grid;gap:6px}
 .teamed-h{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;font-size:14px}
 .teamed-h label{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
@@ -771,6 +799,7 @@ function analyze(date) {
   list.forEach(j => { const mem = new Set((j.teams || []).flatMap(t => (t.members || []).filter(Boolean))); (j.people || []).filter(n => mem.has(n)).forEach(n => issues.push({ lv: 'check', t: `${n} 在「${j.title}」同時排成個人和團隊成員，請擇一` })); });
   [...officeOn(date)].filter(n => leave.has(n)).forEach(n => issues.push({ lv: 'bad', t: `${n} 這天同時排在公司和休假` }));
   jobsOn(date).forEach(j => (j.ext || []).filter(e => !e.ok && extFilled(e)).forEach(e => issues.push({ lv: 'bad', t: `「${j.title}」外調車輛「${extLabel(e)}」還沒確認` })));
+  jobsOn(date).forEach(j => { const soon = (j.ext || []).filter(e => e.ok && !e.plate && extFilled(e) && extState(e, date).soon != null); if (soon.length) issues.push({ lv: 'check', t: `「${j.title}」外調車輛 ${soon.map(extLabel).join('、')} 還沒有車號` }); });
   return { flags, issues };
 }
 // 地址：放在場次名稱右邊，地圖按鈕用 Google 地圖搜尋這個地址
@@ -865,18 +894,23 @@ function jobRow(j, idx, f) {
   };
   const ppl = [...(j.people || [])].sort((a, b) => leads.has(b) - leads.has(a));
   const sup = new Set(S.config.staff.filter(p => p.group === '支援').map(p => p.name));
-  const pReg = ppl.filter(n => !sup.has(n)).map(pChip).join('');
+  // 以前把團隊當成「人」排進去的舊資料：放到支援那一行，打開場次會自動轉成團隊
+  const teamSet = new Set(S.config.staff.filter(p => p.group === '團隊').map(p => p.name));
+  const oldTeams = ppl.filter(n => teamSet.has(n) && !(j.teams || []).some(t => t.name === n));
+  const pReg = ppl.filter(n => !sup.has(n) && !teamSet.has(n)).map(pChip).join('');
   const tChip = t => {
     const show = EXPORTING ? EXPORTING.times : true; const ts = teamTimeSummary(j, t);
     const tm = ts && show ? ` <small class="tmd">${esc(ts)}</small>` : '';
     const names = teamNames(t); const tip = names.length ? names.join('、') : '沒有填姓名';
     return EXPORTING
       ? `<span class="chip team" title="${esc(tip)}">${esc(t.name)} <b>${t.count || 0}人</b>${tm}</span>`
-      : `<button type="button" class="chip team" data-act="team" data-id="${esc(j.id)}" data-t="${esc(t.name)}" title="${esc(tip)}">${esc(t.name)} <b>${t.count || 0}人</b>${tm}</button>`;
+      : `<button type="button" class="chip team" data-act="team" data-tip="team" data-id="${esc(j.id)}" data-t="${esc(t.name)}">${esc(t.name)} <b>${t.count || 0}人</b>${tm}</button>`;
   };
-  const pSup = ppl.filter(n => sup.has(n)).map(pChip).join('') + (j.teams || []).filter(t => t && t.name).map(tChip).join('');
+  const pSup = ppl.filter(n => sup.has(n)).map(pChip).join('') + (j.teams || []).filter(t => t && t.name).map(tChip).join('') + oldTeams.map(n => `<span class="chip team" title="打開場次可以設定人數和成員">${esc(n)}</span>`).join('');
   const veh = (j.vehicles || []).map(vChip).join('');
-  const ext = (j.ext || []).filter(extFilled).map(e => { const d = extDetail(e); const dt = d ? `<small class="exd">${esc(d)}</small>` : ''; return e.ok ? `<span class="chip v ext-ok">${esc(extLabel(e))}${dt} ✓</span>` : `<span class="chip leave">${esc(extLabel(e))}${dt}・未確認</span>`; }).join('');
+  const ext = (j.ext || []).map((e, i) => [e, i]).filter(([e]) => extFilled(e)).map(([e, i]) => { const st = extState(e, j.date);
+    return EXPORTING ? `<span class="chip ${st.cls}">${esc(st.label)}${esc(st.tail)}</span>`
+      : `<button type="button" class="chip ${st.cls}" data-act="extinfo" data-tip="ext" data-id="${esc(j.id)}" data-i="${i}">${esc(st.label)}${esc(st.tail)}</button>`; }).join('');
   return `<article class="job ${dim} ${j.tentative ? 'tent' : ''}" data-act="edit" data-id="${esc(j.id)}" tabindex="0">
     ${timeHTML(j)}
     <div class="jm">
@@ -893,21 +927,40 @@ function jobRow(j, idx, f) {
 function renderPerson() {
   const dates = monthDates(); const today = todayStr();
   const ana = Object.fromEntries(dates.map(d => [d, analyze(d)]));
-  const mon = new Set(dates); const names = [...new Set([...allNames(), ...[...S.jobs.values()].filter(j => mon.has(j.date)).flatMap(j => [...(j.people || []), ...(j.teams || []).map(t => t.name)])])];
+  const mon = new Set(dates); const monJobs = [...S.jobs.values()].filter(j => mon.has(j.date));
+  const names = [...new Set([...allNames(), ...monJobs.flatMap(j => [...(j.people || []), ...(j.teams || []).map(t => t.name)])])];
   if (!names.length) return '<div class="notice">還沒有人員名單，到「人員管理」新增。</div>';
+  const grpOf = n => { const p = S.config.staff.find(x => x.name === n); return p ? (p.group || '正職') : '支援'; };
+  const busy = n => dates.some(d => leaveOn(d).has(n) || officeOn(d).has(n)) || monJobs.some(j => (j.people || []).includes(n) || (j.teams || []).some(t => t.name === n));
+  // 正職、行政每個人都列；支援和團隊人很多，只列這個月有排到的
+  const GROUPS = [['正職', '正職', true], ['行政', '行政', true], ['支援', '支援・個人', false], ['團隊', '支援・團隊', false]];
+  const cols = dates.length + 2;
   let h = '<div class="gridwrap"><table class="pg"><thead><tr><th class="name">人員</th><th>天數</th>';
   for (const d of dates) { const w = parseD(d).getDay(); h += `<th class="${d === today ? 'tcol' : ''}">${md(d)}<small style="${w === 0 || w === 6 ? 'color:var(--bad)' : ''}">${WD[w]}</small></th>`; }
   h += '</tr></thead><tbody>';
-  for (const n of names) {
-    let cnt = 0, cells = '';
-    for (const d of dates) {
-      const js = jobsOn(d).filter(j => (j.people || []).includes(n) || (j.teams || []).some(t => t.name === n));
-      const off = leaveOn(d).has(n); const ofc = officeOn(d).has(n);
-      if (js.length || ofc) cnt++;
-      const fl = ana[d].flags;
-      cells += `<td class="${d === today ? 'tcol' : ''}">${off ? '<span class="off">休</span>' : ''}${ofc ? '<span class="ofc">公司</span>' : ''}${js.map(j => { const st = (fl.get(j.id) || {})['p:' + n]; const c = st === 'leave' || st === 'clash' ? 'bad' : st === 'check' ? 'check' : ''; const ld = (j.leaders || []).includes(n) ? 'lead' : ''; const tt = (j.teams || []).find(t => t.name === n); return `<button class="cell-job ${c} ${ld} ${j.tentative ? 'tent' : ''}" data-act="edit" data-id="${esc(j.id)}" title="${esc(j.title)}">${esc((j.start ? j.start + ' ' : '') + j.title + (tt ? ` ${tt.count || 0}人` : ''))}</button>`; }).join('')}</td>`;
+  const cell = (j, n, fl) => {
+    const st = (fl.get(j.id) || {})['p:' + n]; const c = st === 'leave' || st === 'clash' ? 'bad' : st === 'check' ? 'check' : '';
+    const ld = (j.leaders || []).includes(n) ? 'lead' : ''; const tt = (j.teams || []).find(t => t.name === n);
+    // 只顯示這個人的工作時間（不顯示場次時間），依登入者的權限，看得到的才顯示
+    const tm = tt ? teamTimeSummary(j, tt) : timeText(timeOf(j.id, n));
+    return `<button class="cell-job ${c} ${ld}" data-act="edit" data-id="${esc(j.id)}" title="${esc(j.title)}"><span class="cj-n">${j.tentative ? '<i class="cj-tent">預</i>' : ''}${esc(j.title + (tt ? ` ${tt.count || 0}人` : ''))}</span>${tm ? `<span class="cj-t">${esc(tm)}</span>` : ''}</button>`;
+  };
+  for (const [g, label, all] of GROUPS) {
+    const list = names.filter(n => grpOf(n) === g && (all ? (isActive(S.config.staff.find(x => x.name === n) || {}) || busy(n)) : busy(n)));
+    const hidden = all ? 0 : names.filter(n => grpOf(n) === g).length - list.length;
+    if (!list.length) continue;
+    h += `<tr class="pgsec"><th class="name" colspan="2">${label}<small>${list.length}${g === '團隊' ? ' 隊' : ' 人'}${hidden > 0 ? `・本月沒排的 ${hidden} ${g === '團隊' ? '隊' : '位'}不顯示` : ''}</small></th><td colspan="${cols - 2}"></td></tr>`;
+    for (const n of list) {
+      let cnt = 0, cells = '';
+      for (const d of dates) {
+        const js = jobsOn(d).filter(j => (j.people || []).includes(n) || (j.teams || []).some(t => t.name === n));
+        const off = leaveOn(d).has(n); const ofc = officeOn(d).has(n);
+        if (js.length || ofc) cnt++;
+        const fl = ana[d].flags;
+        cells += `<td class="${d === today ? 'tcol' : ''}">${off ? '<span class="off">休</span>' : ''}${ofc ? '<span class="ofc">公司</span>' : ''}${js.map(j => cell(j, n, fl)).join('')}</td>`;
+      }
+      h += `<tr><th class="name">${esc(n)}</th><td class="cnt">${cnt}</td>${cells}</tr>`;
     }
-    h += `<tr><th class="name">${esc(n)}</th><td class="cnt">${cnt}</td>${cells}</tr>`;
   }
   return h + '</tbody></table></div>';
 }
@@ -927,7 +980,7 @@ function renderSettings() {
       </section>` : `<section class="panel veh">
         <div class="ph"><h2>車輛清單</h2><p>排班時可以選的公司車輛，以及外調車輛的公司和車種選單。公司車輛的新增、改別名、車號、保養和保險，由負責車輛的同事在「車輛管理」頁處理。</p></div>
         ${vehicleList()}
-        ${chipList('extCompanies', '外調公司', '外調車輛的公司選單')}
+        ${chipList('extCompanies', '外調公司', '外調車輛的公司選單；點「名冊」登記固定派給我們的車')}
         ${chipList('carTypes', '車種', '外調車輛的車種選單')}
       </section>`}
     </div>`;
@@ -944,8 +997,9 @@ function chipList(key, title, desc) {
     <div class="chipsrow">${list.map(v => {
       const armed = S.armed === key + ':' + v;
       if (S.editing === key + ':' + v) return `<span class="addin ledit"><input type="text" id="ls-input" value="${esc(v)}" aria-label="修改 ${esc(v)}"><button class="btn sm" data-act="lssave" data-key="${key}" data-name="${esc(v)}">儲存</button><button class="icon-btn sm" data-act="lscancel" aria-label="取消">×</button></span>`;
-      if (S.canWrite === false) return `<span class="tchip">${esc(v)}</span>`;
-      return `<span class="tchip ${armed ? 'armed' : ''}"><button class="tname" data-act="lsedit" data-key="${key}" data-name="${esc(v)}" title="點一下修改">${esc(v)}</button><button data-act="rmlist" data-key="${key}" data-name="${esc(v)}" aria-label="移除 ${esc(v)}">${armed ? '刪除？' : '×'}</button></span>`;
+      const ro = key === 'extCompanies' ? `<button class="trost" data-act="roster" data-name="${esc(v)}" title="打開 ${esc(v)} 的車輛名冊">名冊 ${rosterOf(v).length}</button>` : '';
+      if (S.canWrite === false) return `<span class="tchip">${esc(v)}${ro}</span>`;
+      return `<span class="tchip ${armed ? 'armed' : ''}"><button class="tname" data-act="lsedit" data-key="${key}" data-name="${esc(v)}" title="點一下修改名稱">${esc(v)}</button>${ro}<button data-act="rmlist" data-key="${key}" data-name="${esc(v)}" aria-label="移除 ${esc(v)}">${armed ? '刪除？' : '×'}</button></span>`;
     }).join('')}${addChip('list', key, '＋')}</div></div>`;
 }
 function staffCount(name) {
@@ -1008,7 +1062,8 @@ async function renameList(key, oldN, newN) {
   const f = key === 'extCompanies' ? 'company' : key === 'carTypes' ? 'type' : null;
   const jobs = [...S.jobs.values()].filter(j => key === 'vehicles' ? (j.vehicles || []).includes(oldN) : (j.ext || []).some(e => e[f] === oldN));
   const ok = await write(async () => {
-    await S.db.doc('config/main').set({ ...S.config, [key]: list.map(x => x === oldN ? newN : x) });
+    const fl = { ...(S.config.extFleet || {}) }; if (key === 'extCompanies' && fl[oldN]) { fl[newN] = fl[oldN]; delete fl[oldN]; }
+    await S.db.doc('config/main').set({ ...S.config, [key]: list.map(x => x === oldN ? newN : x), ...(key === 'extCompanies' ? { extFleet: fl } : {}) });
     for (const j of jobs) {
       const upd = key === 'vehicles' ? { vehicles: j.vehicles.map(x => x === oldN ? newN : x) } : { ext: j.ext.map(e => e[f] === oldN ? { ...e, [f]: newN } : e) };
       await S.db.doc('jobs/' + j.id).update(upd);
@@ -1098,6 +1153,10 @@ function addrSuggest() {
 }
 function openEditor(job, date) {
   F = job ? JSON.parse(JSON.stringify(job)) : { id: null, date, title: '', start: '', end: '', timeNote: '', people: [], vehicles: [], ext: [], note: '', unattended: false, tentative: true }; // 新場次預設是預排
+  { // 舊資料：團隊被當成「人」勾在人員裡，打開時轉成團隊（存檔後就修正了）
+    const tn = new Set(S.config.staff.filter(p => p.group === '團隊').map(p => p.name)); const old = (F.people || []).filter(n => tn.has(n));
+    if (old.length) { F.teams = [...(F.teams || [])]; for (const n of old) if (!F.teams.some(t => t.name === n)) F.teams.push({ name: n, count: 1, members: leaderOf(n) ? [leaderOf(n)] : [] }); F.people = F.people.filter(n => !tn.has(n)); F.leaders = (F.leaders || []).filter(n => !tn.has(n)); }
+  }
   F.people = F.people || []; F.vehicles = F.vehicles || []; F.ext = F.ext || []; F.leaders = F.leaders || []; F.teams = JSON.parse(JSON.stringify(F.teams || []));
   const ro = S.canWrite === false;
   const sh = $('#sheet');
@@ -1219,8 +1278,21 @@ function readExt() {
   const v = (r, k) => r.querySelector(`[data-f=${k}]`).value.trim();
   F.ext = [...rows].map((r, i) => {
     const sv = k => { const x = v(r, k); return x === '__new' ? '' : x; };
-    return { company: sv('company'), type: sv('type'), plate: v(r, 'plate'), driver: v(r, 'driver'), ok: r.querySelector('input[type=checkbox]').checked, ...(F.ext[i]?.name ? { name: F.ext[i].name } : {}) };
+    const ps = r.querySelector('[data-f=platesel]'); const pt = r.querySelector('[data-f=plate]');
+    const plate = ps ? (ps.value === '__other' ? '' : ps.value) : (pt ? pt.value.trim() : '');
+    const manual = ps ? ps.value === '__other' : !!(pt && pt.dataset.manual);
+    return { company: sv('company'), type: sv('type'), plate, driver: v(r, 'driver'), phone: v(r, 'phone'), ok: r.querySelector('input[type=checkbox]').checked, ...(manual ? { manual: true } : {}), ...(F.ext[i]?.name ? { name: F.ext[i].name } : {}) };
   });
+}
+// 這家公司的固定車（停用的不列，除非這筆就是那台）
+const rosterOf = (co, keep) => ((S.config.extFleet || {})[co] || []).filter(c => c.plate && (!c.off || c.plate === keep));
+function plateField(e, i) {
+  const ro = rosterOf(e.company, e.plate);
+  if (ro.length && !e.manual && (!e.plate || ro.some(c => c.plate === e.plate)))
+    return `<select data-f="platesel" id="ext-plate-${i}" class="platesel ${e.plate ? '' : 'empty'}" aria-label="車號">
+      <option value="">選車號（${ro.length} 台）</option>${ro.map(c => `<option value="${esc(c.plate)}" ${c.plate === e.plate ? 'selected' : ''}>${esc(c.plate)}${c.type && c.type !== e.type ? `（${esc(c.type)}）` : ''}</option>`).join('')}
+      <option value="__other">其他車號（手動輸入）…</option></select>`;
+  return `<input type="text" data-f="plate" id="ext-plate-${i}" value="${esc(e.plate)}" placeholder="車號" aria-label="車號"${ro.length ? ' data-manual="1"' : ''}>`;
 }
 function extSelect(key, f, val, i, label) {
   const list = [...(S.config[key] || [])];
@@ -1236,8 +1308,9 @@ function renderExt() {
       <div class="ext-sub">
         ${extSelect('extCompanies', 'company', e.company, i, '公司')}
         ${extSelect('carTypes', 'type', e.type, i, '車種')}
-        <input type="text" data-f="plate" id="ext-plate-${i}" value="${esc(e.plate)}" placeholder="車號" aria-label="車號">
-        <input type="text" data-f="driver" id="ext-driver-${i}" value="${esc(e.driver)}" placeholder="姓名" aria-label="姓名">
+        ${plateField(e, i)}
+        <input type="text" data-f="driver" id="ext-driver-${i}" value="${esc(e.driver)}" placeholder="駕駛" aria-label="駕駛">
+        <input type="text" inputmode="tel" data-f="phone" id="ext-phone-${i}" value="${esc(e.phone || '')}" placeholder="電話" aria-label="電話">
         <label class="chk"><input type="checkbox" id="ext-c-${i}" ${e.ok ? 'checked' : ''}>已確認</label>
         <button type="button" class="icon-btn sm ownly" data-act="extrm" data-i="${i}" aria-label="移除這筆外調車輛">×</button>
       </div>
@@ -1245,8 +1318,122 @@ function renderExt() {
 }
 const extLabel = e => [e.company, e.type].filter(Boolean).join(' ') || e.plate || e.driver || e.name || '外調車輛';
 const extDetail = e => [(e.company || e.type) ? e.plate : '', (e.company || e.type || e.plate) ? e.driver : ''].filter(Boolean).join(' ');
-const extFilled = e => e && (e.company || e.type || e.plate || e.driver || e.name);
+const extFilled = e => e && (e.company || e.type || e.plate || e.driver || e.phone || e.name);
+// 外調車的狀態：未確認（紅）→ 已叫車、等車號（灰；活動前 3 天內變橘色）→ 有車號（只顯示車號）
+function extState(e, date) {
+  if (!e.ok) return { cls: 'leave', label: e.plate ? [e.company, e.type, e.plate].filter(Boolean).join(' ') : extLabel(e), tail: '・未確認' };
+  if (e.plate) return { cls: 'v ext-ok', label: [e.company, e.type, e.plate].filter(Boolean).join(' '), tail: ' ✓' };
+  const left = Math.round((parseD(date) - parseD(todayStr())) / 864e5);
+  return left >= 0 && left <= 3
+    ? { cls: 'check', label: extLabel(e), tail: `・待車號 ${left ? '剩 ' + left + ' 天' : '今天'}`, soon: left }
+    : { cls: 'x', label: extLabel(e), tail: '・待車號' };
+}
+const telA = p => p ? `<a href="tel:${esc(p.replace(/[^\d+]/g, ''))}">${esc(p)}</a>` : '';
+function extInfoHTML(j, e) {
+  const st = extState(e, j.date);
+  const row = (k, v) => v ? `<div class="tipr"><span>${k}</span><b>${v}</b></div>` : '';
+  return `<div class="tiph">${esc(e.plate || extLabel(e))}<small class="tipst ${st.cls.split(' ')[0]}">${esc(e.ok ? (e.plate ? '已確認' : st.tail.replace('・', '')) : '未確認')}</small></div>`
+    + row('公司', esc(e.company || '')) + row('車種', esc(e.type || '')) + row('車號', esc(e.plate || '')) + row('駕駛', esc(e.driver || '')) + row('電話', telA(e.phone || ''))
+    + (e.name ? row('原本寫的', esc(e.name)) : '');
+}
+function teamInfoHTML(j, t) {
+  const n = +t.count || 0; const ld = leaderOf(t.name);
+  const rows = Array.from({ length: n }, (_, i) => { const nm = (t.members || [])[i] || `第 ${i + 1} 位`; const r = timeOf(j.id, t.name + '#' + i);
+    return `<div class="tipr"><span>${esc(nm)}</span><b>${r ? esc(timeText(r)) : ''}</b></div>`; }).join('');
+  return `<div class="tiph">${esc(t.name)}<small>${n} 人${ld ? '・負責人 ' + esc(ld) : ''}</small></div>${rows || '<div class="hint">沒有填姓名</div>'}`;
+}
+// 電腦版：滑鼠移到外調車、團隊上就顯示詳細資訊；手機版沒有滑鼠，點一下才跳出視窗
+const HOVER = window.matchMedia ? matchMedia('(hover: hover) and (pointer: fine)') : { matches: false };
+function hideTip() { const d = document.getElementById('hovtip'); if (d) d.remove(); }
+document.addEventListener('mouseover', e => {
+  if (!HOVER.matches) return;
+  const el = e.target.closest('[data-tip]'); if (!el) return;
+  const j = S.jobs.get(el.dataset.id); if (!j) return;
+  let html = '';
+  if (el.dataset.tip === 'ext') { const x = (j.ext || [])[+el.dataset.i]; if (x) html = extInfoHTML(j, x); }
+  else if (el.dataset.tip === 'team') { const t = (j.teams || []).find(x => x.name === el.dataset.t); if (t) html = teamInfoHTML(j, t); }
+  if (!html) return;
+  hideTip();
+  const d = document.createElement('div'); d.id = 'hovtip'; d.innerHTML = html; document.body.appendChild(d);
+  const r = el.getBoundingClientRect(), w = d.offsetWidth, h = d.offsetHeight;
+  let x = Math.min(Math.max(8, r.left), innerWidth - w - 8), y = r.bottom + 6;
+  if (y + h > innerHeight - 8) y = Math.max(8, r.top - h - 6);
+  d.style.left = x + 'px'; d.style.top = y + 'px';
+});
+document.addEventListener('mouseout', e => { const el = e.target.closest('[data-tip]'); if (el && !el.contains(e.relatedTarget)) hideTip(); });
+window.addEventListener('scroll', hideTip, true);
+function openExtInfo(id, i) {
+  const j = S.jobs.get(id); const e = j && (j.ext || [])[i]; if (!e) return;
+  const sh = $('#sheet');
+  sh.innerHTML = `<div class="card tipcard" role="dialog" aria-modal="true" aria-labelledby="xi-h">
+    <h2 id="xi-h">外調車輛<button class="icon-btn x" data-act="close" aria-label="關閉">×</button></h2>
+    <p class="hint" style="margin:0">${md(j.date)}（${WD[parseD(j.date).getDay()]}）「${esc(j.title || '')}」</p>
+    <div class="tipbox">${extInfoHTML(j, e)}</div>
+    ${S.canWrite !== false ? `<div class="acts"><span class="sp"></span><button class="btn sec" data-act="edit" data-id="${esc(id)}">打開場次修改</button></div>` : ''}
+  </div>`;
+  sh.hidden = false;
+}
 // 排班時手動輸入的新公司、新車種，存檔時自動加進選單
+// 場次裡手動打的新車號：問要不要加進那家公司的名冊
+let RA = null;
+function askRosterAdd(ext) {
+  const seen = new Set();
+  const nw = (ext || []).filter(e => e.company && e.plate && !((S.config.extFleet || {})[e.company] || []).some(c => c.plate === e.plate) && !seen.has(e.company + e.plate) && seen.add(e.company + e.plate));
+  if (!nw.length || !can('edit')) return;
+  RA = nw.map(e => ({ company: e.company, plate: e.plate, type: e.type || '', driver: e.driver || '', phone: e.phone || '' }));
+  const sh = $('#sheet');
+  sh.innerHTML = `<div class="card" role="dialog" aria-modal="true" aria-labelledby="ra-h">
+    <h2 id="ra-h">加進外調公司的名冊？<button class="icon-btn x" data-act="close" aria-label="關閉">×</button></h2>
+    <p class="hint" style="margin:0">這些車號名冊裡還沒有。加進去之後，下次選公司就可以直接選車號，車種、駕駛和電話會自動帶出來。</p>
+    <div class="ralist">${RA.map((c, i) => `<label class="chk"><input type="checkbox" data-ra="${i}" checked><span><b>${esc(c.company)}</b> ${esc(c.plate)}　<span class="hint">${esc([c.type, c.driver, c.phone].filter(Boolean).join(' '))}</span></span></label>`).join('')}</div>
+    <div class="acts"><span class="sp"></span><button class="btn sec" data-act="close">不用</button><button class="btn" data-act="rasave">加入名冊</button></div>
+  </div>`;
+  sh.hidden = false;
+}
+async function saveRosterAdd() {
+  const pick = RA.filter((_, i) => $(`[data-ra="${i}"]`)?.checked); if (!pick.length) { closeEditor(); return; }
+  const fl = { ...(S.config.extFleet || {}) };
+  for (const c of pick) fl[c.company] = [...(fl[c.company] || []), { plate: c.plate, type: c.type, driver: c.driver, phone: c.phone, off: false }];
+  closeEditor(); RA = null;
+  await saveConfig({ ...S.config, extFleet: fl }); toast(`已加進名冊 ${pick.length} 台`);
+}
+// 外調公司的固定車名冊：車號、車種、常用駕駛、電話；不再派的車可以停用
+let RO = null;
+function openRoster(co) {
+  RO = { co, cars: JSON.parse(JSON.stringify((S.config.extFleet || {})[co] || [])) };
+  drawRoster();
+}
+function drawRoster() {
+  const ed = S.canWrite !== false; const { co, cars } = RO;
+  const types = [...new Set([...(S.config.carTypes || []), ...cars.map(c => c.type).filter(Boolean)])];
+  const act = cars.filter(c => !c.off).length;
+  const sh = $('#sheet');
+  sh.innerHTML = `<div class="card rocard" role="dialog" aria-modal="true" aria-labelledby="ro-h">
+    <h2 id="ro-h">${esc(co)}・車輛名冊<button class="icon-btn x" data-act="close" aria-label="關閉">×</button></h2>
+    <p class="hint" style="margin:0">固定派給我們的車。排班時選了「${esc(co)}」，車號就能直接選，車種、駕駛和電話自動帶出來；臨時換駕駛只要改那一場。${cars.length ? `目前 ${act} 台${cars.length > act ? `，停用 ${cars.length - act} 台` : ''}。` : ''}</p>
+    <div class="rolist">${cars.length ? cars.map((c, i) => ed ? `<div class="ro-row ${c.off ? 'off' : ''}">
+        <input type="text" data-ro="plate" data-i="${i}" value="${esc(c.plate)}" placeholder="車號" aria-label="車號">
+        <select data-ro="type" data-i="${i}" aria-label="車種"><option value="">車種</option>${types.map(t => `<option ${t === c.type ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select>
+        <input type="text" data-ro="driver" data-i="${i}" value="${esc(c.driver)}" placeholder="駕駛" aria-label="駕駛">
+        <input type="text" inputmode="tel" data-ro="phone" data-i="${i}" value="${esc(c.phone)}" placeholder="電話" aria-label="電話">
+        <label class="chk"><input type="checkbox" data-ro="off" data-i="${i}" ${c.off ? 'checked' : ''}>停用</label>
+        <button type="button" class="icon-btn sm" data-act="rorm" data-i="${i}" aria-label="移除這台車">×</button>
+      </div>` : `<div class="ro-row ro-view ${c.off ? 'off' : ''}"><b>${esc(c.plate)}</b><span>${esc(c.type || '')}</span><span>${esc(c.driver || '')}</span><span>${telA(c.phone || '')}</span>${c.off ? '<span class="hint">停用</span>' : ''}</div>`).join('') : '<div class="hint">還沒有車，按下面新增。</div>'}</div>
+    ${ed ? `<div class="acts"><button type="button" class="mini add" data-act="roadd">＋ 新增車輛</button><span class="sp"></span><button class="btn sec" data-act="close">取消</button><button class="btn" data-act="rosave">儲存</button></div>` : ''}
+  </div>`;
+  sh.hidden = false;
+}
+function readRoster() {
+  if (!RO) return;
+  document.querySelectorAll('[data-ro]').forEach(el => { const c = RO.cars[+el.dataset.i]; if (!c) return; const k = el.dataset.ro; c[k] = k === 'off' ? el.checked : el.value.trim(); });
+}
+async function saveRoster() {
+  readRoster(); const cars = RO.cars.filter(c => c.plate);
+  const dup = cars.map(c => c.plate).find((p, i, a) => a.indexOf(p) !== i);
+  if (dup) { toast(`車號 ${dup} 重複了`); return; }
+  const co = RO.co; closeEditor(); RO = null;
+  await saveConfig({ ...S.config, extFleet: { ...(S.config.extFleet || {}), [co]: cars } }); toast(`已儲存 ${co} 的名冊`);
+}
 async function learnExt(ext) {
   const add = (k, f) => { const cur = S.config[k] || []; const nw = [...new Set(ext.map(e => e[f]).filter(x => x && !cur.includes(x)))]; return nw.length ? [...cur, ...nw] : null; };
   const co = add('extCompanies', 'company'), ty = add('carTypes', 'type');
@@ -1327,7 +1514,7 @@ async function addSupport() {
 }
 function closeEditor() { FR = null; FI = null; TR = false; KML = false; KM = null; TM = null; $('#sheet').hidden = true; $('#sheet').innerHTML = ''; F = null; }
 function jobBody(f) {
-  return { address: (f.address || '').trim(), teams: (f.teams || []).filter(t => t && t.name).map(t => ({ name: t.name, count: +t.count || 0, members: (t.members || []).slice(0, +t.count || 0).map(x => String(x || '').trim()) })), date: f.date, order: f.order ?? Date.now(), title: f.title, start: f.start, end: f.end, timeNote: f.timeNote, people: f.people, leaders: (f.leaders || []).filter(n => f.people.includes(n)), vehicles: f.vehicles, ext: (f.ext || []).filter(extFilled), note: f.note, unattended: !!f.unattended, tentative: !!f.tentative, lodging: !!f.lodging };
+  return { address: (f.address || '').trim(), teams: (f.teams || []).filter(t => t && t.name).map(t => ({ name: t.name, count: +t.count || 0, members: (t.members || []).slice(0, +t.count || 0).map(x => String(x || '').trim()) })), date: f.date, order: f.order ?? Date.now(), title: f.title, start: f.start, end: f.end, timeNote: f.timeNote, people: f.people, leaders: (f.leaders || []).filter(n => f.people.includes(n)), vehicles: f.vehicles, ext: (f.ext || []).filter(extFilled).map(({ manual, ...e }) => e), note: f.note, unattended: !!f.unattended, tentative: !!f.tentative, lodging: !!f.lodging };
 }
 async function write(fn, okMsg) {
   try { await fn(); if (okMsg) toast(okMsg); return true; }
@@ -1370,7 +1557,7 @@ async function saveJob() {
       await (isSelf ? S.db.doc('jobs/' + F.id) : S.db.collection('jobs').doc()).set(body);
     }
   }, dates.length > 1 ? `已建立 ${md(dates[0])}–${md(dates.at(-1))} 共 ${dates.length} 天的場次，其他天的人員和車輛請各自排` : '已儲存');
-  if (ok) { const ext = F.ext; closeEditor(); learnExt(ext); } else if ($('#b-save')) $('#b-save').disabled = false;
+  if (ok) { const ext = F.ext; closeEditor(); await learnExt(ext); askRosterAdd(ext); } else if ($('#b-save')) $('#b-save').disabled = false;
 }
 // 同名場次、日期連續的一整段（例如 Ultra 11/9–11/14），中間斷掉就不算同一個案子
 function sameRun(job) {
@@ -1440,7 +1627,13 @@ document.addEventListener('click', async e => {
   else if (a === 'tentone') confirmOne(t.dataset.id);
   else if (a === 'addrapply') { $('#f-addr').value = t.dataset.v; addrSuggest(); }
   else if (a === 'pickteam') { readForm(); const n = t.dataset.name; F.teams = F.teams.some(x => x.name === n) ? F.teams.filter(x => x.name !== n) : [...F.teams, { name: n, count: 1, members: leaderOf(n) ? [leaderOf(n)] : [] }]; renderPicks(); }
-  else if (a === 'team') openTeam(t.dataset.id, t.dataset.t);
+  else if (a === 'team') { hideTip(); openTeam(t.dataset.id, t.dataset.t); }
+  else if (a === 'roster') openRoster(t.dataset.name);
+  else if (a === 'roadd') { readRoster(); RO.cars.push({ plate: '', type: '', driver: '', phone: '', off: false }); drawRoster(); const ins = document.querySelectorAll('[data-ro=plate]'); ins[ins.length - 1]?.focus(); }
+  else if (a === 'rorm') { readRoster(); RO.cars.splice(+t.dataset.i, 1); drawRoster(); }
+  else if (a === 'rosave') saveRoster();
+  else if (a === 'rasave') saveRosterAdd();
+  else if (a === 'extinfo') { hideTip(); openExtInfo(t.dataset.id, +t.dataset.i); }
   else if (a === 'teamsave') saveTeam();
   else if (a === 'pick') { const f = t.dataset.kind === 'p' ? 'people' : 'vehicles'; const n = t.dataset.name; F[f] = F[f].includes(n) ? F[f].filter(x => x !== n) : [...F[f], n]; renderPicks(); }
   else if (a === 'save') saveJob();
@@ -1573,7 +1766,12 @@ document.addEventListener('change', e => {
       inp.placeholder = s.dataset.f === 'company' ? '輸入公司名稱' : '輸入車種';
       inp.setAttribute('aria-label', inp.placeholder);
       s.replaceWith(inp); inp.focus();
-    } else s.classList.toggle('empty', !s.value);
+    } else if (s.dataset.f === 'platesel') {
+      const i = +s.id.split('-').pop(); readExt(); const x = F.ext[i];
+      if (s.value && s.value !== '__other') { const c = rosterOf(x.company, s.value).find(c => c.plate === s.value); if (c) Object.assign(x, { type: c.type || x.type, driver: c.driver || '', phone: c.phone || '', ok: true }); }
+      renderExt(); if (s.value === '__other') $('#ext-plate-' + i)?.focus();
+    } else if (s.dataset.f === 'company') { readExt(); const i = +s.id.split('-').pop(); delete F.ext[i].manual; renderExt(); }
+    else s.classList.toggle('empty', !s.value);
   }
   if (e.target.matches('#ext-list input[type=checkbox]')) e.target.closest('.ext-row').classList.toggle('ok', e.target.checked);
 });
@@ -2822,7 +3020,8 @@ let NF = null; // 打開中的通知視窗
 function jobSig(j) {
   return { date: j.date || '', title: j.title || '', start: j.start || '', end: j.end || '', address: (j.address || '').trim(),
     people: [...(j.people || [])], vehicles: [...(j.vehicles || [])],
-    teams: (j.teams || []).filter(t => t && t.name).map(t => `${t.name} ${t.count || 0}人`) };
+    teams: (j.teams || []).filter(t => t && t.name).map(t => `${t.name} ${t.count || 0}人`),
+    ext: (j.ext || []).filter(e => e && e.ok && e.plate).map(e => [e.plate, e.company, e.type, e.driver, e.phone].filter(Boolean).join(' ')) };
 }
 // 目前已確定（不是預排）、今天以後的場次
 function confirmedNow() { const o = {}, today = todayStr(); for (const j of S.jobs.values()) if (!j.tentative && (j.date || '') >= today) o[j.id] = jobSig(j); return o; }
@@ -2848,6 +3047,7 @@ function nfDescribe(id, a, b) {
     if (a.address !== b.address) common.push(b.address ? `地址改成 ${b.address}` : '取消地址');
     if (a.vehicles.join('、') !== b.vehicles.join('、')) common.push(`車輛改成 ${b.vehicles.join('、') || '無'}`);
     if (a.teams.join('、') !== b.teams.join('、')) common.push(`支援團隊改成 ${b.teams.join('、') || '無'}`);
+    if (a.ext && b.ext && a.ext.join('、') !== b.ext.join('、')) common.push(`外調車輛 ${b.ext.join('、') || '取消車號'}`);
     const inn = b.people.filter(n => !a.people.includes(n)), out = a.people.filter(n => !b.people.includes(n));
     const stay = b.people.filter(n => a.people.includes(n));
     const all = [...common];
@@ -2920,7 +3120,7 @@ function pendingChanges() {
   for (const id of ids) {
     const a = base[id] && base[id].date >= today ? base[id] : null, b = cur[id] || null;
     if (!a && !b) continue;
-    if (a && b && JSON.stringify(a) === JSON.stringify(b)) continue;
+    if (a && b && JSON.stringify(a) === JSON.stringify(a.ext ? b : { ...b, ext: undefined })) continue; // 舊的通知紀錄沒有外調車，不算異動
     out.push(nfDescribe(id, a, b));
   }
   const sb = S.notify.stays || {}, sc = confirmedStays();
@@ -3177,10 +3377,10 @@ try { applyZoom(localStorage.getItem('zoom') || 100); applyFull(localStorage.get
    ==================================================================== */
 const SC = window.SCHEDULE_CONFIG || {};
 const DEMO = new URLSearchParams(location.search).has('demo');
-const LIST_NAMES = Object.assign({ staff: '人員', options: '車輛選項', jobs: '場次', ext: '外調車輛', days: '每日狀態', trash: '最近刪除', times: '工時', mileage: '里程紀錄', vrec: '車輛紀錄', prec: '私人車紀錄', stays: '住宿', notify: '通知紀錄' }, SC.lists || {});
+const LIST_NAMES = Object.assign({ staff: '人員', options: '車輛選項', jobs: '場次', ext: '外調車輛', days: '每日狀態', trash: '最近刪除', times: '工時', mileage: '里程紀錄', vrec: '車輛紀錄', prec: '私人車紀錄', stays: '住宿', notify: '通知紀錄', xfleet: '外調車隊' }, SC.lists || {});
 // 單據照片放的文件庫（公司車、私人車分開，權限也分開）
 const LIB_NAMES = Object.assign({ vrec: '車輛單據', prec: '私人車單據' }, SC.libraries || {});
-const OPTIONAL_LISTS = ['trash', 'times', 'mileage', 'vrec', 'prec', 'stays', 'notify']; // 還沒建立也能開，只是那個功能不能用
+const OPTIONAL_LISTS = ['trash', 'times', 'mileage', 'vrec', 'prec', 'stays', 'notify', 'xfleet']; // 還沒建立也能開，只是那個功能不能用
 // 每個欄位：[英文名稱, 中文名稱]。程式會比對內部名稱、英文顯示名稱、中文顯示名稱。
 const FIELD_DEFS = {
   staff: { name: ['Title', '姓名'], group: ['Group', '組別'], order: ['SortOrder', '排序'], active: ['Active', '啟用'], email: ['Email', '電子郵件'], leader: ['Leader', '負責人'] },
@@ -3197,7 +3397,9 @@ const FIELD_DEFS = {
   // 住宿：一筆＝一間飯店一次訂房，細節（分房、費用、付款…）放在 Data（JSON）
   stays: { hotel: ['Title', '飯店'], key: ['JobKey', '場次代碼'], checkIn: ['CheckIn', '入住日'], checkOut: ['CheckOut', '退房日'], data: ['Data', '詳細資料'] },
   // 通知紀錄：Title＝last 的那一筆存「上次通知的版本」
-  notify: { title: ['Title', '名稱'], data: ['Data', '詳細資料'] }
+  notify: { title: ['Title', '名稱'], data: ['Data', '詳細資料'] },
+  // 外調車隊：一筆＝一家外調公司，固定車（車號、車種、駕駛、電話、停用）整包放在 Data（JSON）
+  xfleet: { company: ['Title', '公司'], data: ['Data', '詳細資料'] }
 };
 const DATE_KEYS = { jobs: ['date'], ext: ['date'], days: ['date'], times: ['date'], mileage: ['date'], options: ['serviceDate'], vrec: ['date'], prec: ['date'], stays: ['checkIn', 'checkOut'] };
 // 是/否欄位：匯入時若被設成數字或文字（1/0、是/否），讀寫時自動轉換
@@ -3475,12 +3677,13 @@ function demoSeed() {
   const groups = { 'g-team': all, 'g-edit': ['u-me'], 'g-self': reg4, 'g-sup': reg4, 'g-view': ['u-me', 'u-office'], 'g-km': ['u-me', ...reg4], 'g-export': ['u-me', 'u-office'], 'g-admin': ['u-me'], 'g-fleet': ['u-me', 'u-office'], 'g-priv': ['u-me'] };
   Object.assign(GID, { edit: 'g-edit', timeSelf: 'g-self', timeSupport: 'g-sup', viewTime: 'g-view', km: 'g-km', export: 'g-export', admin: 'g-admin', fleet: 'g-fleet', private: 'g-priv' });
   SC.teamGroupId = 'g-team';
-  return { lists: { staff, options, jobs, ext, days, trash: [], times: [], mileage: [], vrec: [], prec: [] }, users, groups };
+  const xfleet = [{ company: '順發', data: JSON.stringify([['KLB-6608', '3.5噸', '林文雄', '0912-111-222'], ['KLB-6609', '3.5噸', '張家豪', '0912-111-333'], ['KLC-2231', '8.8噸', '李國強', '0912-222-111']].map(([plate, type, driver, phone]) => ({ plate, type, driver, phone, off: false }))) }];
+  return { lists: { staff, options, jobs, ext, days, trash: [], times: [], mileage: [], vrec: [], prec: [], stays: [], notify: [], xfleet }, users, groups };
 }
 
 /* ---------- 把清單包成畫面原本使用的資料介面（collection / doc / onSnapshot） ---------- */
 function makeDb(B, ME) {
-  const M = { jobs: new Map(), ext: new Map(), days: new Map(), trash: new Map(), times: new Map(), mileage: new Map(), vrecords: new Map(), stays: new Map(), notify: null, notifyItem: null, vinfo: {}, terms: null, termsItem: null, staff: [], opts: [], accounts: [], myPerms: [] };
+  const M = { jobs: new Map(), ext: new Map(), days: new Map(), trash: new Map(), times: new Map(), mileage: new Map(), vrecords: new Map(), stays: new Map(), notify: null, notifyItem: null, xfleet: {}, vinfo: {}, terms: null, termsItem: null, staff: [], opts: [], accounts: [], myPerms: [] };
   const subs = { jobs: [], days: [], trash: [], times: [], mileage: [], vrecords: [], stays: [], notify: [], config: [] };
   const last = {};
   let gen = 0, busy = 0, syncT = null, syncing = null, accAt = 0;
@@ -3503,6 +3706,7 @@ function makeDb(B, ME) {
     c.vehicleInfo = {}; for (const [n, x] of Object.entries(M.vinfo)) c.vehicleInfo[n] = clone(x.info);
     for (const o of M.opts) if (o.cat === '私人車') c.vehicleInfo[o.name] = { ...(c.vehicleInfo[o.name] || {}), private: true };
     c.fleetTerms = clone(M.terms || {});
+    c.extFleet = {}; for (const [co, x] of Object.entries(M.xfleet)) c.extFleet[co] = clone(x.cars);
     const tol = M.opts.find(o => o.cat === '設定' && o.name === '里程容忍值'); c.kmTol = tol && tol.serviceKm != null ? tol.serviceKm : 3;
     c.accounts = accountsView();
     return c;
@@ -3543,7 +3747,7 @@ function makeDb(B, ME) {
 
   async function load() {
     const g = gen;
-    const [js, xs, dd, st, op, tr, tm, km, vr, pr, sy, nf] = await Promise.all(['jobs', 'ext', 'days', 'staff', 'options', 'trash', 'times', 'mileage', 'vrec', 'prec', 'stays', 'notify'].map(k => B.items(k)));
+    const [js, xs, dd, st, op, tr, tm, km, vr, pr, sy, nf, xf] = await Promise.all(['jobs', 'ext', 'days', 'staff', 'options', 'trash', 'times', 'mileage', 'vrec', 'prec', 'stays', 'notify', 'xfleet'].map(k => B.items(k)));
     if (g !== gen || busy) return false; // 讀取途中有人存檔，這次的結果可能是舊的，丟掉等下一輪
     const ext = new Map();
     for (const r of xs) { const k = r.f.key; if (!k) continue; if (!ext.has(k)) ext.set(k, []); ext.get(k).push({ itemId: r.id, v: extOf(r) }); }
@@ -3583,6 +3787,9 @@ function makeDb(B, ME) {
     // 上次通知的版本
     M.notify = null; M.notifyItem = null;
     for (const r of nf) if (String(r.f.title || '').trim() === 'last') { try { M.notify = JSON.parse(textOf(r.f.data) || 'null'); M.notifyItem = r.id; } catch (_) {} }
+    // 外調公司的固定車名冊
+    M.xfleet = {};
+    for (const r of xf) { const co = String(r.f.company || '').trim(); if (!co) continue; let d = []; try { d = JSON.parse(textOf(r.f.data) || '[]') || []; } catch (_) {} M.xfleet[co] = { itemId: r.id, cars: Array.isArray(d) ? d : [] }; }
     if (Date.now() - accAt > 5 * 60e3) await loadAccounts();
     return true;
   }
@@ -3733,6 +3940,21 @@ function makeDb(B, ME) {
     emit('vrecords'); emit('config');
   }
   // 車輛基本資料、常用項目：存在車輛紀錄（私人車存在私人車紀錄）
+  async function setXfleet(before, next) {
+    if (!next.extFleet) return;
+    const nv = next.extFleet, bv = before.extFleet || {};
+    const changed = Object.keys(nv).filter(co => JSON.stringify(nv[co]) !== JSON.stringify(bv[co]));
+    const removed = Object.keys(bv).filter(co => !(co in nv) && M.xfleet[co]);
+    if (!changed.length && !removed.length) return;
+    if (!B.has('xfleet')) throw userErr('還沒建立「外調車隊」清單，車輛名冊存不進去。請管理員照設定紀錄建立清單。');
+    for (const co of removed) { await B.remove('xfleet', M.xfleet[co].itemId); delete M.xfleet[co]; }
+    for (const co of changed) {
+      const cars = (nv[co] || []).map(c => ({ plate: c.plate || '', type: c.type || '', driver: c.driver || '', phone: c.phone || '', off: !!c.off }));
+      const f = { company: co, data: JSON.stringify(cars) }; const r = M.xfleet[co];
+      if (r) await B.patch('xfleet', r.itemId, f); else { const itemId = await B.create('xfleet', f); M.xfleet[co] = { itemId, cars }; continue; }
+      r.cars = cars;
+    }
+  }
   async function setVinfo(before, next) {
     const nv = next.vehicleInfo || {}, bv = before.vehicleInfo || {};
     const changed = Object.keys(nv).filter(n => JSON.stringify(nv[n]) !== JSON.stringify(bv[n]));
@@ -3786,6 +4008,7 @@ function makeDb(B, ME) {
       if (Object.keys(ch).length) { await B.patch('staff', s.itemId, ch); Object.assign(s, ch); }
     }), 5);
     await setVinfo(before, next);
+    await setXfleet(before, next);
     const svc = next.vehicleService || {}, sdt = next.vehicleServiceDate, canSvc = B.hasCol('options', 'serviceKm'), canSd = B.hasCol('options', 'serviceDate');
     const privOf = n => !!(next.vehicleInfo?.[n]?.private);
     const cats = [['公司車輛', (next.vehicles || []).filter(n => !privOf(n))], ['私人車', (next.vehicles || []).filter(privOf)], ['外調公司', next.extCompanies || []], ['車種', next.carTypes || []]];
@@ -3968,7 +4191,7 @@ render();
     });
     db.doc('config/main').onSnapshot(snap => {
       const c = snap.exists ? snap.data() : {};
-      S.config = { staff: c.staff || [], vehicles: c.vehicles || [], extCompanies: c.extCompanies || [], carTypes: c.carTypes || [], vehicleService: c.vehicleService || {}, vehicleServiceDate: c.vehicleServiceDate || {}, vehicleInfo: c.vehicleInfo || {}, fleetTerms: c.fleetTerms || {}, kmTol: c.kmTol ?? 3, accounts: c.accounts || [] };
+      S.config = { staff: c.staff || [], vehicles: c.vehicles || [], extCompanies: c.extCompanies || [], carTypes: c.carTypes || [], extFleet: c.extFleet || {}, vehicleService: c.vehicleService || {}, vehicleServiceDate: c.vehicleServiceDate || {}, vehicleInfo: c.vehicleInfo || {}, fleetTerms: c.fleetTerms || {}, kmTol: c.kmTol ?? 3, accounts: c.accounts || [] };
       applyMe(); fillMeSelect();
       S.loaded.config = true; refresh();
     });
