@@ -87,7 +87,7 @@ body.full .wrap{max-width:none}
 .issues .bad .dot{background:var(--bad)} .issues .bad{color:var(--bad)}
 .issues .check .dot{background:var(--warn)} .issues .check{color:var(--warn)}
 
-.job{display:grid;grid-template-columns:92px 1fr;gap:12px;padding:10px 14px;border-top:1px solid var(--line);cursor:pointer;background:var(--surface);transition:background .12s}
+.job{display:grid;grid-template-columns:92px 1fr auto;gap:12px;padding:10px 14px;border-top:1px solid var(--line);cursor:pointer;background:var(--surface);transition:background .12s}
 .job:first-of-type{border-top:0}
 .issues + .job{border-top:0}
 .job:hover{background:var(--surface-2)}
@@ -298,6 +298,55 @@ textarea{width:100%;resize:vertical;min-height:56px}
 .delq.ovq{color:var(--warn)}
 @media (min-width:600px){.delq{flex-basis:auto}}
 .hint{font-size:12px;color:var(--muted)}
+.lodgebox{font-size:14px}
+.jlodge{align-self:start}
+.lgbtn{display:inline-flex;align-items:flex-start;gap:6px;border:1px solid color-mix(in srgb,var(--accent) 40%,var(--line));background:var(--surface);color:var(--ink);border-radius:8px;padding:5px 9px;font-size:13px;text-align:left;max-width:220px}
+.lgbtn svg{flex:none;margin-top:2px;color:var(--accent)}
+.lgbtn:hover{background:var(--accent-soft)}
+.lgbtn.empty{border-style:dashed;color:var(--muted)}
+.lgls{display:grid;gap:1px;min-width:0}
+.lgl{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lgs{font-weight:600;margin-right:4px}
+.lgs-入住{color:var(--accent)} .lgs-退房{color:var(--warn)} .lgs-續住{color:var(--muted);font-weight:500}
+.lgnone{color:var(--muted)}
+.lgsub{font-size:12px;padding-left:2px}
+.lgbtn.static{cursor:default}.lgbtn.static:hover{background:var(--surface)}
+.lgcard{border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:grid;gap:4px;background:var(--surface-2)}
+.lgcard.here{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.lgh{display:flex;align-items:center;gap:8px}.lgh b{font-size:16px}.lgh .mini{margin-left:auto}
+.lgd{font-size:14px;font-family:var(--font-body)}
+.lgr{font-size:13px;color:var(--muted)}.lgr a{color:var(--accent)}
+.lgpay{color:var(--ink)}
+.lgnote{white-space:pre-wrap;color:var(--ink)}
+.lgrooms{display:grid;gap:4px;margin-top:4px}
+.lgroom{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:14px;border-top:1px dashed var(--line);padding-top:4px}
+.lgroom b{min-width:4em}.lgroom small{color:var(--muted);font-family:var(--font-num)}
+.lsroom{border:1px solid var(--line);border-radius:8px;padding:8px;display:grid;gap:6px;background:var(--surface-2);margin-top:6px}
+.lsrow{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.lsno{width:6em}.lsg{flex:1;min-width:10em}
+.lsquick .mini{padding:1px 8px}
+.lsdates summary{font-size:12px;color:var(--muted);cursor:pointer}
+.tenttag{font-size:12px;border:1px dashed var(--warn);color:var(--warn);background:none;border-radius:4px;padding:0 6px;font-weight:500;flex:none;line-height:1.5}
+button.tenttag:hover{background:var(--warn-bg);border-style:solid}
+.mini.tentok{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 50%,var(--line))}
+.tentbox{font-size:14px;color:var(--warn)}
+.notifybtn.has{border-color:var(--accent);color:var(--accent);font-weight:500}
+.notifybtn b{display:inline-block;min-width:1.4em;margin-left:2px;border-radius:999px;background:var(--accent);color:var(--accent-ink);font-size:12px;padding:0 5px;font-family:var(--font-num)}
+.nfbar{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.nflist{display:grid;border-top:1px solid var(--line);max-height:38vh;overflow:auto}
+.nfitem{display:flex;gap:10px;align-items:flex-start;padding:8px 2px;border-bottom:1px solid var(--line);cursor:pointer}
+.nfitem input{margin-top:4px;flex:none}
+.nfitem b{display:block;font-weight:500;font-size:14px}
+.nfitem small{display:block;font-size:12px;color:var(--muted)}
+.nfopts{display:grid;gap:6px;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2)}
+.nfsub{display:flex;flex-wrap:wrap;gap:4px 14px;padding-left:24px}
+.nfsub.off{opacity:.4;pointer-events:none}
+.nfprev{display:grid;gap:8px}
+.nfph{font-size:13px}
+.nfmsg{border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--surface)}
+.nfmsg.dm{border-style:dashed}
+.nfmsg small{display:block;color:var(--muted);font-size:12px;margin-bottom:4px}
+.nfmsg pre{margin:0;white-space:pre-wrap;font-family:var(--font-body);font-size:13px;line-height:1.6}
 .addrsug:empty{display:none}.addrsug{margin-top:4px}
 .linkbtn{border:0;background:none;padding:0;color:var(--accent);font-size:12px;font-weight:500;text-decoration:underline;cursor:pointer}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:8px;font-size:14px;z-index:30;display:flex;align-items:center;gap:14px;max-width:calc(100% - 32px)}
@@ -391,7 +440,7 @@ table.permtbl{border-collapse:separate;border-spacing:0;font-size:13px;min-width
 .ro .mini.add,.ro .ownly{display:none}
 .ro .job,.ro .pg .cell-job{cursor:default}
 .ro .job:hover{background:var(--surface)}
-@media (max-width:520px){.job{grid-template-columns:70px 1fr;gap:10px;padding-inline:12px}.dlabel{min-width:0}}
+@media (max-width:520px){.job{grid-template-columns:70px 1fr;gap:10px;padding-inline:12px}.dlabel{min-width:0}.jlodge{grid-column:2;justify-self:start}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 
@@ -611,6 +660,7 @@ table.permtbl{border-collapse:separate;border-spacing:0;font-size:13px;min-width
       </div>
       <button class="ghost" id="gotoday">今天</button>
       <select class="ghost" id="focus" aria-label="只看某人"><option value="">全部人員</option></select>
+      <button class="ghost notifybtn" id="notifybtn" data-act="notify" hidden>通知更新</button>
       <button class="ghost" id="trashbtn" data-act="trash" hidden>最近刪除</button>
       <button class="ghost" id="exportbtn" type="button">匯出</button>
       <button class="ghost" id="kmbtn" type="button" data-act="kmlist">用車紀錄</button>
@@ -637,7 +687,7 @@ const $ = s => document.querySelector(s);
 const md = s => { const d = parseD(s); return `${d.getMonth() + 1}/${d.getDate()}`; };
 
 const S = {
-  db: null, canWrite: true, jobs: new Map(), days: new Map(), trash: new Map(), km: new Map(), times: new Map(), vrec: new Map(), page: 'sched', fleetV: null, fleetKind: '全部', me: null, meId: '',
+  db: null, canWrite: true, jobs: new Map(), days: new Map(), trash: new Map(), km: new Map(), times: new Map(), vrec: new Map(), stays: new Map(), page: 'sched', fleetV: null, fleetKind: '全部', me: null, meId: '',
   config: { staff: [], vehicles: [], extCompanies: [], carTypes: [], vehicleService: {}, vehicleServiceDate: {}, vehicleInfo: {}, fleetTerms: {}, kmTol: 3, accounts: [] }, view: 'day',
   month: (() => { const d = new Date(); return { y: d.getFullYear(), m: d.getMonth() }; })(),
   focus: '', loaded: { jobs: false, days: false, config: false }, scrolled: false
@@ -726,7 +776,7 @@ function render() {
   if (S.focus && S.config.staff.length && !names.includes(S.focus)) S.focus = '';
   fs.innerHTML = '<option value="">全部人員</option>' + names.map(n => `<option ${n === S.focus ? 'selected' : ''}>${esc(n)}</option>`).join('');
   document.body.classList.toggle('ro', S.canWrite === false);
-  { const tb = $('#trashbtn'); if (tb) tb.hidden = !S.trash.size || S.canWrite === false; } { const eb = $('#exportbtn'); if (eb) eb.hidden = !can('export'); const kb = $('#kmbtn'); if (kb) kb.hidden = !can('km'); const pt = $('#tab-perm'); if (pt) pt.hidden = !can('admin'); } // 最近刪除、匯出只給有編輯權限的人
+  { const tb = $('#trashbtn'); if (tb) tb.hidden = !S.trash.size || S.canWrite === false; } { const eb = $('#exportbtn'); if (eb) eb.hidden = !can('export'); const kb = $('#kmbtn'); if (kb) kb.hidden = !can('km'); const pt = $('#tab-perm'); if (pt) pt.hidden = !can('admin'); } updateNotifyBtn(); ensureNotifyBase(); // 最近刪除、匯出只給有編輯權限的人
   const main = $('#main');
   if (!S.db) { main.innerHTML = `<div class="notice">${S.dbMsg || '正在連線排班資料…'}</div>`; return; }
   if (S.page === 'fleet') { main.innerHTML = renderFleet(); return; }
@@ -762,6 +812,7 @@ function renderDays(only) {
         <div class="dact">
           <button class="mini ownly" data-act="office" data-date="${date}">公司</button>
           <button class="mini ownly" data-act="leave" data-date="${date}">休假</button>
+          ${list.some(j => j.tentative) ? `<button class="mini ownly tentok" data-act="tentok" data-date="${date}" title="把這天的預排場次全部改成確定">確定預排</button>` : ''}
           <button class="mini add" data-act="new" data-date="${date}">＋ 場次</button>
         </div>
       </div>
@@ -808,16 +859,17 @@ function jobRow(j, idx, f) {
   const pSup = ppl.filter(n => sup.has(n)).map(pChip).join('') + (j.teams || []).filter(t => t && t.name).map(tChip).join('');
   const veh = (j.vehicles || []).map(vChip).join('');
   const ext = (j.ext || []).filter(extFilled).map(e => { const d = extDetail(e); const dt = d ? `<small class="exd">${esc(d)}</small>` : ''; return e.ok ? `<span class="chip v ext-ok">${esc(extLabel(e))}${dt} ✓</span>` : `<span class="chip leave">${esc(extLabel(e))}${dt}・未確認</span>`; }).join('');
-  return `<article class="job ${dim}" data-act="edit" data-id="${esc(j.id)}" tabindex="0">
+  return `<article class="job ${dim} ${j.tentative ? 'tent' : ''}" data-act="edit" data-id="${esc(j.id)}" tabindex="0">
     ${timeHTML(j)}
     <div class="jm">
-      <h3><span class="num">${idx + 1}</span>${esc(j.title || '（未命名）')}${j.timeNote ? `<span class="jsub">${esc(j.timeNote)}</span>` : ''}${j.unattended ? '<span class="unatt">不留守</span>' : ''}${addrHTML(j)}</h3>
+      <h3><span class="num">${idx + 1}</span>${j.tentative && (!EXPORTING || EXPORTING.tent) ? (!EXPORTING && canNotify() ? `<button type="button" class="tenttag" data-act="tentpop" data-id="${esc(j.id)}" title="點一下可以改成確定">預排</button>` : '<span class="tenttag">預排</span>') : ''}${esc(j.title || '（未命名）')}${j.timeNote ? `<span class="jsub">${esc(j.timeNote)}</span>` : ''}${j.unattended ? '<span class="unatt">不留守</span>' : ''}${addrHTML(j)}</h3>
       ${pReg ? `<div class="chips"><span class="k">正職</span>${pReg}</div>` : ''}
       ${pSup ? `<div class="chips"><span class="k">支援</span>${pSup}</div>` : ''}
       ${veh ? `<div class="chips"><span class="k">車輛</span>${veh}</div>` : ''}
       ${ext ? `<div class="chips"><span class="k">外調</span>${ext}</div>` : ''}
       ${j.note ? `<p class="note">${esc(j.note)}</p>` : ''}
     </div>
+    ${lodgeHTML(j)}
   </article>`;
 }
 function renderPerson() {
@@ -835,7 +887,7 @@ function renderPerson() {
       const off = leaveOn(d).has(n); const ofc = officeOn(d).has(n);
       if (js.length || ofc) cnt++;
       const fl = ana[d].flags;
-      cells += `<td class="${d === today ? 'tcol' : ''}">${off ? '<span class="off">休</span>' : ''}${ofc ? '<span class="ofc">公司</span>' : ''}${js.map(j => { const st = (fl.get(j.id) || {})['p:' + n]; const c = st === 'leave' || st === 'clash' ? 'bad' : st === 'check' ? 'check' : ''; const ld = (j.leaders || []).includes(n) ? 'lead' : ''; const tt = (j.teams || []).find(t => t.name === n); return `<button class="cell-job ${c} ${ld}" data-act="edit" data-id="${esc(j.id)}" title="${esc(j.title)}">${esc((j.start ? j.start + ' ' : '') + j.title + (tt ? ` ${tt.count || 0}人` : ''))}</button>`; }).join('')}</td>`;
+      cells += `<td class="${d === today ? 'tcol' : ''}">${off ? '<span class="off">休</span>' : ''}${ofc ? '<span class="ofc">公司</span>' : ''}${js.map(j => { const st = (fl.get(j.id) || {})['p:' + n]; const c = st === 'leave' || st === 'clash' ? 'bad' : st === 'check' ? 'check' : ''; const ld = (j.leaders || []).includes(n) ? 'lead' : ''; const tt = (j.teams || []).find(t => t.name === n); return `<button class="cell-job ${c} ${ld} ${j.tentative ? 'tent' : ''}" data-act="edit" data-id="${esc(j.id)}" title="${esc(j.title)}">${esc((j.start ? j.start + ' ' : '') + j.title + (tt ? ` ${tt.count || 0}人` : ''))}</button>`; }).join('')}</td>`;
     }
     h += `<tr><th class="name">${esc(n)}</th><td class="cnt">${cnt}</td>${cells}</tr>`;
   }
@@ -1022,7 +1074,7 @@ function addrSuggest() {
   el.innerHTML = prev ? `以前「${esc(t)}」（${md(prev.date)}）的地址：${esc(prev.address)}　<button type="button" class="linkbtn" data-act="addrapply" data-v="${esc(prev.address)}">套用</button>` : '';
 }
 function openEditor(job, date) {
-  F = job ? JSON.parse(JSON.stringify(job)) : { id: null, date, title: '', start: '', end: '', timeNote: '', people: [], vehicles: [], ext: [], note: '', unattended: false };
+  F = job ? JSON.parse(JSON.stringify(job)) : { id: null, date, title: '', start: '', end: '', timeNote: '', people: [], vehicles: [], ext: [], note: '', unattended: false, tentative: true }; // 新場次預設是預排
   F.people = F.people || []; F.vehicles = F.vehicles || []; F.ext = F.ext || []; F.leaders = F.leaders || []; F.teams = JSON.parse(JSON.stringify(F.teams || []));
   const ro = S.canWrite === false;
   const sh = $('#sheet');
@@ -1033,6 +1085,8 @@ function openEditor(job, date) {
         <div class="drange"><input type="date" id="f-date" value="${esc(F.date)}" aria-label="開始日期"><span>到</span><input type="date" id="f-date2" value="" min="${esc(F.date)}" aria-label="結束日期"><span class="hint" id="f-days"></span></div>
       </div>
       <label class="field full"><span>場次 / 內容</span><input type="text" id="f-title" value="${esc(F.title)}"></label>
+      <label class="chk full tentbox"><input type="checkbox" id="f-tent" ${F.tentative ? 'checked' : ''}>預排（還沒確定；班表上標「預排」，不會列入通知）</label>
+      <label class="chk full lodgebox"><input type="checkbox" id="f-lodge" ${F.lodging ? 'checked' : ''}>需要住宿（場次右邊會出現住宿按鈕；第一天打開，這個案子的其他天會一起打開）</label>
       <label class="field full"><span>說明（顯示在場次名稱右邊）</span><input type="text" id="f-tnote" value="${esc(F.timeNote)}"></label>
       <div class="field full"><span>地址（打字會跳出以前用過的地址；填了會在場次名稱右邊顯示地址和地圖按鈕）</span><input type="text" id="f-addr" value="${esc(F.address || '')}" list="addr-hist" autocomplete="off" aria-label="地址">
         <datalist id="addr-hist">${addrHistory().map(a => `<option value="${esc(a)}"></option>`).join('')}</datalist>
@@ -1080,6 +1134,8 @@ function readForm() {
   F.note = $('#f-note').value.trim();
   F.address = ($('#f-addr')?.value || '').trim();
   F.unattended = $('#f-un').checked;
+  F.tentative = !!$('#f-tent')?.checked;
+  F.lodging = !!$('#f-lodge')?.checked;
   readExt(); readTeams();
 }
 /* 滾輪時間選擇：時、分兩欄，可用滑鼠滾輪、觸控滑動、點選或方向鍵 */
@@ -1248,7 +1304,7 @@ async function addSupport() {
 }
 function closeEditor() { FR = null; FI = null; TR = false; KML = false; KM = null; TM = null; $('#sheet').hidden = true; $('#sheet').innerHTML = ''; F = null; }
 function jobBody(f) {
-  return { address: (f.address || '').trim(), teams: (f.teams || []).filter(t => t && t.name).map(t => ({ name: t.name, count: +t.count || 0, members: (t.members || []).slice(0, +t.count || 0).map(x => String(x || '').trim()) })), date: f.date, order: f.order ?? Date.now(), title: f.title, start: f.start, end: f.end, timeNote: f.timeNote, people: f.people, leaders: (f.leaders || []).filter(n => f.people.includes(n)), vehicles: f.vehicles, ext: (f.ext || []).filter(extFilled), note: f.note, unattended: !!f.unattended };
+  return { address: (f.address || '').trim(), teams: (f.teams || []).filter(t => t && t.name).map(t => ({ name: t.name, count: +t.count || 0, members: (t.members || []).slice(0, +t.count || 0).map(x => String(x || '').trim()) })), date: f.date, order: f.order ?? Date.now(), title: f.title, start: f.start, end: f.end, timeNote: f.timeNote, people: f.people, leaders: (f.leaders || []).filter(n => f.people.includes(n)), vehicles: f.vehicles, ext: (f.ext || []).filter(extFilled), note: f.note, unattended: !!f.unattended, tentative: !!f.tentative, lodging: !!f.lodging };
 }
 async function write(fn, okMsg) {
   try { await fn(); if (okMsg) toast(okMsg); return true; }
@@ -1279,12 +1335,15 @@ async function saveJob() {
   if (dates.length > 62) { toast('一次最多排 62 天'); return; }
   $('#b-save').disabled = true;
   const nextOrder = d => Math.max(0, ...jobsOn(d).map(j => j.order || 0)) + 1;
+  const orig = F.id ? S.jobs.get(F.id) : null;
+  const lodgeRun = orig && F.lodging && !orig.lodging ? sameRun(orig).filter(x => x.id !== F.id && !x.lodging) : [];
   const ok = await write(async () => {
+    for (const x of lodgeRun) await S.db.doc('jobs/' + x.id).update({ lodging: true }); // 打開住宿：同一個案子的其他天一起打開
     for (const [i, d] of dates.entries()) {
       const isSelf = i === 0 && F.id;
       const body = i === 0
         ? jobBody({ ...F, date: d, order: isSelf ? F.order : nextOrder(d) })
-        : jobBody({ date: d, title: F.title, address: F.address, order: nextOrder(d), start: '', end: '', timeNote: '', people: [], leaders: [], vehicles: [], ext: [], note: '', unattended: false }); // 其他天只建場次，人和車每天不同
+        : jobBody({ date: d, title: F.title, address: F.address, order: nextOrder(d), start: '', end: '', timeNote: '', people: [], leaders: [], vehicles: [], ext: [], note: '', unattended: false, tentative: !!F.tentative, lodging: !!F.lodging }); // 其他天只建場次，人和車每天不同
       await (isSelf ? S.db.doc('jobs/' + F.id) : S.db.collection('jobs').doc()).set(body);
     }
   }, dates.length > 1 ? `已建立 ${md(dates[0])}–${md(dates.at(-1))} 共 ${dates.length} 天的場次，其他天的人員和車輛請各自排` : '已儲存');
@@ -1354,6 +1413,8 @@ document.addEventListener('click', async e => {
   else if (a === 'addteamok') addTeam();
   else if (a === 'mtime') { const tt = TD; closeEditor(); openTime(tt.jobId, tt.name, +t.dataset.i); }
   else if (a === 'map') { return; } // 地圖連結：直接開新分頁，不打開場次
+  else if (a === 'tentpop') openTentPop(t.dataset.id);
+  else if (a === 'tentone') confirmOne(t.dataset.id);
   else if (a === 'addrapply') { $('#f-addr').value = t.dataset.v; addrSuggest(); }
   else if (a === 'pickteam') { readForm(); const n = t.dataset.name; F.teams = F.teams.some(x => x.name === n) ? F.teams.filter(x => x.name !== n) : [...F.teams, { name: n, count: 1, members: leaderOf(n) ? [leaderOf(n)] : [] }]; renderPicks(); }
   else if (a === 'team') openTeam(t.dataset.id, t.dataset.t);
@@ -1643,6 +1704,8 @@ const PERMS = [
   ['export', '匯出班表', 'PNG／PDF'],
   ['fleet', '車輛管理', '車輛管理頁：新增車輛、改別名與車號，記保險、保養、維修、驗車、稅費'],
   ['private', '私人車', '車輛管理頁的私人車：看、編輯，決定要不要開放排班'],
+  ['viewLodge', '查看住宿', '點場次的住宿按鈕，看飯店、地址、電話、訂房代號、分房（看不到費用）'],
+  ['lodging', '編輯住宿', '場次的住宿資訊：飯店、訂房、費用、分房'],
   ['admin', '權限管理', '打開這一頁設定大家的權限']
 ];
 const can = p => !!(S.me && S.me.perms && S.me.perms.includes(p));
@@ -2575,6 +2638,399 @@ document.addEventListener('change', async e => {
   $('#fr-ph').innerHTML = photosHTML();
 });
 
+/* ---------- 住宿 ---------- */
+// 一筆住宿＝一間飯店的一次訂房，掛在一個案子（同名、連續幾天的場次）上，依入住到退房的日期顯示在每一天
+const canLodge = () => can('lodging') || can('edit');
+const canLodgeSecret = canLodge;
+const canViewLodge = () => can('viewLodge') || canLodge(); // 訂房代號、費用、付款方式只給能編輯住宿的人看
+const PAYS = ['公司已付清', '已付訂金，現場付尾款', '現場付款', '個人先墊付，之後請款', '其他'];
+let LG = null, LS = null; // 打開中的住宿視窗、正在編輯的住宿
+// 住宿掛的那個場次；被刪掉的話，找同名、日期在住宿期間內的場次
+function stayJob(st) {
+  return S.jobs.get(st.jobId) || [...S.jobs.values()].find(j => (j.title || '').trim() === (st.title || '').trim() && st.checkIn <= j.date && j.date <= (st.checkOut || st.checkIn)) || null;
+}
+function runIds(job) { return new Set(sameRun(job).map(j => j.id)); }
+function staysOf(job) {
+  const run = sameRun(job), ids = new Set(run.map(j => j.id)), title = (job.title || '').trim();
+  const d0 = run.reduce((m, j) => j.date < m ? j.date : m, job.date), d1 = run.reduce((m, j) => j.date > m ? j.date : m, job.date);
+  // 掛住宿的那天如果被刪掉，改用「同一個案子名稱、日期有重疊」找回來
+  const orphan = s => !S.jobs.has(s.jobId) && (s.title || '').trim() === title && s.checkIn <= d1 && (s.checkOut || s.checkIn) >= d0;
+  return [...S.stays.values()].filter(s => ids.has(s.jobId) || orphan(s)).sort((a, b) => (a.checkIn || '').localeCompare(b.checkIn || '') || (a.hotel || '').localeCompare(b.hotel || ''));
+}
+const staysOn = (job, d) => staysOf(job).filter(s => s.checkIn && s.checkIn <= d && d <= (s.checkOut || s.checkIn));
+const stayState = (s, d) => d === s.checkIn ? '入住' : d === s.checkOut ? '退房' : '續住';
+const nights = s => s.checkIn && s.checkOut ? Math.round((parseD(s.checkOut) - parseD(s.checkIn)) / 86400000) : 0;
+function lodgeHTML(j) {
+  if (!j.lodging) return '';
+  const on = staysOn(j, j.date);
+  const icon = '<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M3 6h2v8h14a2 2 0 0 1 2 2v3h-2v-2H5v2H3V6zm6 2a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zm3 1h5a3 3 0 0 1 3 3v1h-8V9z"/></svg>';
+  const part = (s, k) => (s.rooms || []).filter(r => k === 'to' ? r.to && r.to === j.date && r.to !== s.checkOut : r.from && r.from === j.date && r.from !== s.checkIn).flatMap(r => r.guests || []);
+  const lines = on.length ? on.map(s => { const st = stayState(s, j.date); const out = st === '退房' ? [] : part(s, 'to'), inn = st === '入住' ? [] : part(s, 'from');
+    return `<span class="lgl"><b class="lgs lgs-${st}">${st}</b>${esc(s.hotel || '（未填飯店）')}</span>${out.length ? `<span class="lgl lgsub"><b class="lgs lgs-退房">先退房</b>${esc(out.join('、'))}</span>` : ''}${inn.length ? `<span class="lgl lgsub"><b class="lgs lgs-入住">晚入住</b>${esc(inn.join('、'))}</span>` : ''}`; }).join('') : `<span class="lgl lgnone">${canLodge() ? '還沒填住宿' : '住宿待安排'}</span>`;
+  if (EXPORTING || !canViewLodge()) return `<div class="jlodge"><span class="lgbtn static">${icon}<span class="lgls">${lines}</span></span></div>`;
+  return `<div class="jlodge"><button type="button" class="lgbtn ${on.length ? '' : 'empty'}" data-act="lodge" data-id="${esc(j.id)}" title="住宿資訊">${icon}<span class="lgls">${lines}</span></button></div>`;
+}
+function openLodge(jobId) {
+  const j = S.jobs.get(jobId); if (!j || !canViewLodge()) return;
+  const run = sameRun(j).sort((a, b) => a.date.localeCompare(b.date));
+  LG = { jobId, date: j.date };
+  const stays = staysOf(j); const sec = canLodgeSecret();
+  const card = s => {
+    const here = s.checkIn <= j.date && j.date <= (s.checkOut || s.checkIn);
+    const rooms = (s.rooms || []).filter(r => r.no || (r.guests || []).length);
+    return `<div class="lgcard ${here ? 'here' : ''}">
+      <div class="lgh"><b>${esc(s.hotel || '（未填飯店）')}</b>${canLodge() ? `<button class="mini" data-act="stayedit" data-sid="${esc(s.id)}">修改</button>` : ''}</div>
+      <div class="lgd">${s.checkIn ? `入住 ${nfDay(s.checkIn)}` : ''}${s.checkOut ? ` → 退房 ${nfDay(s.checkOut)}・${nights(s)} 晚` : ''}</div>
+      ${s.address ? `<div class="lgr">${esc(s.address)} <a class="mapbtn" href="${esc(mapUrl(s.address))}" target="_blank" rel="noopener">地圖</a></div>` : ''}
+      ${s.phone ? `<div class="lgr">電話 <a href="tel:${esc(s.phone.replace(/[^\d+]/g, ''))}">${esc(s.phone)}</a></div>` : ''}
+      ${s.bookingNo || s.booker ? `<div class="lgr">${s.bookingNo ? '訂房代號 ' + esc(s.bookingNo) : ''}${s.bookingNo && s.booker ? '・' : ''}${s.booker ? '訂房人 ' + esc(s.booker) : ''}</div>` : ''}
+      ${sec && (s.cost != null || s.pay) ? `<div class="lgr lgpay">${s.cost != null ? '費用 $' + Number(s.cost).toLocaleString('en-US') : ''}${s.pay ? `・${esc(s.pay)}` : ''}${s.payNote ? `（${esc(s.payNote)}）` : ''}</div>` : ''}
+      ${rooms.length ? `<div class="lgrooms">${rooms.map(r => `<div class="lgroom"><b>${esc(r.no || '房號未定')}</b><span>${esc((r.guests || []).join('、') || '—')}</span>${r.from || r.to ? `<small>${[r.from ? md(r.from) + ' 才入住' : '', r.to ? md(r.to) + ' 先退房' : ''].filter(Boolean).join('，')}</small>` : ''}</div>`).join('')}</div>` : '<div class="lgr hint">還沒分配房間（入住後再登記也可以）</div>'}
+      ${s.note ? `<div class="lgr lgnote">${esc(s.note)}</div>` : ''}
+    </div>`;
+  };
+  const sh = $('#sheet');
+  sh.innerHTML = `<div class="card lgwin" role="dialog" aria-modal="true" aria-labelledby="lg-h">
+    <h2 id="lg-h">住宿・${esc(j.title || '')}<button class="icon-btn x" data-act="close" aria-label="關閉">×</button></h2>
+    <p class="hint" style="margin:0">${run.length > 1 ? `這個案子 ${md(run[0].date)}–${md(run[run.length - 1].date)}，` : ''}${md(j.date)} 有的住宿用藍框標出。換飯店或分住不同飯店，就各新增一筆。</p>
+    ${stays.length ? stays.map(card).join('') : '<p class="emptymsg">還沒有住宿資料。</p>'}
+    ${canLodge() ? `<div class="acts"><span class="sp"></span><button class="btn" data-act="staynew">＋ 新增住宿</button></div>` : ''}
+  </div>`;
+  sh.hidden = false;
+}
+function openStay(stay) {
+  if (!canLodge()) return;
+  const j = S.jobs.get(LG.jobId); const run = sameRun(j).sort((a, b) => a.date.localeCompare(b.date));
+  const ppl = [...new Set(run.flatMap(x => [...(x.people || []), ...(x.teams || []).flatMap(t => t.members || []).filter(Boolean)]))];
+  LS = { id: stay.id || null, rooms: JSON.parse(JSON.stringify(stay.rooms && stay.rooms.length ? stay.rooms : [{ no: '', guests: [] }])), ppl };
+  const v = k => esc(stay[k] ?? '');
+  const sh = $('#sheet');
+  sh.innerHTML = `<div class="card" role="dialog" aria-modal="true" aria-labelledby="ls-h">
+    <h2 id="ls-h">${LS.id ? '修改住宿' : '新增住宿'}<button class="icon-btn x" data-act="stayback" aria-label="回到住宿">×</button></h2>
+    <div class="fgrid">
+      <label class="field full"><span>飯店名稱</span><input type="text" id="ls-hotel" value="${v('hotel')}"></label>
+      <label class="field full"><span>地址</span><input type="text" id="ls-addr" value="${v('address')}" list="addr-hist" autocomplete="off"></label>
+      <label class="field"><span>電話</span><input type="text" inputmode="tel" id="ls-phone" value="${v('phone')}"></label>
+      <span></span>
+      <label class="field"><span>入住日</span><input type="date" id="ls-in" value="${v('checkIn')}"></label>
+      <label class="field"><span>退房日</span><input type="date" id="ls-out" value="${v('checkOut')}"></label>
+      <label class="field"><span>訂房代號</span><input type="text" id="ls-no" value="${v('bookingNo')}"></label>
+      <label class="field"><span>訂房人</span><input type="text" id="ls-booker" value="${v('booker')}"></label>
+      <label class="field"><span>費用（元）</span><input type="text" inputmode="numeric" id="ls-cost" value="${v('cost')}"></label>
+      <label class="field"><span>怎麼付</span><select class="inp" id="ls-pay"><option value="">（請選）</option>${PAYS.map(p => `<option ${p === stay.pay ? 'selected' : ''}>${p}</option>`).join('')}</select></label>
+      <label class="field full"><span>付款說明（例如：尾款 $3,600 退房時付、誰墊付）</span><input type="text" id="ls-paynote" value="${v('payNote')}"></label>
+      <div class="field full"><span>房間（入住後再登記也可以；家屬直接打名字，例如「嘎的家屬 小美」）</span><div id="ls-rooms"></div>
+        <button type="button" class="mini add" data-act="stayroom" style="justify-self:start;margin-top:6px">＋ 房間</button></div>
+      <label class="field full"><span>備註（停車、早餐、門禁時間…）</span><textarea id="ls-note" rows="2">${v('note')}</textarea></label>
+    </div>
+    <div class="acts">${LS.id ? '<button class="btn danger" data-act="staydel">刪除這筆住宿</button>' : ''}<span class="sp"></span><button class="btn sec" data-act="stayback">取消</button><button class="btn" data-act="staysave" id="b-ls">儲存</button></div>
+  </div>`;
+  sh.hidden = false;
+  drawRooms();
+}
+function readRooms() {
+  document.querySelectorAll('#ls-rooms .lsroom').forEach((el, i) => {
+    const r = LS.rooms[i]; if (!r) return;
+    r.no = el.querySelector('[data-k=no]').value.trim();
+    r.guests = el.querySelector('[data-k=g]').value.split(/[、,，\n]/).map(x => x.trim()).filter(Boolean);
+    r.from = el.querySelector('[data-k=from]').value; r.to = el.querySelector('[data-k=to]').value;
+  });
+}
+function drawRooms() {
+  const box = $('#ls-rooms'); if (!box) return;
+  const used = new Set(LS.rooms.flatMap(r => r.guests || []));
+  box.innerHTML = LS.rooms.map((r, i) => `<div class="lsroom">
+    <div class="lsrow"><input type="text" data-k="no" value="${esc(r.no || '')}" placeholder="房號" aria-label="房號" class="lsno">
+      <input type="text" data-k="g" value="${esc((r.guests || []).join('、'))}" placeholder="住客，用「、」隔開" aria-label="住客" class="lsg">
+      <button type="button" class="icon-btn sm" data-act="stayrmroom" data-i="${i}" aria-label="刪除這間">×</button></div>
+    <div class="lsrow lsquick">${LS.ppl.filter(n => !used.has(n)).map(n => `<button type="button" class="mini" data-act="stayadd" data-i="${i}" data-n="${esc(n)}">＋${esc(n)}</button>`).join('')}</div>
+    <details class="lsdates" ${r.from || r.to ? 'open' : ''}><summary>這間只住其中幾天</summary>
+      <div class="lsrow"><input type="date" data-k="from" value="${esc(r.from || '')}" aria-label="這間入住日"><span>到</span><input type="date" data-k="to" value="${esc(r.to || '')}" aria-label="這間退房日"></div></details>
+  </div>`).join('');
+}
+async function saveStay() {
+  readRooms();
+  const g = id => ($('#' + id)?.value || '').trim();
+  const cost = g('ls-cost').replace(/[^\d]/g, '');
+  const s = { jobId: LG.jobId, title: (S.jobs.get(LG.jobId) || {}).title || '', hotel: g('ls-hotel'), address: g('ls-addr'), phone: g('ls-phone'), checkIn: g('ls-in'), checkOut: g('ls-out'),
+    bookingNo: g('ls-no'), booker: g('ls-booker'), cost: cost ? +cost : null, pay: g('ls-pay'), payNote: g('ls-paynote'), note: g('ls-note'),
+    rooms: LS.rooms.filter(r => r.no || (r.guests || []).length || r.from || r.to).map(r => ({ no: r.no || '', guests: r.guests || [], from: r.from || '', to: r.to || '' })) };
+  if (LS.id) { const old = S.stays.get(LS.id); if (old) s.jobId = old.jobId; }
+  if (!s.hotel) { toast('請填飯店名稱'); $('#ls-hotel').focus(); return; }
+  if (!s.checkIn) { toast('請填入住日'); $('#ls-in').focus(); return; }
+  if (s.checkOut && s.checkOut <= s.checkIn) { toast('退房日要在入住日之後'); $('#ls-out').focus(); return; }
+  $('#b-ls').disabled = true;
+  const ok = await write(() => (LS.id ? S.db.doc('stays/' + LS.id) : S.db.collection('stays').doc()).set(s), LS.id ? '已更新住宿' : '已新增住宿');
+  if (ok) { LS = null; openLodge(LG.jobId); } else if ($('#b-ls')) $('#b-ls').disabled = false;
+}
+document.addEventListener('click', async e => {
+  const t = e.target.closest('[data-act]'); if (!t) return; const a = t.dataset.act;
+  if (a === 'lodge') openLodge(t.dataset.id);
+  else if (a === 'staynew') {
+    const j = S.jobs.get(LG.jobId); const run = sameRun(j).sort((x, y) => x.date.localeCompare(y.date));
+    const last = run[run.length - 1].date;
+    openStay({ checkIn: run[0].date, checkOut: last > run[0].date ? last : addDays(run[0].date, 1) });
+  }
+  else if (a === 'stayedit') { const s = S.stays.get(t.dataset.sid); if (s) openStay(s); }
+  else if (a === 'stayback') { LS = null; openLodge(LG.jobId); }
+  else if (a === 'stayroom') { readRooms(); LS.rooms.push({ no: '', guests: [] }); drawRooms(); }
+  else if (a === 'stayrmroom') { readRooms(); LS.rooms.splice(+t.dataset.i, 1); if (!LS.rooms.length) LS.rooms.push({ no: '', guests: [] }); drawRooms(); }
+  else if (a === 'stayadd') { readRooms(); const r = LS.rooms[+t.dataset.i]; r.guests = [...(r.guests || []), t.dataset.n]; drawRooms(); }
+  else if (a === 'staysave') saveStay();
+  else if (a === 'staydel') {
+    if (!t.dataset.armed) { t.dataset.armed = '1'; t.textContent = '確定刪除？'; return; }
+    const ok = await write(() => S.db.doc('stays/' + LS.id).delete(), '已刪除住宿');
+    if (ok) { LS = null; openLodge(LG.jobId); }
+  }
+});
+document.addEventListener('input', e => { if (LS && e.target.matches('#ls-rooms [data-k=g]')) { /* 打字時不重畫，離開欄位才更新快速按鈕 */ } });
+// 住客欄改完只更新快速按鈕，不重畫整個房間（不然會搶走游標）
+document.addEventListener('change', e => { if (LS && e.target.matches('#ls-rooms [data-k=g]')) { readRooms(); drawQuick(); } });
+function drawQuick() {
+  const used = new Set(LS.rooms.flatMap(r => r.guests || []));
+  document.querySelectorAll('#ls-rooms .lsroom').forEach((el, i) => { const q = el.querySelector('.lsquick'); if (q) q.innerHTML = LS.ppl.filter(n => !used.has(n)).map(n => `<button type="button" class="mini" data-act="stayadd" data-i="${i}" data-n="${esc(n)}">＋${esc(n)}</button>`).join(''); });
+}
+
+/* ---------- 預排與發布通知 ---------- */
+// 誰可以發布通知：先跟「排班編輯」一樣，之後要分開再加一個權限
+const canNotify = () => can('edit');
+let NF = null; // 打開中的通知視窗
+// 通知只比對會影響同事的欄位（帶班目前不通知）
+function jobSig(j) {
+  return { date: j.date || '', title: j.title || '', start: j.start || '', end: j.end || '', address: (j.address || '').trim(),
+    people: [...(j.people || [])], vehicles: [...(j.vehicles || [])],
+    teams: (j.teams || []).filter(t => t && t.name).map(t => `${t.name} ${t.count || 0}人`) };
+}
+// 目前已確定（不是預排）、今天以後的場次
+function confirmedNow() { const o = {}, today = todayStr(); for (const j of S.jobs.values()) if (!j.tentative && (j.date || '') >= today) o[j.id] = jobSig(j); return o; }
+const nfDay = d => `${md(d)}（${WD[parseD(d).getDay()]}）`;
+const nfName = (s, t = true) => `${s.title || '未命名'}${t && s.start ? ' ' + s.start : ''}`;
+const nfTime = s => s.start ? s.start + (s.end ? '–' + s.end : '') : '未定';
+// 一個場次的變更：頻道用的一行（line）、清單用的文字（text）、每個人私訊的內容（per）
+function nfDescribe(id, a, b) {
+  const per = {}; const add = (n, t) => (per[n] ||= []).push(t);
+  let line, day;
+  if (!a) {
+    day = b.date; line = `${nfName(b)}：新增場次${b.people.length ? '（' + b.people.join('、') + '）' : ''}`;
+    b.people.forEach(n => add(n, `新增排班 ${nfDay(b.date)}${nfName(b)}`));
+  } else if (!b) {
+    day = a.date; line = `${nfName(a, false)}：取消`;
+    a.people.forEach(n => add(n, `${nfDay(a.date)}${nfName(a, false)} 取消`));
+  } else {
+    day = a.date !== b.date ? a.date : b.date;
+    const common = [];
+    if (a.date !== b.date) common.push(`日期改成 ${nfDay(b.date)}`);
+    if (a.title !== b.title) common.push(`名稱改成 ${b.title}`);
+    if (a.start !== b.start || a.end !== b.end) common.push(`時間改成 ${nfTime(b)}（原本${nfTime(a)}）`);
+    if (a.address !== b.address) common.push(b.address ? `地址改成 ${b.address}` : '取消地址');
+    if (a.vehicles.join('、') !== b.vehicles.join('、')) common.push(`車輛改成 ${b.vehicles.join('、') || '無'}`);
+    if (a.teams.join('、') !== b.teams.join('、')) common.push(`支援團隊改成 ${b.teams.join('、') || '無'}`);
+    const inn = b.people.filter(n => !a.people.includes(n)), out = a.people.filter(n => !b.people.includes(n));
+    const stay = b.people.filter(n => a.people.includes(n));
+    const all = [...common];
+    if (inn.length) all.push(`新增排班 ${inn.join('、')}`);
+    if (out.length) all.push(`取消排班 ${out.join('、')}`);
+    const nm = nfName(a, false);
+    line = `${nm}：${all.join('；')}`;
+    inn.forEach(n => add(n, `新增排班 ${nfDay(b.date)}${nfName(b)}`));
+    out.forEach(n => add(n, `取消排班 ${nfDay(a.date)}${nm}`));
+    stay.forEach(n => { if (common.length) add(n, `${nfDay(a.date)}${nm} ${common.join('；')}`); });
+  }
+  return { id, date: day, line, text: nfDay(day) + line, per, people: Object.keys(per) };
+}
+// 住宿也列入通知：比對飯店、地址、日期和分房（費用、訂房代號不通知）
+function staySig(st) {
+  const j = stayJob(st);
+  return { title: (j && j.title) || st.title || '', hotel: st.hotel || '', address: st.address || '', phone: st.phone || '', checkIn: st.checkIn || '', checkOut: st.checkOut || '',
+    rooms: (st.rooms || []).map(r => ({ no: r.no || '', guests: [...(r.guests || [])], from: r.from || '', to: r.to || '' })) };
+}
+function confirmedStays() {
+  const o = {}, today = todayStr();
+  for (const st of S.stays.values()) { const j = stayJob(st); if (j && !j.tentative && (st.checkOut || st.checkIn || '') >= today) o[st.id] = staySig(st); }
+  return o;
+}
+const roomOf = (st, n) => (st.rooms || []).find(r => (r.guests || []).includes(n));
+// 受影響的人：有分房就看住客，還沒分房就看這段日期排到的人
+function stayPeople(st) {
+  const g = (st.rooms || []).flatMap(r => r.guests || []); if (g.length) return [...new Set(g)];
+  const j = stayJob(st); if (!j) return [];
+  return [...new Set(sameRun(j).filter(x => x.date >= st.checkIn && x.date <= (st.checkOut || st.checkIn)).flatMap(x => x.people || []))];
+}
+function roomText(st, n) { const r = roomOf(st, n); if (!r) return ''; return `${r.no ? '房間 ' + r.no : ''}${r.from || r.to ? `（${r.from ? md(r.from) + ' 入住' : ''}${r.from && r.to ? '，' : ''}${r.to ? md(r.to) + ' 先退房' : ''}）` : ''}`; }
+function nfDescribeStay(id, a, b) {
+  const s0 = b || a; const j = stayJob(s0); const tt = (j && j.title) || s0.title || '';
+  const per = {}; const add = (n, t) => (per[n] ||= []).push(t);
+  const span = st => `${nfDay(st.checkIn)}入住 → ${st.checkOut ? nfDay(st.checkOut) + '退房' : '退房日未定'}`;
+  let line;
+  if (!a) {
+    line = `${tt} 住宿：${b.hotel}（${md(b.checkIn)} 入住 → ${b.checkOut ? md(b.checkOut) + ' 退房' : '退房日未定'}）`;
+    stayPeople(b).forEach(n => { const rt = roomText(b, n); add(n, `住宿 ${tt}：${b.hotel} ${span(b)}${rt ? '，' + rt : ''}`); });
+  } else if (!b) {
+    line = `${tt} 住宿：取消 ${a.hotel}`;
+    stayPeople(a).forEach(n => add(n, `住宿 ${tt}：${a.hotel} 取消`));
+  } else {
+    const common = [];
+    if (a.hotel !== b.hotel) common.push(`飯店改成 ${b.hotel}`);
+    if (a.address !== b.address) common.push(`地址改成 ${b.address || '未填'}`);
+    if (a.phone !== b.phone) common.push(`電話改成 ${b.phone || '未填'}`);
+    if (a.checkIn !== b.checkIn) common.push(`入住改成 ${nfDay(b.checkIn)}`);
+    if (a.checkOut !== b.checkOut) common.push(`退房改成 ${b.checkOut ? nfDay(b.checkOut) : '未定'}`);
+    const pa = stayPeople(a), pb = stayPeople(b);
+    const roomCh = pb.filter(n => pa.includes(n) && roomText(a, n) !== roomText(b, n));
+    const all = [...common]; if (roomCh.length || pb.some(n => !pa.includes(n)) || pa.some(n => !pb.includes(n))) all.push('分房有異動');
+    line = `${tt} 住宿 ${a.hotel}：${all.join('；')}`;
+    pb.forEach(n => {
+      if (!pa.includes(n)) { const rt = roomText(b, n); add(n, `住宿 ${tt}：${b.hotel} ${span(b)}${rt ? '，' + rt : ''}`); return; }
+      const c = [...common]; if (roomCh.includes(n)) c.push(roomText(b, n) || '房間未定');
+      if (c.length) add(n, `住宿 ${tt} ${a.hotel}：${c.join('；')}`);
+    });
+    pa.filter(n => !pb.includes(n)).forEach(n => add(n, `住宿 ${tt}：${a.hotel} 不用住了`));
+  }
+  const day = (b && a && a.checkIn < b.checkIn ? a.checkIn : s0.checkIn) || todayStr();
+  return { id: 'stay:' + id, date: day, line, text: nfDay(day) + line, per, people: Object.keys(per) };
+}
+// 跟上次通知比，有哪些場次變了（改來改去又改回原樣的不算）
+function pendingChanges() {
+  if (!S.notify) return [];
+  const base = S.notify.jobs || {}, cur = confirmedNow(), today = todayStr(), out = [];
+  const ids = new Set([...Object.keys(base).filter(id => (base[id].date || '') >= today), ...Object.keys(cur)]);
+  for (const id of ids) {
+    const a = base[id] && base[id].date >= today ? base[id] : null, b = cur[id] || null;
+    if (!a && !b) continue;
+    if (a && b && JSON.stringify(a) === JSON.stringify(b)) continue;
+    out.push(nfDescribe(id, a, b));
+  }
+  const sb = S.notify.stays || {}, sc = confirmedStays();
+  for (const id of new Set([...Object.keys(sb).filter(id => (sb[id].checkOut || sb[id].checkIn || '') >= today), ...Object.keys(sc)])) {
+    const a = sb[id] && (sb[id].checkOut || sb[id].checkIn || '') >= today ? sb[id] : null, b = sc[id] || null;
+    if (!a && !b) continue;
+    if (a && b && JSON.stringify(a) === JSON.stringify(b)) continue;
+    out.push(nfDescribeStay(id, a, b));
+  }
+  return out.sort((x, y) => x.date.localeCompare(y.date) || x.text.localeCompare(y.text, 'zh-Hant'));
+}
+function updateNotifyBtn() {
+  const b = $('#notifybtn'); if (!b) return;
+  const n = canNotify() ? pendingChanges().length : 0;
+  b.hidden = !canNotify(); b.innerHTML = n ? `通知更新 <b>${n}</b>` : '通知更新'; b.classList.toggle('has', !!n);
+}
+// 第一次使用時，把目前的班表當作「已通知」的起點
+let NF_BASE_PENDING = false, NF_BASE_FAIL = false;
+function ensureNotifyBase() {
+  if (S.notify || NF_BASE_PENDING || NF_BASE_FAIL || !S.notifyLoaded || !S.loaded.jobs || !canNotify()) return;
+  NF_BASE_PENDING = true;
+  S.db.doc('notify/last').set({ at: Date.now(), by: '（起點）', jobs: confirmedNow(), stays: confirmedStays() }).catch(e => { NF_BASE_FAIL = true; console.warn('通知起點存不進去', e); }).finally(() => { NF_BASE_PENDING = false; });
+}
+const accountOfStaff = n => (S.config.accounts || []).find(a => a.staff === n);
+function openNotify() {
+  if (!canNotify()) return;
+  const items = pendingChanges();
+  NF = { items, sel: new Set(items.map(i => i.id)) };
+  const last = S.notify && S.notify.at ? new Date(S.notify.at) : null;
+  const sh = $('#sheet');
+  sh.innerHTML = `<div class="card nfcard" role="dialog" aria-modal="true" aria-labelledby="nf-h">
+    <h2 id="nf-h">發布班表更新<button class="icon-btn x" data-act="close" aria-label="關閉">×</button></h2>
+    <p class="hint" style="margin:0">跟${last ? `上次通知（${last.getMonth() + 1}/${last.getDate()} ${pad(last.getHours())}:${pad(last.getMinutes())}${S.notify.by && S.notify.by !== '（起點）' ? '・' + esc(S.notify.by) : ''}）` : '上次通知'}比，今天以後、已確定的場次有這些變更。<b>預排的場次不會列入</b>，確定後才會出現。</p>
+    ${items.length ? `<div class="nfbar"><span class="hint">要通知哪些：</span><button class="mini" data-act="nfsel" data-k="all">全選</button><button class="mini" data-act="nfsel" data-k="none">全不選</button><button class="mini" data-act="nfsel" data-k="7">只選未來 7 天</button></div>
+    <div class="nflist">${items.map(i => `<label class="nfitem"><input type="checkbox" data-nid="${esc(i.id)}" checked><span><b>${esc(i.text)}</b>${i.people.length ? `<small>影響：${esc(i.people.join('、'))}</small>` : '<small>沒有人員異動</small>'}</span></label>`).join('')}</div>
+    <div class="nfopts">
+      <label class="chk"><input type="checkbox" id="nf-ch" checked>發到「排班」頻道</label>
+      <div class="nfsub" id="nf-chsub"><span class="hint">標記：</span>
+        <label class="chk"><input type="radio" name="nf-at" value="people" checked>受影響的人</label>
+        <label class="chk"><input type="radio" name="nf-at" value="channel">整個頻道</label>
+        <label class="chk"><input type="radio" name="nf-at" value="none">不標記</label></div>
+      <label class="chk"><input type="checkbox" id="nf-dm" checked>私訊每位受影響的同事（每人只收到自己的部分）</label>
+    </div>
+    <div class="nfprev" id="nf-prev"></div>
+    <div class="acts"><button class="btn sec" data-act="nfmark" title="不發訊息，只把勾選的變更記成已通知（例如已經口頭講過）">只標記為已通知</button><span class="sp"></span><button class="btn" data-act="nfsend" id="b-nf">發送</button></div>`
+    : '<p class="emptymsg">目前沒有需要通知的變更。改了今天以後、已確定（不是預排）的場次，這裡就會列出來。</p>'}
+  </div>`;
+  sh.hidden = false;
+  if (items.length) nfPreview();
+}
+function nfPicked() { return NF.items.filter(i => NF.sel.has(i.id)); }
+function nfMessages() {
+  const picked = nfPicked(); const me = S.me ? S.me.name : '';
+  const at = ($('input[name="nf-at"]:checked') || {}).value || 'people';
+  const people = [...new Set(picked.flatMap(i => i.people))];
+  const withAcc = people.filter(n => accountOfStaff(n)), noAcc = people.filter(n => !accountOfStaff(n));
+  const ch = $('#nf-ch')?.checked, dm = $('#nf-dm')?.checked;
+  const byDay = []; for (const i of picked) { let g = byDay.find(x => x.d === i.date); if (!g) byDay.push(g = { d: i.date, ls: [] }); g.ls.push('・' + i.line); }
+  const chText = picked.length ? ['📅 班表更新', ...byDay.flatMap(g => [nfDay(g.d), ...g.ls]),
+    at === 'people' && withAcc.length ? '\n' + withAcc.map(n => '@' + n).join(' ') : at === 'channel' ? '\n@排班' : ''].join('\n').trim() : '';
+  const dms = withAcc.map(n => ({ to: n, acc: accountOfStaff(n), text: [`${n}，你的班表有異動：`, ...picked.flatMap(i => (i.per[n] || []).map(t => '・' + t))].join('\n') }));
+  const chBody = picked.length ? ['📅 班表更新', ...byDay.flatMap(g => [nfDay(g.d), ...g.ls])].join('\n') : '';
+  const mention = at === 'people' ? withAcc.map(n => ({ name: n, acc: accountOfStaff(n) })) : [];
+  return { picked, ch, dm, at, chText, chBody, mention, dms, noAcc, people };
+}
+function nfPreview() {
+  const el = $('#nf-prev'); if (!el || !NF) return;
+  NF.sel = new Set([...document.querySelectorAll('.nflist input[data-nid]:checked')].map(x => x.dataset.nid));
+  const m = nfMessages();
+  $('#nf-chsub').classList.toggle('off', !m.ch);
+  if (!m.picked.length) { el.innerHTML = '<p class="hint" style="margin:0">沒有勾選任何變更。</p>'; $('#b-nf').disabled = true; return; }
+  $('#b-nf').disabled = !m.ch && !m.dm;
+  el.innerHTML = `<b class="nfph">預覽</b>
+    ${m.ch ? `<div class="nfmsg"><small>「排班」頻道</small><pre>${esc(m.chText)}</pre></div>` : ''}
+    ${m.dm ? (m.dms.length ? m.dms.map(d => `<div class="nfmsg dm"><small>私訊給 ${esc(d.to)}（${esc(d.acc.name)}）</small><pre>${esc(d.text)}</pre></div>`).join('') : '<p class="hint">受影響的人都沒有對應公司帳號，不會發出私訊。</p>') : ''}
+    ${m.noAcc.length && (m.dm || m.at === 'people') ? `<p class="hint warn">收不到私訊、也無法 @ 標記（沒有對應公司帳號）：${esc(m.noAcc.join('、'))}。要通知他們請另外聯絡。</p>` : ''}`;
+}
+// 把勾選的變更記成已通知；沒勾的下次還會出現
+async function nfCommit(sent) {
+  const m = nfMessages(); if (!m.picked.length) return;
+  const base = { ...((S.notify && S.notify.jobs) || {}) }, cur = confirmedNow(), today = todayStr();
+  const sbase = { ...((S.notify && S.notify.stays) || {}) }, scur = confirmedStays();
+  for (const i of m.picked) {
+    if (i.id.startsWith('stay:')) { const k = i.id.slice(5); if (scur[k]) sbase[k] = scur[k]; else delete sbase[k]; continue; }
+    if (cur[i.id]) base[i.id] = cur[i.id]; else delete base[i.id];
+  }
+  for (const id of Object.keys(base)) if ((base[id].date || '') < today) delete base[id];
+  for (const id of Object.keys(sbase)) if ((sbase[id].checkOut || sbase[id].checkIn || '') < today) delete sbase[id];
+  // 正式版：真的發到 Teams（測試版沒有 __nfSend，只會記成已通知）
+  if (sent && window.__nfSend) {
+    const b = $('#b-nf'); b.disabled = true; b.textContent = '發送中…';
+    try { const r = await window.__nfSend(m); if (r && r.fail && r.fail.length) toast(`有 ${r.fail.length} 則沒發出去：${r.fail.join('、')}`); }
+    catch (e) { b.disabled = false; b.textContent = '發送'; toast('發送失敗：' + ((e && (e.userMsg || e.message)) || e)); return; }
+  }
+  const ok = await write(() => S.db.doc('notify/last').set({ at: Date.now(), by: S.me ? S.me.name : '', jobs: base, stays: sbase }),
+    sent ? (window.__nfSend ? `已發送，${m.picked.length} 項記成已通知` : `測試版不會真的發出；已把 ${m.picked.length} 項記成已通知`) : `已把 ${m.picked.length} 項記成已通知`);
+  if (ok) { closeEditor(); render(); }
+}
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-act]'); if (!t) return; const a = t.dataset.act;
+  if (a === 'notify') openNotify();
+  else if (a === 'nfsel') {
+    const lim = addDays(todayStr(), 7);
+    document.querySelectorAll('.nflist input[data-nid]').forEach(x => { const it = NF.items.find(i => i.id === x.dataset.nid); x.checked = t.dataset.k === 'all' || (t.dataset.k === '7' && it && it.date <= lim); });
+    nfPreview();
+  }
+  else if (a === 'nfsend') nfCommit(true);
+  else if (a === 'nfmark') nfCommit(false);
+  else if (a === 'tentok') confirmDay(t.dataset.date);
+});
+document.addEventListener('change', e => { if (NF && e.target.closest('.nfcard')) nfPreview(); });
+// 點場次名稱前的「預排」：問要不要改成確定
+function openTentPop(id) {
+  const j = S.jobs.get(id); if (!j || !canNotify()) return;
+  const sh = $('#sheet');
+  sh.innerHTML = `<div class="card tentcard" role="dialog" aria-modal="true" aria-labelledby="tp-h">
+    <h2 id="tp-h">確定這個場次？<button class="icon-btn x" data-act="close" aria-label="關閉">×</button></h2>
+    <p style="margin:0">${md(j.date)}（${WD[parseD(j.date).getDay()]}）「${esc(j.title || '未命名')}」${j.start ? ' ' + esc(j.start) : ''} 目前是<b class="warn">預排</b>。</p>
+    <p class="hint" style="margin:0">確定後「預排」標籤會消失，這個場次會列入「通知更新」。之後要改回預排，打開場次勾選「預排」即可。</p>
+    <div class="acts"><span class="sp"></span><button class="btn sec" data-act="close">先不要</button><button class="btn" data-act="tentone" data-id="${esc(id)}">確定這個場次</button></div>
+  </div>`;
+  sh.hidden = false;
+}
+async function confirmOne(id) {
+  const ok = await write(() => S.db.doc('jobs/' + id).update({ tentative: false }), '已確定，可以到「通知更新」發通知');
+  if (ok) closeEditor();
+}
+// 把某天的預排場次全部改成確定
+async function confirmDay(date) {
+  const js = jobsOn(date).filter(j => j.tentative); if (!js.length) return;
+  await write(async () => { for (const j of js) await S.db.doc('jobs/' + j.id).update({ tentative: false }); }, `已確定 ${md(date)} 的 ${js.length} 個場次`);
+}
+
 /* ---------- 匯出整月／半月為 PNG 或 PDF ---------- */
 const EXPORT_LIBS = {
   img: 'https://cdn.jsdelivr.net/npm/html-to-image@1.11.13/dist/html-to-image.js',
@@ -2588,7 +3044,7 @@ const loadScript = src => new Promise((ok, no) => {
   s.onerror = () => { s.remove(); no(new Error('匯出元件載入失敗，請確認網路後再試一次')); };
   document.head.appendChild(s);
 });
-const EX = { range: 'all', fmt: 'png', times: false };
+const EX = { range: 'all', fmt: 'png', times: false, tent: false };
 let EXPORTING = null;
 function openExport() {
   if (!can('export')) return;
@@ -2598,12 +3054,13 @@ function openExport() {
     <h2 id="ex-h">匯出 ${y}年${m + 1}月<button class="icon-btn x" data-act="close" aria-label="關閉">×</button></h2>
     <div class="field"><span>範圍</span><div class="exopts">${opt('exr', 'all', `整個月（1–${last}日）`, EX.range)}${opt('exr', 'h1', '上半月（1–15日）', EX.range)}${opt('exr', 'h2', `下半月（16–${last}日）`, EX.range)}</div></div>
     <div class="field"><span>格式</span><div class="exopts">${opt('exf', 'png', '圖片 PNG', EX.fmt)}${opt('exf', 'pdf', 'PDF（A4，可列印）', EX.fmt)}</div></div>
+    <div class="field"><span>預排</span><div class="exopts"><label class="exopt"><input type="checkbox" id="ex-tent" ${EX.tent ? 'checked' : ''}><span>顯示「預排」標籤</span></label></div></div>
     ${can('viewTime') || can('editTime') ? `<div class="field"><span>工作時間</span><div class="exopts"><label class="exopt"><input type="checkbox" id="ex-tm" ${EX.times ? 'checked' : ''}><span>在人名旁顯示大家填的時間</span></label></div></div>` : ''}
     <p class="hint" style="margin:0">匯出「依日期」的排班內容，不含按鈕。要看其他月份，先用上方的 ‹ › 切換月份再匯出。</p>
     <div class="acts"><span class="sp"></span><button class="btn" id="b-ex" type="button">下載</button></div>
   </div>`;
   sh.hidden = false;
-  $('#b-ex').onclick = () => { EX.range = sh.querySelector('[name=exr]:checked').value; EX.fmt = sh.querySelector('[name=exf]:checked').value; EX.times = !!((can('viewTime') || can('editTime')) && $('#ex-tm')?.checked); doExport(); };
+  $('#b-ex').onclick = () => { EX.range = sh.querySelector('[name=exr]:checked').value; EX.fmt = sh.querySelector('[name=exf]:checked').value; EX.times = !!((can('viewTime') || can('editTime')) && $('#ex-tm')?.checked); EX.tent = !!$('#ex-tent')?.checked; doExport(); };
 }
 async function saveBlob(blob, name) {
   // 在 claude.ai 的預覽裡要透過它的下載功能；在 GitHub／Teams 用一般下載
@@ -2623,7 +3080,7 @@ async function doExport() {
   const box = document.createElement('div'); box.className = 'exportbox'; wrap.appendChild(box);
   try {
     await loadScript(EXPORT_LIBS.img); if (EX.fmt === 'pdf') await loadScript(EXPORT_LIBS.pdf);
-    root.setAttribute('data-theme', 'light'); S.focus = ''; EXPORTING = { times: EX.times };
+    root.setAttribute('data-theme', 'light'); S.focus = ''; EXPORTING = { times: EX.times, tent: EX.tent };
     const stamp = new Date().toLocaleString('zh-TW', { hour12: false, month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
     box.innerHTML = `<div class="exhead"><b>${APP_NAME}・班表</b><span>${y}年${m + 1}月　${md(dates[0])}–${md(dates.at(-1))}</span><small>${stamp} 匯出</small></div>` + renderDays(dates);
     box.querySelectorAll('.day.today').forEach(d => d.classList.remove('today'));
@@ -2697,15 +3154,15 @@ try { applyZoom(localStorage.getItem('zoom') || 100); applyFull(localStorage.get
    ==================================================================== */
 const SC = window.SCHEDULE_CONFIG || {};
 const DEMO = new URLSearchParams(location.search).has('demo');
-const LIST_NAMES = Object.assign({ staff: '人員', options: '車輛選項', jobs: '場次', ext: '外調車輛', days: '每日狀態', trash: '最近刪除', times: '工時', mileage: '里程紀錄', vrec: '車輛紀錄', prec: '私人車紀錄' }, SC.lists || {});
+const LIST_NAMES = Object.assign({ staff: '人員', options: '車輛選項', jobs: '場次', ext: '外調車輛', days: '每日狀態', trash: '最近刪除', times: '工時', mileage: '里程紀錄', vrec: '車輛紀錄', prec: '私人車紀錄', stays: '住宿', notify: '通知紀錄' }, SC.lists || {});
 // 單據照片放的文件庫（公司車、私人車分開，權限也分開）
 const LIB_NAMES = Object.assign({ vrec: '車輛單據', prec: '私人車單據' }, SC.libraries || {});
-const OPTIONAL_LISTS = ['trash', 'times', 'mileage', 'vrec', 'prec']; // 還沒建立也能開，只是那個功能不能用
+const OPTIONAL_LISTS = ['trash', 'times', 'mileage', 'vrec', 'prec', 'stays', 'notify']; // 還沒建立也能開，只是那個功能不能用
 // 每個欄位：[英文名稱, 中文名稱]。程式會比對內部名稱、英文顯示名稱、中文顯示名稱。
 const FIELD_DEFS = {
   staff: { name: ['Title', '姓名'], group: ['Group', '組別'], order: ['SortOrder', '排序'], active: ['Active', '啟用'], email: ['Email', '電子郵件'], leader: ['Leader', '負責人'] },
   options: { name: ['Title', '名稱'], cat: ['Category', '類別'], order: ['SortOrder', '排序'], serviceKm: ['ServiceKm', '保養里程'], serviceDate: ['ServiceDate', '下次保養日'] },
-  jobs: { title: ['Title', '場次名稱'], key: ['JobKey', '場次代碼'], date: ['JobDate', '日期'], start: ['StartTime', '開始時間'], end: ['EndTime', '結束時間'], timeNote: ['TimeNote', '時間說明'], people: ['Staff', '人員'], leaders: ['Leaders', '帶班'], vehicles: ['Vehicles', '車輛'], unattended: ['Unattended', '不留守'], note: ['Note', '備註'], order: ['SortOrder', '排序'], address: ['Address', '地址'], teams: ['Teams', '團隊'] },
+  jobs: { title: ['Title', '場次名稱'], key: ['JobKey', '場次代碼'], date: ['JobDate', '日期'], start: ['StartTime', '開始時間'], end: ['EndTime', '結束時間'], timeNote: ['TimeNote', '時間說明'], people: ['Staff', '人員'], leaders: ['Leaders', '帶班'], vehicles: ['Vehicles', '車輛'], unattended: ['Unattended', '不留守'], note: ['Note', '備註'], order: ['SortOrder', '排序'], address: ['Address', '地址'], teams: ['Teams', '團隊'] , tentative: ['Tentative', '預排'], lodging: ['Lodging', '住宿'] },
   ext: { company: ['Title', '公司'], key: ['JobKey', '場次代碼'], date: ['JobDate', '日期'], type: ['CarType', '車種'], plate: ['Plate', '車號'], driver: ['Driver', '司機姓名'], phone: ['Phone', '電話'], ok: ['Confirmed', '已確認'] },
   days: { key: ['Title', '日期代碼'], date: ['DayDate', '日期'], leave: ['Leave', '休假'], office: ['Office', '公司'] },
   trash: { title: ['Title', '場次名稱'], data: ['Data', '資料'] },
@@ -2713,17 +3170,21 @@ const FIELD_DEFS = {
   mileage: { vehicle: ['Title', '車輛'], kind: ['Kind', '類型'], job: ['JobKey', '場次代碼'], date: ['KmDate', '日期'], tStart: ['TimeStart', '出發時間'], tEnd: ['TimeEnd', '回來時間'], start: ['StartKm', '起始里程'], end: ['EndKm', '完成里程'], driver: ['Driver', '駕駛'], note: ['Note', '備註'], gap: ['Gap', '里程差距'] },
   // 車輛紀錄、私人車紀錄：一筆＝一筆紀錄（或一台車的基本資料、或設定），細節整包放在 Data（JSON）
   vrec: { vehicle: ['Title', '車輛'], kind: ['Kind', '類別'], date: ['RecDate', '日期'], cost: ['Cost', '金額'], data: ['Data', '詳細資料'] },
-  prec: { vehicle: ['Title', '車輛'], kind: ['Kind', '類別'], date: ['RecDate', '日期'], cost: ['Cost', '金額'], data: ['Data', '詳細資料'] }
+  prec: { vehicle: ['Title', '車輛'], kind: ['Kind', '類別'], date: ['RecDate', '日期'], cost: ['Cost', '金額'], data: ['Data', '詳細資料'] },
+  // 住宿：一筆＝一間飯店一次訂房，細節（分房、費用、付款…）放在 Data（JSON）
+  stays: { hotel: ['Title', '飯店'], key: ['JobKey', '場次代碼'], checkIn: ['CheckIn', '入住日'], checkOut: ['CheckOut', '退房日'], data: ['Data', '詳細資料'] },
+  // 通知紀錄：Title＝last 的那一筆存「上次通知的版本」
+  notify: { title: ['Title', '名稱'], data: ['Data', '詳細資料'] }
 };
-const DATE_KEYS = { jobs: ['date'], ext: ['date'], days: ['date'], times: ['date'], mileage: ['date'], options: ['serviceDate'], vrec: ['date'], prec: ['date'] };
+const DATE_KEYS = { jobs: ['date'], ext: ['date'], days: ['date'], times: ['date'], mileage: ['date'], options: ['serviceDate'], vrec: ['date'], prec: ['date'], stays: ['checkIn', 'checkOut'] };
 // 是/否欄位：匯入時若被設成數字或文字（1/0、是/否），讀寫時自動轉換
-const BOOL_KEYS = { staff: ['active'], jobs: ['unattended'], ext: ['ok'] };
+const BOOL_KEYS = { staff: ['active'], jobs: ['unattended', 'tentative', 'lodging'], ext: ['ok'] };
 const toBool = v => (v === null || v === undefined || v === '') ? undefined : v === true || v === 1 || /^(1|true|yes|y|是)$/i.test(String(v).trim());
 // 清單沒有這欄也能用，只是那項資料不會存
-const OPTIONAL_FIELDS = { ext: ['phone'], staff: ['email', 'leader'], options: ['serviceKm', 'serviceDate'], jobs: ['address', 'teams'], times: ['slot', 'member'], mileage: ['gap'] };
+const OPTIONAL_FIELDS = { ext: ['phone'], staff: ['email', 'leader'], options: ['serviceKm', 'serviceDate'], jobs: ['address', 'teams', 'tentative', 'lodging'], times: ['slot', 'member'], mileage: ['gap'] };
 const OPT_CATS = [['vehicles', '公司車輛'], ['extCompanies', '外調公司'], ['carTypes', '車種']];
 // 權限對應的群組（config.js 的 groups）。「排班編輯」沿用原本的 editorGroupId。
-const PERM_LABEL = { edit: '排班編輯', timeSelf: '班表-填自己時間', timeSupport: '班表-填支援時間', viewTime: '班表-看大家時間', editTime: '班表-改大家時間', km: '班表-登記里程', export: '班表-匯出', admin: '班表-權限管理', fleet: '班表-車輛管理', private: '車輛-私人車' };
+const PERM_LABEL = { edit: '排班編輯', timeSelf: '班表-填自己時間', timeSupport: '班表-填支援時間', viewTime: '班表-看大家時間', editTime: '班表-改大家時間', km: '班表-登記里程', export: '班表-匯出', admin: '班表-權限管理', fleet: '班表-車輛管理', private: '車輛-私人車', viewLodge: '班表-查看住宿', lodging: '班表-編輯住宿' };
 const isBlank = v => !v || /請填/.test(v);
 const GID = (() => { const g = Object.assign({}, SC.groups || {}); if (isBlank(g.edit)) g.edit = SC.editorGroupId; for (const k of Object.keys(g)) if (isBlank(g[k])) delete g[k]; return g; })();
 const splitNames = s => String(s ?? '').split(/[;；]/).map(x => x.trim()).filter(Boolean);
@@ -2742,6 +3203,7 @@ async function pool(tasks, n = 4) {
 // User.ReadBasic.All：讀群組成員時才拿得到姓名和信箱（只有 GroupMember.Read.All 時只會回傳 ID）
 const SCOPES = ['User.Read', 'User.ReadBasic.All', 'Sites.ReadWrite.All', 'GroupMember.Read.All'];
 const ADMIN_SCOPES = ['GroupMember.ReadWrite.All']; // 只有在權限管理頁打勾時才會要
+const MSG_SCOPES = ['ChannelMessage.Send', 'Chat.Create', 'ChatMessage.Send']; // 只有按「發送」通知時才會要
 let PCA = null, IN_TEAMS = false, TEAMS_HINT = '';
 const TOKENS = {};
 const redirectUri = () => SC.redirectUri || (location.origin + location.pathname.replace(/index\.html$/, ''));
@@ -2995,14 +3457,14 @@ function demoSeed() {
 
 /* ---------- 把清單包成畫面原本使用的資料介面（collection / doc / onSnapshot） ---------- */
 function makeDb(B, ME) {
-  const M = { jobs: new Map(), ext: new Map(), days: new Map(), trash: new Map(), times: new Map(), mileage: new Map(), vrecords: new Map(), vinfo: {}, terms: null, termsItem: null, staff: [], opts: [], accounts: [], myPerms: [] };
-  const subs = { jobs: [], days: [], trash: [], times: [], mileage: [], vrecords: [], config: [] };
+  const M = { jobs: new Map(), ext: new Map(), days: new Map(), trash: new Map(), times: new Map(), mileage: new Map(), vrecords: new Map(), stays: new Map(), notify: null, notifyItem: null, vinfo: {}, terms: null, termsItem: null, staff: [], opts: [], accounts: [], myPerms: [] };
+  const subs = { jobs: [], days: [], trash: [], times: [], mileage: [], vrecords: [], stays: [], notify: [], config: [] };
   const last = {};
   let gen = 0, busy = 0, syncT = null, syncing = null, accAt = 0;
   const textOf = s => { s = String(s ?? ''); return /^\s*</.test(s) ? new DOMParser().parseFromString(s, 'text/html').body.textContent : s; };
   const parseTeams = s => { try { const a = JSON.parse(textOf(s) || '[]'); return Array.isArray(a) ? a.filter(t => t && t.name).map(t => ({ name: String(t.name), count: +t.count || 0, members: (t.members || []).map(x => String(x || '')) })) : []; } catch (_) { return []; } };
   const extOf = r => ({ company: r.f.company || '', type: r.f.type || '', plate: r.f.plate || '', driver: r.f.driver || '', phone: r.f.phone || '', ok: !!r.f.ok });
-  const jobOf = (f, exts) => ({ date: f.date || '', order: f.order ?? 0, title: f.title || '', start: f.start || '', end: f.end || '', timeNote: f.timeNote || '', address: f.address || '', teams: parseTeams(f.teams), people: splitNames(f.people), leaders: splitNames(f.leaders), vehicles: splitNames(f.vehicles), ext: (exts || []).map(e => ({ ...e.v })), note: f.note || '', unattended: !!f.unattended });
+  const jobOf = (f, exts) => ({ tentative: !!f.tentative, lodging: !!f.lodging, date: f.date || '', order: f.order ?? 0, title: f.title || '', start: f.start || '', end: f.end || '', timeNote: f.timeNote || '', address: f.address || '', teams: parseTeams(f.teams), people: splitNames(f.people), leaders: splitNames(f.leaders), vehicles: splitNames(f.vehicles), ext: (exts || []).map(e => ({ ...e.v })), note: f.note || '', unattended: !!f.unattended });
   const byOrder = (a, b) => (a.order ?? 9999) - (b.order ?? 9999);
   const num = v => (v === null || v === undefined || v === '' || isNaN(+v)) ? null : +v;
   // 帳號對應的排班人員：人員清單的 Email 欄 = 公司帳號
@@ -3022,10 +3484,10 @@ function makeDb(B, ME) {
     c.accounts = accountsView();
     return c;
   };
-  const snapOf = c => c === 'config'
+  const snapOf = c => c === 'notify' ? { exists: !!M.notify, data: () => clone(M.notify), metadata: { fromCache: false } } : c === 'config'
     ? { exists: true, data: () => clone(cfg()), metadata: { fromCache: false } }
     : { docs: [...M[c].entries()].map(([id, r]) => ({ id, data: () => clone(r.data) })), metadata: { fromCache: false } };
-  const sig = c => JSON.stringify(c === 'config' ? cfg() : [...M[c].entries()].map(([id, r]) => [id, r.data]));
+  const sig = c => JSON.stringify(c === 'notify' ? M.notify : c === 'config' ? cfg() : [...M[c].entries()].map(([id, r]) => [id, r.data]));
   const emit = (c, force) => {
     const s = sig(c); if (!force && last[c] === s) return; last[c] = s;
     subs[c].forEach(x => { try { x(snapOf(c)); } catch (e) { console.error(e); } });
@@ -3058,7 +3520,7 @@ function makeDb(B, ME) {
 
   async function load() {
     const g = gen;
-    const [js, xs, dd, st, op, tr, tm, km, vr, pr] = await Promise.all(['jobs', 'ext', 'days', 'staff', 'options', 'trash', 'times', 'mileage', 'vrec', 'prec'].map(k => B.items(k)));
+    const [js, xs, dd, st, op, tr, tm, km, vr, pr, sy, nf] = await Promise.all(['jobs', 'ext', 'days', 'staff', 'options', 'trash', 'times', 'mileage', 'vrec', 'prec', 'stays', 'notify'].map(k => B.items(k)));
     if (g !== gen || busy) return false; // 讀取途中有人存檔，這次的結果可能是舊的，丟掉等下一輪
     const ext = new Map();
     for (const r of xs) { const k = r.f.key; if (!k) continue; if (!ext.has(k)) ext.set(k, []); ext.get(k).push({ itemId: r.id, v: extOf(r) }); }
@@ -3093,6 +3555,11 @@ function makeDb(B, ME) {
       M.vrecords.set((k === 'vrec' ? 'v' : 'p') + r.id, { itemId: r.id, k, data: { ...d, vehicle: v, kind: f.kind || '', date: f.date || '', cost: num(f.cost), by: r.editor.name || r.author.name } });
     }
     for (const r of km.filter(r => r.f.kind === 'check')) { const f = r.f; M.vrecords.set('c' + r.id, { itemId: r.id, k: 'mileage', data: { vehicle: f.vehicle || '', kind: '里程', date: f.date || '', km: num(f.start), note: f.note || '', photos: [], ...gapOf(f.gap), by: r.editor.name || r.author.name } }); }
+    // 住宿
+    M.stays = new Map(sy.map(r => { let d = {}; try { d = JSON.parse(textOf(r.f.data) || '{}') || {}; } catch (_) {} return ['st' + r.id, { itemId: r.id, data: { ...d, hotel: r.f.hotel || '', jobId: r.f.key || d.jobId || '', checkIn: r.f.checkIn || '', checkOut: r.f.checkOut || '' } }]; }));
+    // 上次通知的版本
+    M.notify = null; M.notifyItem = null;
+    for (const r of nf) if (String(r.f.title || '').trim() === 'last') { try { M.notify = JSON.parse(textOf(r.f.data) || 'null'); M.notifyItem = r.id; } catch (_) {} }
     if (Date.now() - accAt > 5 * 60e3) await loadAccounts();
     return true;
   }
@@ -3126,7 +3593,7 @@ function makeDb(B, ME) {
   async function setJob(id, data) {
     const rec = M.jobs.get(id);
     const teams = (data.teams || []).filter(t => t && t.name);
-    const f = { title: data.title || '', key: id, date: data.date || '', start: data.start || '', end: data.end || '', timeNote: data.timeNote || '', address: data.address || '', teams: teams.length ? JSON.stringify(teams) : '', people: joinNames(data.people), leaders: joinNames(data.leaders), vehicles: joinNames(data.vehicles), unattended: !!data.unattended, note: data.note || '', order: data.order ?? 0 };
+    const f = { tentative: !!data.tentative, lodging: !!data.lodging, title: data.title || '', key: id, date: data.date || '', start: data.start || '', end: data.end || '', timeNote: data.timeNote || '', address: data.address || '', teams: teams.length ? JSON.stringify(teams) : '', people: joinNames(data.people), leaders: joinNames(data.leaders), vehicles: joinNames(data.vehicles), unattended: !!data.unattended, note: data.note || '', order: data.order ?? 0 };
     if (teams.length && !B.hasCol('jobs', 'teams')) throw userErr('「場次」清單還沒有 Teams 欄位，團隊存不進去。請管理員照設定紀錄新增欄位。');
     let itemId = rec?.itemId;
     if (itemId) await B.patch('jobs', itemId, f); else itemId = await B.create('jobs', f);
@@ -3353,7 +3820,23 @@ function makeDb(B, ME) {
     }
     if (changed) { await loadMyPerms(); await loadAccounts(); }
   }
+  async function setStay(id, data) {
+    const rec = M.stays.get(id);
+    const { hotel, jobId, checkIn, checkOut, ...rest } = data;
+    const f = { hotel: hotel || '', key: jobId || '', checkIn: checkIn || '', checkOut: checkOut || '', data: JSON.stringify(rest) };
+    let itemId = rec?.itemId;
+    if (itemId) await B.patch('stays', itemId, f); else itemId = await B.create('stays', f);
+    M.stays.delete(id); M.stays.set('st' + itemId, { itemId, data: clone(data) }); emit('stays');
+  }
+  async function delStay(id) { const rec = M.stays.get(id); if (!rec) return; await B.remove('stays', rec.itemId); M.stays.delete(id); emit('stays'); }
+  async function setNotify(_, data) {
+    const f = { title: 'last', data: JSON.stringify(data) };
+    if (M.notifyItem) await B.patch('notify', M.notifyItem, f); else M.notifyItem = await B.create('notify', f);
+    M.notify = clone(data); emit('notify');
+  }
   const handlers = {
+    stays: { set: setStay, update: (id, p) => setStay(id, { ...(M.stays.get(id)?.data || {}), ...p }), delete: delStay },
+    notify: { set: setNotify, update: (id, p) => setNotify(id, { ...(M.notify || {}), ...p }), delete: async () => {} },
     jobs: { set: setJob, update: (id, p) => { const r = M.jobs.get(id); if (!r) throw Object.assign(new Error('找不到這個場次，可能已被別人刪除'), { code: 'error' }); return setJob(id, { ...r.data, ...p }); }, delete: delJob },
     days: { set: setDay, update: (id, p) => setDay(id, { ...(M.days.get(id)?.data || {}), ...p }), delete: async () => {} },
     trash: { set: setTrash, update: (id, p) => setTrash(id, { ...(M.trash.get(id)?.data || {}), ...p }), delete: delTrash },
@@ -3395,6 +3878,35 @@ function explain(e) {
   return '無法連線：' + m;
 }
 
+/* ---------- 把通知發到 Teams（頻道訊息、私訊；用按的人的身分） ---------- */
+const htmlOf = t => esc(t).replace(/\n/g, '<br>');
+async function sendTeams(B, me, m) {
+  const fail = [];
+  const call = (method, url, body) => B.raw(method, url, body, { scopes: MSG_SCOPES });
+  const teamId = SC.teamGroupId, chId = SC.notifyChannelId;
+  if (m.ch) {
+    if (isBlank(teamId) || isBlank(chId)) throw userErr('config.js 還沒填「排班」頻道的識別碼（notifyChannelId），頻道訊息發不出去。');
+    let content = htmlOf(m.chBody); const mentions = [];
+    if (m.at === 'people' && m.mention.length) {
+      content += '<br><br>' + m.mention.map((x, i) => { mentions.push({ id: i, mentionText: x.name, mentioned: { user: { id: x.acc.id, displayName: x.acc.name, userIdentityType: 'aadUser' } } }); return `<at id="${i}">${esc(x.name)}</at>`; }).join(' ');
+    } else if (m.at === 'channel') {
+      mentions.push({ id: 0, mentionText: '排班', mentioned: { conversation: { id: chId, displayName: '排班', conversationIdentityType: 'channel' } } });
+      content += '<br><br><at id="0">排班</at>';
+    }
+    try { await call('POST', `/teams/${teamId}/channels/${encodeURIComponent(chId)}/messages`, { body: { contentType: 'html', content }, mentions }); }
+    catch (e) { if (e.status === 403 || e.status === 401) throw userErr('沒有在「排班」頻道發訊息的權限。請管理員確認 App 的 Teams 訊息權限已同意，而且你是團隊成員。'); throw e; }
+  }
+  if (m.dm) for (const d of m.dms) {
+    if (!d.acc || d.acc.id === me.id) continue; // 不能私訊自己
+    try {
+      const bind = id => ({ '@odata.type': '#microsoft.graph.aadUserConversationMember', roles: ['owner'], 'user@odata.bind': `https://graph.microsoft.com/v1.0/users('${id}')` });
+      const chat = await call('POST', '/chats', { chatType: 'oneOnOne', members: [bind(me.id), bind(d.acc.id)] });
+      await call('POST', `/chats/${chat.id}/messages`, { body: { contentType: 'html', content: htmlOf(d.text) } });
+    } catch (e) { console.warn('私訊失敗', d.to, e); fail.push(d.to); }
+  }
+  return { fail };
+}
+
 /* ---------- boot ---------- */
 render();
 (async () => {
@@ -3416,11 +3928,14 @@ render();
     const me = await B.me();
     S.meId = me.id;
     const db = makeDb(B, me);
+    if (!DEMO) window.__nfSend = m => sendTeams(B, me, m);
     db.collection('jobs').onSnapshot(snap => { S.jobs = new Map(snap.docs.map(d => [d.id, { id: d.id, ...d.data() }])); S.loaded.jobs = true; refresh(); });
     db.collection('days').onSnapshot(snap => { S.days = new Map(snap.docs.map(d => [d.id, d.data()])); S.loaded.days = true; refresh(); });
     db.collection('times').onSnapshot(snap => { S.times = new Map(snap.docs.map(d => [d.id, d.data()])); refresh(); });
     db.collection('mileage').onSnapshot(snap => { S.km = new Map(snap.docs.map(d => [d.id, { id: d.id, ...d.data() }])); refresh(); if (KML) openKmList(); else if (KM) kmInfo(); });
     db.collection('vrecords').onSnapshot(snap => { S.vrec = new Map(snap.docs.map(d => [d.id, { id: d.id, ...d.data() }])); refresh(); });
+    db.collection('stays').onSnapshot(snap => { S.stays = new Map(snap.docs.map(d => [d.id, { id: d.id, ...d.data() }])); refresh(); if (LG && !LS && !$('#sheet').hidden && $('.lgwin')) openLodge(LG.jobId); });
+    db.doc('notify/last').onSnapshot(snap => { S.notify = snap.exists ? snap.data() : null; S.notifyLoaded = true; refresh(); });
     db.collection('trash').onSnapshot(snap => {
       S.trash = new Map(snap.docs.map(d => [d.id, { id: d.id, ...d.data() }]));
       const b = $('#trashbtn'); b.hidden = !S.trash.size || S.canWrite === false; b.textContent = `最近刪除 ${S.trash.size}`;
