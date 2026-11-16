@@ -196,6 +196,25 @@ table.pg{border-collapse:separate;border-spacing:0;font-size:13px;min-width:100%
   .set2.show-people .veh,.set2.show-veh .ppl{display:none}
 }
 @media (max-width:420px){.scols{grid-template-columns:1fr}}
+/* 人員管理改成橫向：每一組一列，名字由左到右排，排滿自動換行 */
+.scols{grid-template-columns:1fr;gap:10px}
+.scol{padding:10px 12px}
+.scol-h{align-items:center;padding:0 2px 8px}
+.scol-h .sfilter{margin-left:auto;width:9em;padding:3px 8px;font-size:13px;border:1px solid var(--line);border-radius:7px;background:var(--surface)}
+.scards{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.scard{min-height:34px;padding:2px 2px 2px 0;gap:3px}
+.scard .handle{padding:4px 1px 4px 4px}
+.scard .sname{flex:none;font-size:14px;max-width:10em}
+.scard .leadn{display:inline;margin-left:4px}
+.scard .scount{font-size:11px}
+.scard .more{width:24px;height:24px}
+.scard.editing{flex:1 1 100%;max-width:420px}
+.scard.drop-before{box-shadow:-3px 0 0 0 var(--accent)}
+.scard.drop-after{box-shadow:3px 0 0 0 var(--accent)}
+.scards .addchip{padding:5px 10px}
+.scards .addin{flex:1 1 220px}
+.scard.hid{display:none}
+.scard .smenu button{white-space:nowrap}
 
 /* settings */
 .set{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
@@ -897,12 +916,12 @@ function renderSettings() {
   const staffBy = g => activeStaff().filter(p => (p.group || '正職') === g);
   const off = S.config.staff.filter(p => !isActive(p));
   const col = g => { const list = staffBy(g); return `<div class="scol" data-group="${g}">
-      <div class="scol-h"><b>${GLABEL[g] || g}</b><span>${list.length} ${g === '團隊' ? '隊' : '人'}</span></div>
+      <div class="scol-h"><b>${GLABEL[g] || g}</b><span>${list.length} ${g === '團隊' ? '隊' : '人'}</span>${list.length > 10 ? `<input type="search" class="sfilter" data-group="${g}" placeholder="找名字" aria-label="在${GLABEL[g] || g}裡找名字">` : ''}</div>
       <div class="scards">${list.map(staffCard).join('')}${addChip('staff', g, '＋ 新增' + (g === '團隊' ? '團隊' : GLABEL[g] || g))}</div>
     </div>`; };
   return `<div class="set1">
       ${tab === 'people' ? `<section class="panel ppl">
-        <div class="ph"><h2>人員管理</h2><p>拖曳 ⋮⋮ 調整順序，拖到另一欄就是換組。排班時依這個順序列出。改名會一併更新已排的場次和休假。</p></div>
+        <div class="ph"><h2>人員管理</h2><p>拖曳 ⋮⋮ 調整順序，拖到另一組就是換組。只來一次的支援人員，可以從「⋯」選「停用」收起來，以前的場次和時間都會保留。排班時依這個順序列出。改名會一併更新已排的場次和休假。</p></div>
         <div class="scols">${col('正職')}${col('行政')}${col('支援')}${col('團隊')}</div>
         ${off.length ? `<details class="offlist"><summary>已停用 ${off.length} 位（以前的場次與時間都保留）</summary><div class="chipsrow">${off.map(p => `<span class="tchip">${esc(p.name)}<small>${esc(GLABEL[p.group] || p.group || '')}</small>${S.canWrite === false ? '' : `<button data-act="restaff" data-name="${esc(p.name)}">恢復</button>`}</span>`).join('')}</div></details>` : ''}
       </section>` : `<section class="panel veh">
@@ -953,8 +972,8 @@ function staffCard(p) {
       <button data-act="renstart" data-name="${nm}">改名</button>
       ${g === '團隊' ? `<button data-act="setlead" data-name="${nm}">設定負責人</button>` : ''}
       ${['正職', '行政', '支援', '團隊'].filter(x => x !== g).map(x => `<button data-act="mvstaff" data-name="${nm}" data-to="${x}">移到${GLABEL[x]}</button>`).join('')}
-      <button data-act="mvup" data-name="${nm}">往上移</button>
-      <button data-act="mvdown" data-name="${nm}">往下移</button>
+      <button data-act="mvup" data-name="${nm}">往前移</button>
+      <button data-act="mvdown" data-name="${nm}">往後移</button>
       <button class="del ${armed ? 'armed' : ''}" data-act="rmstaff" data-name="${nm}">${armed ? '確定停用？' : '停用（資料保留）'}</button>
     </div>` : ''}
   </div>`;
@@ -1014,6 +1033,11 @@ async function commitAdd() {
   render(); const i = $('#add-in'); if (i) { i.value = ''; i.focus(); }
 }
 
+// 支援人員很多時，可以打字找名字（只是暫時隱藏，不會改到資料）
+document.addEventListener('input', e => {
+  const f = e.target.closest('.sfilter'); if (!f) return; const q = f.value.trim();
+  f.closest('.scol').querySelectorAll('.scard[data-name]').forEach(c => c.classList.toggle('hid', !!q && !c.dataset.name.includes(q)));
+});
 /* 拖曳排序：按住 ⋮⋮ 拖，滑鼠和手指都可以 */
 let DR = null;
 document.addEventListener('pointerdown', e => {
@@ -1032,7 +1056,7 @@ document.addEventListener('pointermove', e => {
   DR.ghost.style.display = 'none'; const el = document.elementFromPoint(e.clientX, e.clientY); DR.ghost.style.display = '';
   const card = el && el.closest('.scard:not(.dragging)'); const col = el && el.closest('.scol');
   if (card && card.dataset.name) {
-    const r = card.getBoundingClientRect(); const before = e.clientY < r.top + r.height / 2;
+    const r = card.getBoundingClientRect(); const before = e.clientX < r.left + r.width / 2; // 橫向排列：看左半邊還是右半邊
     card.classList.add(before ? 'drop-before' : 'drop-after');
     DR.target = { group: card.closest('.scol').dataset.group, ref: card.dataset.name, before };
   } else if (col) { col.classList.add('drop-col'); DR.target = { group: col.dataset.group, ref: null }; }
