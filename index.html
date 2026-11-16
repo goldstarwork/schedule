@@ -812,7 +812,6 @@ function renderDays(only) {
         <div class="dact">
           <button class="mini ownly" data-act="office" data-date="${date}">公司</button>
           <button class="mini ownly" data-act="leave" data-date="${date}">休假</button>
-          ${list.some(j => j.tentative) ? `<button class="mini ownly tentok" data-act="tentok" data-date="${date}" title="把這天的預排場次全部改成確定">確定預排</button>` : ''}
           <button class="mini add" data-act="new" data-date="${date}">＋ 場次</button>
         </div>
       </div>
