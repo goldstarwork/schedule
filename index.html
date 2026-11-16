@@ -3906,6 +3906,8 @@ async function sendTeams(B, me, m) {
   return { fail };
 }
 
+// 畫面重畫時，保留權限表、依人員表格左右捲動的位置（不然一打勾就跳回最左邊）
+{ const _render = render; render = function () { const xs = [...document.querySelectorAll('.permwrap, .gridwrap')].map(e => e.scrollLeft); _render(); document.querySelectorAll('.permwrap, .gridwrap').forEach((e, i) => { if (xs[i]) e.scrollLeft = xs[i]; }); }; }
 /* ---------- boot ---------- */
 render();
 (async () => {
