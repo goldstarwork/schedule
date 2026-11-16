@@ -8,8 +8,10 @@ window.SCHEDULE_CONFIG = {
   siteUrl: 'https://galaxyca.sharepoint.com/sites/-672',
   // 「排班編輯」群組的物件識別碼
   editorGroupId: 'd326725a-7205-4826-81ae-c88c53a202cb',
-  // 「金星工作站」團隊群組的物件識別碼（權限管理頁的同事名單）
+  // 「金星工作站」團隊群組的物件識別碼（權限管理頁的同事名單、發通知的團隊）
   teamGroupId: '8f7fa11f-c8ce-4f37-90c6-3ea8fa8ee0ba',
+  // 「排班」頻道的識別碼（通知更新發到這個頻道）
+  notifyChannelId: '19:bFOXCNvLe6SJf0yVjH0LzCbCZ8KF8K_09T9sZ8OGKbA1@thread.tacv2',
   // 各項權限對應的群組物件識別碼
   groups: {
     timeSelf: 'ea33b5c5-a5a0-49e8-8ade-089c4675ae9d',     // 班表-填自己時間
@@ -20,10 +22,12 @@ window.SCHEDULE_CONFIG = {
     export: '4a9290e9-4547-42c3-8aa9-a1a2dcc03e94',     // 班表-匯出
     admin: '27541af4-d287-40f8-ba35-910c7bf30ee5',       // 班表-權限管理
     fleet: 'bac76b02-3eb2-4c7a-9319-834fd1612f42',       // 班表-車輛管理
-    private: '47a5824c-7497-4ff4-a153-7b845a10e4bb'      // 車輛-私人車
+    private: '47a5824c-7497-4ff4-a153-7b845a10e4bb',     // 車輛-私人車
+    viewLodge: '939aa6d4-b498-476b-926c-7a3c4afd9097',   // 班表-查看住宿
+    lodging: '74fca78b-432b-4668-bf89-84efcc175d20'      // 班表-編輯住宿
   },
   // 清單名稱
-  lists: { staff: '人員', options: '車輛選項', jobs: '場次', ext: '外調車輛', days: '每日狀態', trash: '最近刪除', times: '工時', mileage: '里程紀錄', vrec: '車輛紀錄', prec: '私人車紀錄' },
+  lists: { staff: '人員', options: '車輛選項', jobs: '場次', ext: '外調車輛', days: '每日狀態', trash: '最近刪除', times: '工時', mileage: '里程紀錄', vrec: '車輛紀錄', prec: '私人車紀錄', stays: '住宿', notify: '通知紀錄' },
   // 放單據照片的文件庫
   libraries: { vrec: '車輛單據', prec: '私人車單據' },
   // 每隔幾秒自動更新一次
