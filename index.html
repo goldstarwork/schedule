@@ -846,6 +846,7 @@ function render() {
   document.body.classList.toggle('pg-fleet', S.page === 'fleet'); $('#brand').textContent = APP_NAME + (S.page === 'fleet' ? '・車輛管理' : '・班表');
   document.querySelectorAll('.tabs button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.view === S.view)));
   $('#mlabel').textContent = `${S.month.y}年${S.month.m + 1}月`;
+  if (S.db && S.db.need) S.db.need(`${S.month.y}-${pad(S.month.m + 1)}-01`); // 正式版只先讀近幾個月，翻到更早的月份時補讀
   const fs = $('#focus'); const names = activeStaff().filter(p => (p.group || '正職') === '正職').map(p => p.name);
   if (S.focus && S.config.staff.length && !names.includes(S.focus)) S.focus = '';
   fs.innerHTML = '<option value="">全部人員</option>' + names.map(n => `<option ${n === S.focus ? 'selected' : ''}>${esc(n)}</option>`).join('');
@@ -1061,6 +1062,7 @@ function staffCard(p) {
 async function renameStaff(oldN, newN) {
   if (!newN || newN === oldN) { S.renaming = null; render(); return; }
   if (S.config.staff.some(p => p.name === newN)) { toast(`名單裡已經有「${newN}」`); return; }
+  if (S.db.loadAll) await S.db.loadAll(); // 舊場次也要一起改名
   const jobs = [...S.jobs.values()].filter(j => (j.people || []).includes(oldN) || (j.teams || []).some(t => t.name === oldN));
   const dayList = [...S.days.entries()].filter(([, d]) => (d.leave || []).includes(oldN) || (d.office || []).includes(oldN));
   const ok = await write(async () => {
@@ -1085,6 +1087,7 @@ async function renameList(key, oldN, newN) {
   if (!newN || newN === oldN) { S.editing = null; render(); return; }
   const list = S.config[key] || [];
   if (list.includes(newN)) { toast(`已經有「${newN}」`); return; }
+  if (S.db.loadAll) await S.db.loadAll(); // 舊場次也要一起改名
   const f = key === 'extCompanies' ? 'company' : key === 'carTypes' ? 'type' : null;
   const jobs = [...S.jobs.values()].filter(j => key === 'vehicles' ? (j.vehicles || []).includes(oldN) : (j.ext || []).some(e => e[f] === oldN));
   const ok = await write(async () => {
@@ -2467,7 +2470,7 @@ function renderFleetCar(v) {
   };
   const cnt = k => all.filter(r => r.kind === k).length;
   const kmPanel = `<section class="panel"><div class="frecbar"><h2>最近里程</h2><button class="btn sm" data-act="fkmlog">＋ 登記里程</button></div>${(kmRecs.length ? `<div class="ftrip">${kmRecs.map(r => `<button type="button" class="ftrow" data-act="fredit" data-rid="${esc(r.id)}" title="點一下修改或刪除"><span>${md(r.date)}</span><span>${esc(r.note || '')}</span><span class="kmv">${kmFmt(r.km)} km</span></button>`).join('')}</div><p class="hint" style="margin:6px 0 0">登記錯了：點那一筆就可以修改或刪除。</p>` : '<p class="emptymsg" style="margin:0">還沒有里程登記。</p>')}</section>`;
-  const tripPanel = `<section class="panel"><h2>最近用車</h2>${trips.length ? `<div class="ftrip">${trips.map(r => { const j = r.jobId ? S.jobs.get(r.jobId) : null; const d = r.start != null && r.end != null ? r.end - r.start : null; return `<div><span>${md(r.date)}</span><span>${esc(j ? j.title : (r.note || '事務用車'))}</span><span class="kmv">${d != null ? kmFmt(d) + ' km' : kmFmt(r.start)}</span></div>`; }).join('')}</div>` : '<p class="emptymsg" style="margin:0">還沒有用車登記。</p>'}</section>`;
+  const tripPanel = `<section class="panel"><h2>最近用車</h2>${trips.length ? `<div class="ftrip">${trips.map(r => { const j = r.jobId ? S.jobs.get(r.jobId) : null; const d = r.start != null && r.end != null ? r.end - r.start : null; return `<div><span>${md(r.date)}</span><span>${esc(j ? j.title : r.jobId ? '（較早的場次）' : (r.note || '事務用車'))}</span><span class="kmv">${d != null ? kmFmt(d) + ' km' : kmFmt(r.start)}</span></div>`; }).join('')}</div>` : '<p class="emptymsg" style="margin:0">還沒有用車登記。</p>'}</section>`;
   // 基本資料直接放在車名下面
   const facts = [i.model, i.year ? i.year + ' 年出廠' : '', i.buyDate ? `${fmtD(i.buyDate)} 購買（車齡 ${ageText(i.buyDate)}）` : '', i.price ? '購價 ' + money(i.price) : '', i.dealer].filter(Boolean);
   return `<div class="fdetail">
@@ -2849,6 +2852,7 @@ async function saveFI() {
   if (oldN && vinfo(oldN).retired) info.retired = vinfo(oldN).retired;
   if (FI.priv) info.private = true;
   const renamed = !!oldN && alias !== oldN;
+  if (renamed && S.db.loadAll) await S.db.loadAll(); // 舊場次也要一起改名
   const vi = { ...(S.config.vehicleInfo || {}) }; if (oldN) delete vi[oldN]; vi[alias] = info;
   const svc = { ...(S.config.vehicleService || {}) }; if (renamed && svc[oldN] != null) { svc[alias] = svc[oldN]; delete svc[oldN]; }
   const jobs = renamed ? [...S.jobs.values()].filter(j => (j.vehicles || []).includes(oldN)) : [];
@@ -3588,11 +3592,14 @@ function getToken(scopes = SCOPES) {
 /* ---------- SharePoint 清單與群組（Microsoft Graph） ---------- */
 function graphBackend() {
   const G = 'https://graph.microsoft.com/v1.0';
-  let site = null; const ids = {}, cols = {}, kinds = {}, drives = {}; let spOk = null, spWhy = '';
+  let site = null; const ids = {}, cols = {}, kinds = {}, drives = {}, dts = {}; let spOk = null, spWhy = '';
+  // 只讀某個日期以後的資料：清單 → 用哪個日期欄位篩選（欄位要是日期類型才篩，否則照舊全部讀）
+  const RANGE_FIELD = { jobs: 'date', ext: 'date', days: 'date', times: 'date', stays: 'checkIn' };
+  const rangeCol = (k, since) => { const lk = RANGE_FIELD[k]; return since && lk && dts[k]?.[lk] && cols[k]?.[lk] ? cols[k][lk] : ''; };
   async function call(method, url, body, opt = {}, tries = 0) {
     let r;
     try {
-      r = await fetch(url.startsWith('http') ? url : G + url, { method, headers: { Authorization: 'Bearer ' + await getToken(opt.scopes), 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
+      r = await fetch(url.startsWith('http') ? url : G + url, { method, headers: { Authorization: 'Bearer ' + await getToken(opt.scopes), 'Content-Type': 'application/json', ...(opt.headers || {}) }, body: body ? JSON.stringify(body) : undefined });
     } catch (e) { if (e && e.userMsg) throw e; throw Object.assign(new Error('網路連線失敗'), { code: 'unavailable' }); }
     if ((r.status === 429 || r.status === 503 || r.status === 504) && tries < 4) {
       const s = Math.min(+(r.headers.get('Retry-After') || 2) || 2, 30);
@@ -3605,7 +3612,7 @@ function graphBackend() {
     }
     return r.status === 204 ? null : r.json();
   }
-  async function all(url) { const out = []; while (url) { const j = await call('GET', url); out.push(...(j.value || [])); url = j['@odata.nextLink']; } return out; }
+  async function all(url, opt) { const out = []; while (url) { const j = await call('GET', url, null, opt); out.push(...(j.value || [])); url = j['@odata.nextLink']; } return out; }
   // 日期一律用公司時區（預設台北）換算：讀取時把 UTC 時間轉成台北日期，寫入時存台北當天的午夜
   const TZ = SC.timeZone || 'Asia/Taipei';
   const dayFmt = new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit' });
@@ -3636,7 +3643,7 @@ function graphBackend() {
     let cs;
     try { cs = await all(`${L(k)}/columns?$top=200`); }
     catch (e) { if (OPTIONAL_LISTS.includes(k)) { why[k] = `讀取欄位失敗（${e.status || ''} ${e.message || ''}）`; delete ids[k]; return; } throw e; }
-    const c2 = {}, k2 = {};
+    const c2 = {}, k2 = {}, d2 = {};
     for (const [lk, [internal, disp]] of Object.entries(FIELD_DEFS[k])) {
       const custom = SC.fields?.[k]?.[lk];
       const usable = cs.filter(x => !x.readOnly || x.name === 'Title');
@@ -3647,14 +3654,15 @@ function graphBackend() {
         // 車輛紀錄的 Data 欄位，建立時曾誤打成 Date：內部名稱是 Date、類型是文字，也當成 Data
         || (lk === 'data' && usable.find(x => x.text && /^dat[ae]\d*$/i.test(x.name)));
       if (!c && OPTIONAL_FIELDS[k]?.includes(lk)) continue;
+      if (c && c.dateTime) d2[lk] = true;
       if (c) { c2[lk] = c.name; k2[lk] = c.boolean ? 'boolean' : c.number ? 'number' : (c.text || c.choice) ? 'text' : 'other'; } else { const have = usable.filter(x => !['ContentType','Attachments','Edit','LinkTitle','LinkTitleNoMenu','DocIcon','ItemChildCount','FolderChildCount','_ColorTag','ComplianceAssetId','AppAuthor','AppEditor','_UIVersionString','Modified','Created','Author','Editor'].includes(x.name)).map(x => `${x.displayName}=${x.name}`).join('，'); bad.push(`${LIST_NAMES[k]} 的「${internal}」（這張清單目前的欄位：${have}）`); }
     }
-    cols[k] = c2; kinds[k] = k2; delete why[k];
+    cols[k] = c2; kinds[k] = k2; dts[k] = d2; delete why[k];
   }
   // 選用清單（工時、里程紀錄）一開始讀不到時，隔一段時間再找一次（剛加權限時 SharePoint 可能還沒同步）
   async function ensure(k, force) {
     if (ids[k] || !OPTIONAL_LISTS.includes(k)) return !!ids[k];
-    if (!force && Date.now() - (tried[k] || 0) < 60e3) return false;
+    if (!force && Date.now() - (tried[k] || 0) < 600e3) return false; // 讀不到（多半是沒權限）的清單，10 分鐘才再試一次
     tried[k] = Date.now();
     try {
       const lists = await all(`/sites/${site.id}/lists?$select=id,displayName,name&$top=200`);
@@ -3689,27 +3697,32 @@ function graphBackend() {
       }
       if (missing.length) throw userErr(`在網站「${site.displayName}」找不到清單 ${missing.join('、')}。請確認清單名稱和指南一致。`);
       const bad = [];
-      await pool(Object.keys(ids).map(k => () => loadCols(k, bad)));
+      await pool(Object.keys(ids).map(k => () => loadCols(k, bad)), 8);
       if (bad.length) throw userErr('清單裡找不到這些欄位：' + bad.join('、') + '。請對照指南的清單設計檢查。');
     },
     has: k => !!ids[k],
     hasCol: (k, f) => !!(cols[k] && cols[k][f]),
-    async items(k) {
+    async items(k, since) {
       if (!ids[k] && !(await ensure(k))) return [];
+      const rc = rangeCol(k, since);
       // 工時清單有「只能讀自己建的項目」：一般權限的讀取連管理員都只拿到自己的。改用 SharePoint REST（完全控制範圍）讀，讀不到才退回 Graph
-      if (k === 'times' && spOk !== false) { try { const rows = await this.spItems(k); if (spOk !== true) console.info('工時：用 SharePoint 讀取，共', rows.length, '筆'); spOk = true; return rows; } catch (e) { console.warn('SharePoint REST 讀工時失敗，改用 Graph', e); spOk = false; spWhy = (e.status || '') + ' ' + (e.message || ''); } }
+      if (k === 'times' && spOk !== false) { try { const rows = await this.spItems(k, rc ? since : ''); if (spOk !== true) console.info('工時：用 SharePoint 讀取，共', rows.length, '筆'); spOk = true; return rows; } catch (e) { console.warn('SharePoint REST 讀工時失敗，改用 Graph', e); spOk = false; spWhy = (e.status || '') + ' ' + (e.message || ''); } }
       const sel = Object.values(cols[k]).join(',');
-      const rows = await all(`${L(k)}/items?$select=id,createdBy,lastModifiedBy,lastModifiedDateTime&$expand=fields($select=${sel})&$top=999`);
+      const base = `${L(k)}/items?$select=id,createdBy,lastModifiedBy,lastModifiedDateTime&$expand=fields($select=${sel})&$top=999`;
+      let rows = null;
+      if (rc) { try { rows = await all(`${base}&$filter=fields/${rc} ge '${midnight(since)}'`, { headers: { Prefer: 'HonorNonIndexedQueriesWarningMayFailRandomly' } }); } catch (e) { console.warn('依日期篩選失敗，改成全部讀取', LIST_NAMES[k], e); } }
+      if (!rows) rows = await all(base);
       return rows.map(r => {
         const f = {};
         for (const [lk, n] of Object.entries(cols[k])) { let v = r.fields?.[n]; if (DATE_KEYS[k]?.includes(lk)) v = toDs(v); else if (BOOL_KEYS[k]?.includes(lk)) v = toBool(v); f[lk] = v; }
         return { id: r.id, f, author: userOf(r.createdBy), editor: userOf(r.lastModifiedBy), at: Date.parse(r.lastModifiedDateTime || '') || 0 };
       });
     },
-    async spItems(k) {
+    async spItems(k, since) {
       const origin = new URL(SC.siteUrl).origin; const scopes = [origin + '/AllSites.Read']; // 工時清單已改成「讀取所有項目」（修改仍只限自己建的），誰看得到哪些時間由程式判斷；不再需要完全控制範圍
       const sel = ['Id', 'Modified', 'Author/Title', 'Author/EMail', 'Editor/Title', ...Object.values(cols[k])].join(',');
-      let url = `${SC.siteUrl.replace(/\/+$/, '')}/_api/web/lists(guid'${ids[k]}')/items?$select=${sel}&$expand=Author,Editor&$top=5000`; const rows = [];
+      const rc = rangeCol(k, since);
+      let url = `${SC.siteUrl.replace(/\/+$/, '')}/_api/web/lists(guid'${ids[k]}')/items?$select=${sel}&$expand=Author,Editor&$top=5000${rc ? `&$filter=${rc} ge datetime'${midnight(since)}'` : ''}`; const rows = [];
       while (url) {
         const r = await fetch(url, { headers: { Authorization: 'Bearer ' + await getToken(scopes), Accept: 'application/json;odata=nometadata' } });
         if (!r.ok) throw Object.assign(new Error('SharePoint ' + r.status), { status: r.status });
@@ -3819,7 +3832,14 @@ function makeDb(B, ME) {
   const M = { jobs: new Map(), ext: new Map(), days: new Map(), trash: new Map(), times: new Map(), mileage: new Map(), vrecords: new Map(), stays: new Map(), notify: null, notifyItem: null, xfleet: {}, vinfo: {}, terms: null, termsItem: null, staff: [], opts: [], accounts: [], myPerms: [] };
   const subs = { jobs: [], days: [], trash: [], times: [], mileage: [], vrecords: [], stays: [], notify: [], config: [] };
   const last = {};
-  let gen = 0, busy = 0, syncT = null, syncing = null, accAt = 0;
+  let gen = 0, busy = 0, syncT = null, syncing = null, accAt = 0, accBusy = null;
+  // 只讀「當月往前 3 個月」以後的場次、外調、休假、工時、住宿；翻到更早的月份才補讀（need）。改名時先全部讀（loadAll）
+  const monthStart = back => { const d = new Date(); d.setDate(1); d.setMonth(d.getMonth() - back); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`; };
+  let from = monthStart(3), full = false;
+  const RANGED = new Set(['jobs', 'ext', 'days', 'times', 'stays']);
+  // 車輛管理頁用不到的清單就不讀
+  const SKIP = S.page === 'fleet' ? new Set(['days', 'trash', 'times', 'stays', 'notify', 'xfleet']) : new Set();
+  const LISTS = ['jobs', 'ext', 'days', 'staff', 'options', 'trash', 'times', 'mileage', 'vrec', 'prec', 'stays', 'notify', 'xfleet'];
   const textOf = s => { s = String(s ?? ''); return /^\s*</.test(s) ? new DOMParser().parseFromString(s, 'text/html').body.textContent : s; };
   const parseTeams = s => { try { const a = JSON.parse(textOf(s) || '[]'); return Array.isArray(a) ? a.filter(t => t && t.name).map(t => ({ name: String(t.name), count: +t.count || 0, members: (t.members || []).map(x => String(x || '')) })) : []; } catch (_) { return []; } };
   const extOf = r => ({ company: r.f.company || '', type: r.f.type || '', plate: r.f.plate || '', driver: r.f.driver || '', phone: r.f.phone || '', ok: !!r.f.ok });
@@ -3854,6 +3874,9 @@ function makeDb(B, ME) {
   };
   const emitAll = force => Object.keys(subs).forEach(c => emit(c, force));
 
+  const rankAcc = a => { const s = M.staff.find(x => x.name === staffOfMail(a.mail, a.upn)); return s ? (s.order ?? 9999) : 99999; };
+  const cmpAcc = (a, b) => (b.id === ME.id) - (a.id === ME.id) || rankAcc(a) - rankAcc(b) || a.name.localeCompare(b.name, 'zh-Hant');
+  const sortAccounts = () => { M.accounts.sort(cmpAcc); };
   /* 誰有哪些權限：讀群組成員（同事名單＝Teams 團隊成員＋各權限群組的成員） */
   async function loadAccounts() {
     const users = new Map();
@@ -3861,14 +3884,12 @@ function makeDb(B, ME) {
     if (!isBlank(SC.teamGroupId)) { try { (await B.members(SC.teamGroupId)).forEach(touch); } catch (e) { console.warn('讀不到團隊成員', e); } }
     await pool(Object.entries(GID).map(([p, gid]) => async () => {
       try { (await B.members(gid)).forEach(u => touch(u).perms.add(p)); } catch (e) { console.warn('讀不到群組成員', PERM_LABEL[p], e); }
-    }));
+    }), 8);
     const me = touch(ME); me.perms = new Set(M.myPerms);
     for (const u of users.values()) if (!u.name) u.name = u.mail || u.upn || '（讀不到姓名）';
     // 還沒設定群組的權限：先給排班編輯
     for (const u of users.values()) for (const p of Object.keys(PERM_LABEL)) if (!GID[p] && (p === 'edit' ? !GID.edit : u.perms.has('edit'))) u.perms.add(p);
-    const rank = a => { const s = M.staff.find(x => x.name === staffOfMail(a.mail, a.upn)); return s ? (s.order ?? 9999) : 99999; };
-    M.accounts = [...users.values()].map(u => ({ ...u, perms: [...u.perms] }))
-      .sort((a, b) => (b.id === ME.id) - (a.id === ME.id) || rank(a) - rank(b) || a.name.localeCompare(b.name, 'zh-Hant'));
+    M.accounts = [...users.values()].map(u => ({ ...u, perms: [...u.perms] })).sort(cmpAcc);
     accAt = Date.now();
   }
   async function loadMyPerms() {
@@ -3880,7 +3901,8 @@ function makeDb(B, ME) {
 
   async function load() {
     const g = gen;
-    const [js, xs, dd, st, op, tr, tm, km, vr, pr, sy, nf, xf] = await Promise.all(['jobs', 'ext', 'days', 'staff', 'options', 'trash', 'times', 'mileage', 'vrec', 'prec', 'stays', 'notify', 'xfleet'].map(k => B.items(k)));
+    const since = full ? '' : from;
+    const [js, xs, dd, st, op, tr, tm, km, vr, pr, sy, nf, xf] = await Promise.all(LISTS.map(k => !full && SKIP.has(k) ? [] : B.items(k, RANGED.has(k) ? since : '')));
     if (g !== gen || busy) return false; // 讀取途中有人存檔，這次的結果可能是舊的，丟掉等下一輪
     const ext = new Map();
     for (const r of xs) { const k = r.f.key; if (!k) continue; if (!ext.has(k)) ext.set(k, []); ext.get(k).push({ itemId: r.id, v: extOf(r) }); }
@@ -3923,13 +3945,26 @@ function makeDb(B, ME) {
     // 外調公司的固定車名冊
     M.xfleet = {};
     for (const r of xf) { const co = String(r.f.company || '').trim(); if (!co) continue; let d = []; try { d = JSON.parse(textOf(r.f.data) || '[]') || []; } catch (_) {} M.xfleet[co] = { itemId: r.id, cars: Array.isArray(d) ? d : [] }; }
-    if (Date.now() - accAt > 5 * 60e3) await loadAccounts();
+    // 同事名單每 5 分鐘在背景更新，不擋住畫面
+    if (accAt && Date.now() - accAt > 5 * 60e3 && !accBusy) accBusy = loadAccounts().then(() => { sortAccounts(); emit('config'); }).catch(e => console.warn(e)).finally(() => { accBusy = null; });
     return true;
+  }
+  // 這台裝置的暫存（只在 Teams 裡、按帳號分開）：下次打開先顯示，背景再更新
+  const CACHE_KEY = IN_TEAMS && ME && ME.id ? `gw-cache:${S.page}:${ME.id}` : '';
+  let cacheAt = 0, cacheSig = '';
+  function saveCache(force) {
+    if (!CACHE_KEY || (!force && Date.now() - cacheAt < 60e3)) return;
+    try {
+      const pick = c => [...M[c].entries()].map(([id, r]) => [id, r.data]);
+      const data = { jobs: pick('jobs'), days: pick('days'), times: pick('times'), mileage: pick('mileage'), vrecords: pick('vrecords'), stays: pick('stays'), trash: pick('trash'), notify: M.notify, config: cfg() };
+      const str = JSON.stringify(data); if (str === cacheSig) return;
+      localStorage.setItem(CACHE_KEY, JSON.stringify({ v: 1, at: Date.now(), data })); cacheAt = Date.now(); cacheSig = str;
+    } catch (e) { try { localStorage.removeItem(CACHE_KEY); } catch (_) {} }
   }
   async function sync() {
     if (syncing) return syncing;
     syncing = (async () => {
-      try { if (await load()) { emitAll(); setStatus(DEMO ? '示範模式（資料不會儲存）' : S.canWrite === false ? '僅可檢視' : '已同步'); } }
+      try { if (await load()) { emitAll(); saveCache(); setStatus(DEMO ? '示範模式（資料不會儲存）' : S.canWrite === false ? '僅可檢視' : '已同步'); } }
       catch (e) { console.warn(e); setStatus('連線中斷，稍後自動重試', true); }
       finally { syncing = null; }
     })();
@@ -4243,11 +4278,24 @@ function makeDb(B, ME) {
   return {
     collection: c => ({ doc: id => docRef(c, id || newId()), onSnapshot: cb => { subs[c].push(cb); if (last[c] !== undefined) cb(snapOf(c)); return () => {}; } }),
     doc: path => { const [c, id] = path.split('/'); return docRef(c, id); },
+    // 翻到更早的月份：把讀取範圍往前延伸，再讀一次
+    need(ds) { if (full || !ds || ds >= from) return; from = ds; setStatus('讀取較早的資料…'); (syncing || Promise.resolve()).then(() => sync()); },
+    // 改名之前：先把全部資料讀進來，舊場次也一起改
+    async loadAll() {
+      if (full) return; full = true; setStatus('讀取全部資料…');
+      for (let i = 0; i < 3; i++) { if (syncing) await syncing; if (await load()) { emitAll(); break; } }
+      setStatus('已同步');
+    },
     async start() {
-      await loadMyPerms();
-      if (!(await load())) await load();
-      if (!accAt) await loadAccounts();
-      emitAll(true);
+      // 權限、資料、同事名單同時讀，不用排隊
+      const t0 = performance.now(); const lap = w => console.info('[載入]', w, ((performance.now() - t0) / 1000).toFixed(1) + ' 秒');
+      const pPerm = loadMyPerms().then(() => lap('權限'));
+      const pLoad = (async () => { if (!(await load())) await load(); lap('資料'); })();
+      await pPerm;
+      const pAcc = loadAccounts().then(() => lap('同事名單'));
+      await Promise.all([pLoad, pAcc]);
+      sortAccounts();
+      emitAll(true); saveCache(true);
       setInterval(() => { if (document.visibilityState === 'visible' && !busy) sync(); }, Math.max(15, +SC.pollSeconds || 30) * 1000);
       document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') sync(); });
     }
@@ -4296,11 +4344,28 @@ async function sendTeams(B, me, m) {
 
 // 畫面重畫時，保留權限表、依人員表格左右捲動的位置（不然一打勾就跳回最左邊）
 { const _render = render; render = function () { const xs = [...document.querySelectorAll('.permwrap, .gridwrap')].map(e => e.scrollLeft); _render(); document.querySelectorAll('.permwrap, .gridwrap').forEach((e, i) => { if (xs[i]) e.scrollLeft = xs[i]; }); }; }
+/* ---------- 打開時先顯示這台裝置上次的資料（只在 Teams 裡；按帳號分開存），背景再更新 ---------- */
+const BOOT_T0 = performance.now(); const bootLap = w => console.info('[載入]', w, ((performance.now() - BOOT_T0) / 1000).toFixed(1) + ' 秒');
+const CACHE_DB = (() => { const no = () => Promise.reject(Object.assign(new Error('資料還在更新'), { userMsg: '資料還在更新，請稍候幾秒再試' })); const ref = () => ({ set: no, update: no, delete: no, get: no, onSnapshot: () => () => {} }); return { collection: () => ({ doc: ref, onSnapshot: () => () => {} }), doc: ref }; })();
+function showCache() {
+  try {
+    if (!IN_TEAMS || !PCA) return;
+    const acc = PCA.getActiveAccount(); if (!acc || !acc.localAccountId) return;
+    const raw = localStorage.getItem(`gw-cache:${S.page}:${acc.localAccountId}`); if (!raw) return;
+    const c = JSON.parse(raw); if (!c || c.v !== 1 || !c.data || Date.now() - (c.at || 0) > 14 * 864e5) return;
+    const d = c.data, withId = a => new Map((a || []).map(([id, x]) => [id, { id, ...x }]));
+    S.jobs = withId(d.jobs); S.days = new Map(d.days || []); S.times = new Map(d.times || []); S.km = withId(d.mileage); S.vrec = withId(d.vrecords); S.stays = withId(d.stays); S.trash = withId(d.trash); S.notify = d.notify || null;
+    S.config = { ...S.config, ...(d.config || {}) };
+    S.meId = acc.localAccountId; applyMe(); S.canWrite = false; // 暫存畫面先不能改，等最新資料讀完
+    S.loaded = { jobs: true, days: true, config: true };
+    S.db = CACHE_DB; setStatus('更新中…'); render(); bootLap('先顯示上次的資料');
+  } catch (e) { console.warn('暫存讀取失敗', e); }
+}
 /* ---------- boot ---------- */
 render();
 (async () => {
   try {
-    let B;
+    let B, pMe = null;
     if (DEMO) B = memoryBackend(demoSeed());
     else {
       if (isBlank(SC.tenantId) || isBlank(SC.clientId) || isBlank(SC.siteUrl)) {
@@ -4308,13 +4373,15 @@ render();
         setStatus('未設定', true); render(); return;
       }
       S.dbMsg = '正在用公司帳號登入…'; render();
-      await initAuth();
-      await getToken();
+      await initAuth(); bootLap('Teams／登入元件');
+      await getToken(); bootLap('取得登入');
+      showCache();
       S.dbMsg = S.page === 'fleet' ? '正在讀取車輛資料…' : '正在讀取排班資料…'; render();
       B = graphBackend();
-      await B.init();
+      pMe = B.me(); // 跟讀清單同時做
+      await B.init(); bootLap('清單與欄位');
     }
-    const me = await B.me();
+    const me = await (pMe || B.me());
     S.meId = me.id;
     const db = makeDb(B, me);
     if (!DEMO) window.__nfSend = m => sendTeams(B, me, m);
@@ -4342,6 +4409,7 @@ render();
     render();
   } catch (e) {
     console.error(e);
+    if (S.db === CACHE_DB) S.db = null;
     S.dbMsg = esc(explain(e)); setStatus('未連線', true); render();
   }
 })();
@@ -4355,3 +4423,46 @@ function refresh() {
 </script>
 
 </body></html>
+
+<!--
+================ 修改紀錄（最新的在最上面） ================
+每次更新都在這裡加一段。上傳前可以先看這裡，知道這一版改了什麼。
+出問題時，把上一版 index.html 重新上傳就能還原（config.js 不用動）。
+
+2026-11-18 01:20　載入加速
+  ・場次、外調車、休假、工時、住宿只先讀「當月往前 3 個月」（例：11 月讀 8 月 1 日以後）；往前翻到更早的月份時自動補讀。
+  ・改名（人員、車輛別名、外調公司、車種）前會先讀全部資料，舊場次一起改。
+  ・Teams 裡打開時先顯示這台裝置上次的資料（「更新中…」時不能編輯），讀完自動換新；瀏覽器網頁版不存。
+  ・權限、資料、同事名單同時讀；車輛管理頁不讀工時、休假、住宿等用不到的資料。
+  ・Console 會顯示「[載入] 步驟 秒數」。
+  影響：班表、車輛管理都有（只改讀資料的方式，畫面與資料內容沒改）。
+
+2026-11-17 18:40　工時：顯示最後改的那筆
+  ・本人和有權限的人都填過同一格時，顯示最後改的；填時間視窗多了「填寫紀錄」。
+  影響：只有班表填時間。
+
+2026-11-17 18:20　工時：代填的時間本人看得到
+  ・本人看得到別人幫他代填的時間（需 SharePoint「工時」清單＝讀取所有項目）。
+  ・一般同事按「清除」只清自己填的，別人代填的會提示。
+  影響：只有班表填時間。
+
+2026-11-17 18:00　工時：修正看不到別人填的時間
+  ・工時改用 SharePoint 直接讀取（Entra 加 SharePoint AllSites.Read）；填寫人改用信箱比對。
+  ・有填但沒採用的時間，點開會顯示原因。
+  影響：只有班表填時間。
+
+2026-11-17 16:40　車輛管理：到期與續保
+  ・保單、驗車有「確認到期」（不再提醒、可復原）。
+  ・「續保」複製上一張保單內容，日期空白；「下次驗車」小卡有「登記驗車」。
+  影響：只有車輛管理。
+
+2026-11-17 12:40　車輛管理：實付金額、PDF
+  ・保養、維修有「實付金額」，費用統計以實付為準。
+  ・單據、保單都可以上傳 PDF（每個上限 10 MB）。
+  影響：只有車輛管理。
+
+2026-11-15　上線前修正
+  ・班表匯出檔名改成「金星工作站-班表-…」。
+  ・修正車輛紀錄讀不到 Data 欄位。
+============================================================
+-->
