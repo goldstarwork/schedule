@@ -586,6 +586,8 @@ button.chip{cursor:pointer;font:inherit;font-size:14px}
 .ffacts.muted{color:var(--muted)!important}
 .dotsep{color:var(--muted);margin:0 2px}
 .fold{margin-top:10px}
+.tmdiag{display:grid;gap:4px;margin:0;padding:8px 10px;border-radius:8px;background:var(--warn-bg);color:var(--warn);font-size:13px}
+.tmdiag small{color:var(--muted);font-size:12px}
 .fendlink{display:inline-block;margin-left:6px;border:0;background:none;padding:0;font-size:12px;color:var(--muted);text-decoration:underline;cursor:pointer}
 .fendlink.warn{color:var(--warn);font-weight:600}.fendlink.bad{color:var(--bad);font-weight:600}
 .fcopy{margin:0 0 12px;padding:8px 10px;border-radius:8px;background:var(--accent-soft);color:var(--ink);font-size:13px;line-height:1.5}
@@ -1955,14 +1957,18 @@ const teamText = t => `${t.name} ${t.count || 0}人`;
 const teamNames = t => (t.members || []).filter(Boolean);
 const canFillTime = n => can('edit') || can('editTime') || (can('timeSelf') && !!S.me.staff && S.me.staff === n) || (can('timeSupport') && isSupport(n));
 // 跟正式版 SharePoint 的規則一樣：沒有「看大家的時間」的人，只看得到自己建立的紀錄
-const canSeeRec = r => !!r && (can('viewTime') || can('editTime') || can('edit') || (S.me && r.byId === S.me.id));
+// 填寫人是誰：先用帳號代碼比對，對不到再用信箱、姓名比對（SharePoint 回傳的建立者代碼有時跟群組名單不一樣）
+const lcs = x => String(x || '').trim().toLowerCase();
+const accOf = r => { if (!r) return null; const L = S.config.accounts || [];
+  return (r.byId && L.find(x => x.id === r.byId)) || (r.byMail && L.find(x => [x.mail, x.upn].some(m => m && lcs(m) === lcs(r.byMail)))) || (r.byAuthor && L.find(x => x.name === r.byAuthor)) || null; };
+const canSeeRec = r => !!r && (can('viewTime') || can('editTime') || can('edit') || (S.me && (r.byId === S.me.id || (accOf(r) || {}).id === S.me.id)));
 // 正職的時間只採用本人或排班編輯填的（防止有人繞過 App 幫別的正職亂填）
 const leaderOf = team => (S.config.staff.find(p => p.name === team) || {}).leader || '';
 // 團隊負責人：可以幫自己團隊的每個人填時間（只限有排到這個團隊的場次）
 const isMyTeam = team => !!(S.me && S.me.staff && can('timeSelf') && leaderOf(team) === S.me.staff);
 const canFillTeam = team => canFillTime(team) || isMyTeam(team);
 const validRec = r => {
-  if (!r) return false; const a = (S.config.accounts || []).find(x => x.id === r.byId);
+  if (!r) return false; const a = accOf(r);
   if (r.slot != null) return !!a && (a.perms.includes('edit') || a.perms.includes('editTime') || a.perms.includes('timeSupport') || (a.perms.includes('timeSelf') && a.staff && a.staff === leaderOf(r.name)));
   if (isSupport(r.name)) return true;
   return !!a && (a.staff === r.name || a.perms.includes('edit') || a.perms.includes('editTime'));
@@ -2013,11 +2019,23 @@ function openTime(jobId, n, slot) {
     </div>
     <p class="hint tminfo" id="tm-info"></p>
     ${r.by ? `<p class="hint" style="margin:0">上次由 ${esc(r.by)} 填寫</p>` : ''}
+    ${timeDiag(jobId, key, n)}
     <div class="acts">${r.start ? '<button class="btn danger" data-act="tmdel">清除</button>' : ''}<span class="sp"></span><button class="btn" data-act="tmsave" id="b-tm">儲存</button></div>
   </div>`;
   sh.hidden = false;
   initWheels(sh);
   tmInfo();
+}
+// 有填但沒採用的時間：告訴有權限的人原因（例如填的人還沒加進團隊、沒有對應這個名字）
+function timeDiag(jobId, key, n) {
+  if (!(can('edit') || can('editTime') || can('viewTime'))) return '';
+  const raw = S.times.get(timeKey(jobId, key)); if (!raw) return '';
+  const bad = [raw, ...(raw.alts || [])].filter(x => x && !validRec(x));
+  if (!bad.length) return '';
+  const why = x => { const a = accOf(x); const who = x.byAuthor || x.by || '某人';
+    return !a ? `${esc(who)} 填的 ${esc(x.start)}–${esc(x.end)}：${esc(who)} 不在權限管理的名單裡（還沒加進「金星工作站」團隊）`
+      : `${esc(who)} 填的 ${esc(x.start)}–${esc(x.end)}：${esc(who)} 沒有對應「${esc(n)}」，也沒有「排班編輯」或「改大家的時間」`; };
+  return `<div class="tmdiag"><b>有 ${bad.length} 筆時間沒有採用</b>${bad.map(x => `<span>${why(x)}</span>`).join('')}<small>在「權限管理」把那位同事對應到正確的名字，或給他權限後就會出現；也可以在這裡直接重填。</small></div>`;
 }
 function tmInfo() {
   const el = $('#tm-info'); if (!el || !TM) return; const s = tpVal('tm-s'), e = tpVal('tm-e');
@@ -3776,7 +3794,7 @@ function makeDb(B, ME) {
   const num = v => (v === null || v === undefined || v === '' || isNaN(+v)) ? null : +v;
   // 帳號對應的排班人員：人員清單的 Email 欄 = 公司帳號
   const staffOfMail = (...mails) => { const ms = mails.map(lc).filter(Boolean); const s = M.staff.find(p => p.email && ms.includes(lc(p.email))); return s ? s.name : ''; };
-  const accountsView = () => M.accounts.map(a => ({ id: a.id, name: a.name, staff: staffOfMail(a.mail, a.upn), perms: [...a.perms] }));
+  const accountsView = () => M.accounts.map(a => ({ id: a.id, name: a.name, mail: a.mail || '', upn: a.upn || '', staff: staffOfMail(a.mail, a.upn), perms: [...a.perms] }));
   const cfg = () => {
     const c = { staff: M.staff.slice().sort(byOrder).map(s => ({ name: s.name, group: s.group || '正職', ...(s.leader ? { leader: s.leader } : {}), ...(s.active === false ? { active: false } : {}) })) };
     for (const [k, cat] of OPT_CATS) c[k] = M.opts.filter(o => o.cat === cat).sort(byOrder).map(o => o.name);
@@ -3844,7 +3862,7 @@ function makeDb(B, ME) {
     for (const r of tm) {
       const f = r.f; if (!f.job || !f.name) continue;
       const slot = num(f.slot); const id = f.job + '__' + (slot != null ? f.name + '#' + slot : f.name);
-      const data = { jobId: f.job, date: f.date || '', name: f.name, ...(slot != null ? { slot, member: f.member || '' } : {}), start: f.start || '', end: f.end || '', by: r.editor.name || r.author.name, byId: r.author.id, at: r.at };
+      const data = { jobId: f.job, date: f.date || '', name: f.name, ...(slot != null ? { slot, member: f.member || '' } : {}), start: f.start || '', end: f.end || '', by: r.editor.name || r.author.name, byId: r.author.id, byMail: r.author.mail || '', byAuthor: r.author.name || '', at: r.at };
       if (!M.times.has(id)) M.times.set(id, { all: [] });
       M.times.get(id).all.push({ itemId: r.id, authorId: r.author.id, at: r.at, data });
     }
