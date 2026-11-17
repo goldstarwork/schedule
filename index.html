@@ -3572,7 +3572,7 @@ function getToken(scopes = SCOPES) {
 /* ---------- SharePoint 清單與群組（Microsoft Graph） ---------- */
 function graphBackend() {
   const G = 'https://graph.microsoft.com/v1.0';
-  let site = null; const ids = {}, cols = {}, kinds = {}, drives = {};
+  let site = null; const ids = {}, cols = {}, kinds = {}, drives = {}; let spOk = null, spWhy = '';
   async function call(method, url, body, opt = {}, tries = 0) {
     let r;
     try {
@@ -3680,6 +3680,8 @@ function graphBackend() {
     hasCol: (k, f) => !!(cols[k] && cols[k][f]),
     async items(k) {
       if (!ids[k] && !(await ensure(k))) return [];
+      // 工時清單有「只能讀自己建的項目」：Graph 不認「覆寫清單行為」，連管理員都只拿到自己的。改用 SharePoint REST 讀，讀不到才退回 Graph
+      if (k === 'times' && spOk !== false) { try { const rows = await this.spItems(k); spOk = true; return rows; } catch (e) { console.warn('SharePoint REST 讀工時失敗，改用 Graph', e); spOk = false; spWhy = (e.status || '') + ' ' + (e.message || ''); } }
       const sel = Object.values(cols[k]).join(',');
       const rows = await all(`${L(k)}/items?$select=id,createdBy,lastModifiedBy,lastModifiedDateTime&$expand=fields($select=${sel})&$top=999`);
       return rows.map(r => {
@@ -3688,6 +3690,22 @@ function graphBackend() {
         return { id: r.id, f, author: userOf(r.createdBy), editor: userOf(r.lastModifiedBy), at: Date.parse(r.lastModifiedDateTime || '') || 0 };
       });
     },
+    async spItems(k) {
+      const origin = new URL(SC.siteUrl).origin; const scopes = [origin + '/AllSites.Read'];
+      const sel = ['Id', 'Modified', 'Author/Title', 'Author/EMail', 'Editor/Title', ...Object.values(cols[k])].join(',');
+      let url = `${SC.siteUrl.replace(/\/+$/, '')}/_api/web/lists(guid'${ids[k]}')/items?$select=${sel}&$expand=Author,Editor&$top=5000`; const rows = [];
+      while (url) {
+        const r = await fetch(url, { headers: { Authorization: 'Bearer ' + await getToken(scopes), Accept: 'application/json;odata=nometadata' } });
+        if (!r.ok) throw Object.assign(new Error('SharePoint ' + r.status), { status: r.status });
+        const j = await r.json(); rows.push(...(j.value || [])); url = j['odata.nextLink'] || '';
+      }
+      return rows.map(r => {
+        const f = {};
+        for (const [lk, n] of Object.entries(cols[k])) { let v = r[n]; if (DATE_KEYS[k]?.includes(lk)) v = toDs(v); else if (BOOL_KEYS[k]?.includes(lk)) v = toBool(v); f[lk] = v; }
+        return { id: String(r.Id), f, author: { id: '', name: r.Author?.Title || '', mail: r.Author?.EMail || '' }, editor: { id: '', name: r.Editor?.Title || '', mail: '' }, at: Date.parse(r.Modified || '') || 0 };
+      });
+    },
+    spState: () => ({ ok: spOk, why: spWhy }),
     async create(k, f) { if (!ids[k] && !(await ensure(k, true))) throw userErr(`讀不到「${LIST_NAMES[k]}」清單：${why[k] || ''}。如果剛加權限，SharePoint 可能要幾分鐘到一小時才會生效，請稍後重新整理再試。`); const r = await guard(k, call('POST', `${L(k)}/items`, { fields: out(k, f) })); return r.id; },
     async patch(k, id, f) { await guard(k, call('PATCH', `${L(k)}/items/${id}/fields`, out(k, f))); },
     async remove(k, id) { await guard(k, call('DELETE', `${L(k)}/items/${id}`)); },
@@ -3862,9 +3880,9 @@ function makeDb(B, ME) {
     for (const r of tm) {
       const f = r.f; if (!f.job || !f.name) continue;
       const slot = num(f.slot); const id = f.job + '__' + (slot != null ? f.name + '#' + slot : f.name);
-      const data = { jobId: f.job, date: f.date || '', name: f.name, ...(slot != null ? { slot, member: f.member || '' } : {}), start: f.start || '', end: f.end || '', by: r.editor.name || r.author.name, byId: r.author.id, byMail: r.author.mail || '', byAuthor: r.author.name || '', at: r.at };
+      const data = { jobId: f.job, date: f.date || '', name: f.name, ...(slot != null ? { slot, member: f.member || '' } : {}), start: f.start || '', end: f.end || '', by: r.editor.name || r.author.name, byId: r.author.id || myIdByMail(r.author.mail), byMail: r.author.mail || '', byAuthor: r.author.name || '', at: r.at };
       if (!M.times.has(id)) M.times.set(id, { all: [] });
-      M.times.get(id).all.push({ itemId: r.id, authorId: r.author.id, at: r.at, data });
+      M.times.get(id).all.push({ itemId: r.id, authorId: r.author.id || myIdByMail(r.author.mail), at: r.at, data });
     }
     // 同一人同一場有好幾筆時（例如排班編輯改過別人填的），畫面挑最新、而且填寫人有資格的那筆
     for (const t of M.times.values()) { t.all.sort((a, b) => b.at - a.at); t.data = { ...t.all[0].data, alts: t.all.slice(1).map(x => x.data) }; }
@@ -3955,6 +3973,8 @@ function makeDb(B, ME) {
   }
   async function delTrash(id) { const rec = M.trash.get(id); if (!rec) return; await B.remove('trash', rec.itemId); M.trash.delete(id); emit('trash'); }
   /* 工時 */
+  // SharePoint REST 只給建立者的信箱：是自己建的就換成自己的帳號代碼（改時間時才會改自己那筆，不會一直新增）
+  const myIdByMail = m => m && [ME.mail, ME.upn].some(x => x && lc(x) === lc(m)) ? ME.id : '';
   async function setTime(id, data) {
     const rec = M.times.get(id), mine = rec?.all.find(x => x.authorId === ME.id);
     const f = { name: data.name || '', job: data.jobId || '', date: data.date || '', slot: data.slot != null ? data.slot : null, member: data.member || '', start: data.start || '', end: data.end || '' };
