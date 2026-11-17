@@ -650,9 +650,21 @@ button.chip{cursor:pointer;font:inherit;font-size:14px}
 .fph button{position:absolute;top:2px;right:2px;width:22px;height:22px;border-radius:50%;border:0;background:rgb(0 0 0 / .55);color:#fff;font-size:13px;line-height:1}
 .fup{display:inline-grid;place-items:center;width:72px;height:72px;border:1px dashed var(--line);border-radius:8px;font-size:12px;color:var(--accent);cursor:pointer;text-align:center}
 .fup input{position:absolute;width:1px;height:1px;opacity:0}
+.fpdf{display:grid;place-items:center;align-content:center;gap:2px;width:100%;height:100%;cursor:pointer;background:var(--bad-bg);color:var(--bad);padding:4px;text-align:center}
+.fpdf b{font-size:15px;letter-spacing:.04em}
+.fpdf small{font-size:10px;line-height:1.2;color:var(--ink);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pdfview{grid-template-rows:auto 1fr;place-items:stretch;cursor:default;gap:8px}
+.pdfview .pdfbar{display:flex;align-items:center;gap:10px;color:#fff;min-width:0}
+.pdfview .pdfbar b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+.pdfview .pdfbar .icon-btn{position:static}
+.pdfview .pdfbar a{text-decoration:none}
+.pdfview iframe{width:100%;height:100%;border:0;border-radius:6px;background:#fff}
 .phview{position:fixed;inset:0;z-index:40;background:rgb(0 0 0 / .85);display:grid;place-items:center;padding:16px;cursor:zoom-out}
 .phview img{max-width:100%;max-height:100%;border-radius:6px}
 .phview .icon-btn{position:absolute;top:max(12px,env(safe-area-inset-top,0px));right:12px}
+.frgrid .field{align-content:start}
+.fdisc,.fr-c .fdisc{color:var(--accent)}
+.fdisc.up{color:var(--warn)}
 .fr-ph{display:block;font-size:11px;color:var(--muted);font-family:var(--font-body)}
 .field small.hint{font-size:11px}
 .fcar.off{opacity:.8;border-style:dashed}
@@ -2409,7 +2421,7 @@ function renderFleetCar(v) {
     return `<button type="button" class="frow" data-act="fredit" data-rid="${esc(r.id)}">
       <span class="fr-d">${fmtD(r.date)}</span><i class="ftag" data-k="${esc(r.kind)}">${esc(r.kind)}</i>
       <span class="fr-w"><b>${esc(what || r.note || (r.kind === '驗車' ? '定期檢驗' : r.kind))}</b>${meta ? `<small>${esc(meta)}</small>` : ''}${r.gap ? `<small class="kmgapt">⚠ 跟上次紀錄${r.gapType === 'back' ? '倒退' : '相差'} ${kmFmt(r.gap)} km</small>` : ''}</span>
-      <span class="fr-c">${money(r.cost)}${(r.photos || []).length ? `<small class="fr-ph">單據 ${r.photos.length} 張</small>` : ''}</span></button>`;
+      <span class="fr-c">${money(r.cost)}${(() => { if (r.kind !== '保養' && r.kind !== '維修') return ''; const s = normItems(r.items).reduce((a, it) => a + (it.cost || 0), 0); return s && r.cost != null && r.cost !== '' && s > +r.cost ? `<small class="fr-ph fdisc">優惠 −${money(s - +r.cost)}</small>` : ''; })()}${(r.photos || []).length ? `<small class="fr-ph">單據 ${r.photos.length} 份</small>` : ''}</span></button>`;
   };
   const cnt = k => all.filter(r => r.kind === k).length;
   const kmPanel = `<section class="panel"><div class="frecbar"><h2>最近里程</h2><button class="btn sm" data-act="fkmlog">＋ 登記里程</button></div>${(kmRecs.length ? `<div class="ftrip">${kmRecs.map(r => `<button type="button" class="ftrow" data-act="fredit" data-rid="${esc(r.id)}" title="點一下修改或刪除"><span>${md(r.date)}</span><span>${esc(r.note || '')}</span><span class="kmv">${kmFmt(r.km)} km</span></button>`).join('')}</div><p class="hint" style="margin:6px 0 0">登記錯了：點那一筆就可以修改或刪除。</p>` : '<p class="emptymsg" style="margin:0">還沒有里程登記。</p>')}</section>`;
@@ -2486,7 +2498,7 @@ function policyCard(r) {
       <div class="fi-a"><button type="button" class="mini" data-act="fredit" data-rid="${esc(r.id)}">修改</button><button type="button" class="mini add" data-act="finsrenew" data-rid="${esc(r.id)}">續保</button></div>
     </div>
     ${type !== '強制險' || !r.coverages ? `<ul class="fp-cov">${covs.map(c => `<li><b>${esc(c.name)}</b><span>${esc(c.detail || '')}</span><span class="c">${money(c.cost)}</span></li>`).join('')}</ul>` : ''}
-    ${r.agent || r.agentPhone || (r.photos || []).length ? `<div class="fp-ft">${r.agent || r.agentPhone ? `<span>業務員 ${esc(r.agent || '')}${r.agentPhone ? ` <a href="tel:${esc(r.agentPhone.replace(/[^\d+]/g, ''))}">${esc(r.agentPhone)}</a>` : ''}</span>` : ''}${(r.photos || []).length ? `<span>單據 ${r.photos.length} 張</span>` : ''}</div>` : ''}
+    ${r.agent || r.agentPhone || (r.photos || []).length ? `<div class="fp-ft">${r.agent || r.agentPhone ? `<span>業務員 ${esc(r.agent || '')}${r.agentPhone ? ` <a href="tel:${esc(r.agentPhone.replace(/[^\d+]/g, ''))}">${esc(r.agentPhone)}</a>` : ''}</span>` : ''}${(r.photos || []).length ? `<span>單據 ${r.photos.length} 份</span>` : ''}</div>` : ''}
   </div>`;
 }
 function drawIns(rec) {
@@ -2517,7 +2529,7 @@ function drawIns(rec) {
       </div>` : ''}
       <label class="field"><span>${type === '強制險' ? '保費（元）' : '總保費（元，預設＝各險種小計）'}</span><input type="text" inputmode="numeric" id="fr-c" value="${val('cost')}" ${type === '任意險' && rec.cost != null && rec.cost !== '' && sumCov !== +rec.cost ? 'data-manual="1"' : ''}></label>
       <label class="field"><span>提醒日</span><input type="date" id="fr-rm" value="${val('remind')}"><small class="hint">不填＝到期前 30 天開始提醒</small></label>
-      <div class="field full"><span>保單、收據照片</span><div class="fphotos"><span id="fr-ph">${photosHTML()}</span><label class="fup">＋ 加照片<input type="file" accept="image/*" multiple id="fr-file"></label></div></div>
+      <div class="field full"><span>保單、收據（照片或 PDF）</span><div class="fphotos"><span id="fr-ph">${photosHTML()}</span><label class="fup">＋ 照片<br>或 PDF<input type="file" accept="image/*,application/pdf,.pdf" multiple id="fr-file"></label></div></div>
       <label class="field full"><span>備註</span><textarea id="fr-n" rows="2">${val('note')}</textarea></label>
     </div>
     <div class="acts" style="margin-top:12px">${FR.id ? '<button class="btn danger" data-act="frdel">刪除</button>' : ''}<span class="sp"></span><button class="btn" data-act="frsave" id="b-fr">儲存</button></div>
@@ -2553,13 +2565,24 @@ const itemRow = it => { const ins = FR && FR.kind === '保險'; return `<div cla
 </div>`; };
 const readItems = () => [...document.querySelectorAll('#fr-items .fit')].map(el => { const c = el.querySelector('.it-c').value.replace(/[^\d.]/g, ''); return { name: el.querySelector('.it-n').value.trim(), cost: c === '' ? null : Math.round(+c), note: el.querySelector('.it-o').value.trim() }; }).filter(it => it.name || it.cost != null || it.note);
 function itemsSum() {
-  const s = readItems().reduce((a, it) => a + (it.cost || 0), 0); const el = $('#fr-isum'); if (el) el.textContent = s ? `項目小計 ${money(s)}` : '';
-  const c = $('#fr-c'); if (c && !c.dataset.manual && s) c.value = s; // 總金額沒有自己改過，就跟著小計
+  const s = readItems().reduce((a, it) => a + (it.cost || 0), 0); const el = $('#fr-isum');
+  const c = $('#fr-c'); if (c && !c.dataset.manual && s) c.value = s; // 實付金額沒有自己改過，就跟著小計
+  if (!el) return;
+  const x = c ? c.value.replace(/[^\d.]/g, '') : ''; const paid = x === '' ? null : Math.round(+x);
+  const off = s && paid != null ? s - paid : 0;
+  el.innerHTML = s ? `項目小計 ${money(s)}${off > 0 ? `<span class="fdisc">・優惠 −${money(off)}</span>` : off < 0 ? `<span class="fdisc up">・比小計多 ${money(-off)}</span>` : ''}` : '';
 }
 // ---- 單據照片：先縮小再存，手機拍的照片也不會太大 ----
-const shrink = file => new Promise((ok, no) => {
+const PDF_MAX = 10 * 1024 * 1024; // PDF 不壓縮，存到 SharePoint 文件庫
+const isPdfFile = f => f.type === 'application/pdf' || /\.pdf$/i.test(f.name || '');
+const isPdf = p => !!p && (p.type === 'pdf' || /^data:application\/pdf/.test(p.src || '') || /\.pdf$/i.test(p.name || ''));
+const readPdf = file => new Promise((ok, no) => {
+  if (file.size > PDF_MAX) return no(new Error(`「${file.name}」太大了（${(file.size / 1048576).toFixed(1)} MB），PDF 請小於 ${PDF_MAX / 1048576} MB`));
+  const rd = new FileReader(); rd.onload = () => ok({ name: file.name, src: rd.result, type: 'pdf' }); rd.onerror = () => no(rd.error); rd.readAsDataURL(file);
+});
+const shrink = file => isPdfFile(file) ? readPdf(file) : new Promise((ok, no) => {
   const rd = new FileReader();
-  rd.onload = () => { const im = new Image(); im.onload = () => { const m = 1400, sc = Math.min(1, m / Math.max(im.width, im.height)); const cv = document.createElement('canvas'); cv.width = Math.round(im.width * sc); cv.height = Math.round(im.height * sc); cv.getContext('2d').drawImage(im, 0, 0, cv.width, cv.height); ok({ name: file.name, src: cv.toDataURL('image/jpeg', 0.72) }); }; im.onerror = () => no(new Error('這個檔案不是圖片')); im.src = rd.result; };
+  rd.onload = () => { const im = new Image(); im.onload = () => { const m = 1400, sc = Math.min(1, m / Math.max(im.width, im.height)); const cv = document.createElement('canvas'); cv.width = Math.round(im.width * sc); cv.height = Math.round(im.height * sc); cv.getContext('2d').drawImage(im, 0, 0, cv.width, cv.height); ok({ name: file.name, src: cv.toDataURL('image/jpeg', 0.72) }); }; im.onerror = () => no(new Error('這個檔案不是圖片或 PDF')); im.src = rd.result; };
   rd.onerror = () => no(rd.error); rd.readAsDataURL(file);
 });
 // 照片網址：剛加的照片直接用本機資料；存好的照片向文件庫要暫時網址（約一小時有效），拿到後重畫縮圖
@@ -2571,7 +2594,24 @@ function photoSrc(p) {
   Promise.resolve(window.__loadPhoto && window.__loadPhoto(p)).then(u => { if (!u) { PHOTO_URL.delete(p.id); return; } PHOTO_URL.set(p.id, u); setTimeout(() => PHOTO_URL.delete(p.id), 50 * 60e3); if ($('#fr-ph') && FR) $('#fr-ph').innerHTML = photosHTML(); }).catch(() => PHOTO_URL.delete(p.id));
   return '';
 }
-const photosHTML = () => (FR.photos || []).map((p, i) => `<span class="fph"><img src="${photoSrc(p)}" alt="${esc(p.name || '單據')}" data-act="phview" data-i="${i}"><button type="button" data-act="phdel" data-i="${i}" aria-label="移除這張">×</button></span>`).join('');
+const pdfTile = (p, attrs) => `<span class="fpdf" ${attrs} title="${esc(p.name || 'PDF')}"><b>PDF</b><small>${esc(String(p.name || '').replace(/\.pdf$/i, '') || '文件')}</small></span>`;
+const photosHTML = () => (FR.photos || []).map((p, i) => isPdf(p) ? `<span class="fph">${pdfTile(p, `data-act="phpdf" data-i="${i}" role="button" tabindex="0"`)}<button type="button" data-act="phdel" data-i="${i}" aria-label="移除這個檔案">×</button></span>` : `<span class="fph"><img src="${photoSrc(p)}" alt="${esc(p.name || '單據')}" data-act="phview" data-i="${i}"><button type="button" data-act="phdel" data-i="${i}" aria-label="移除這張">×</button></span>`).join('');
+async function viewPdf(p) {
+  const d = document.createElement('div'); d.className = 'phview pdfview';
+  d.innerHTML = `<div class="pdfbar"><b>${esc(p.name || 'PDF')}</b><button type="button" class="icon-btn" data-x aria-label="關閉">×</button></div><p style="color:#fff;margin:0">讀取中…</p>`;
+  let url = '';
+  const close = () => { d.remove(); if (url) setTimeout(() => URL.revokeObjectURL(url), 60000); };
+  d.addEventListener('click', e => { if (e.target === d || e.target.closest('[data-x]')) close(); });
+  document.body.appendChild(d);
+  try {
+    const src = p.src || (p.id ? await window.__loadPhoto(p) : '');
+    if (!src) throw new Error('找不到檔案');
+    const blob = await (await fetch(src)).blob();
+    url = URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }));
+    if (!d.isConnected) return URL.revokeObjectURL(url);
+    d.innerHTML = `<div class="pdfbar"><b>${esc(p.name || 'PDF')}</b><a class="btn sm sec" href="${url}" download="${esc(p.name || '單據.pdf')}" target="_blank" rel="noopener">下載／另開</a><button type="button" class="icon-btn" data-x aria-label="關閉">×</button></div><iframe src="${url}" title="${esc(p.name || 'PDF')}"></iframe>`;
+  } catch (e) { d.querySelector('p').textContent = 'PDF 讀取失敗：' + (e.message || e); }
+}
 function viewPhoto(src) {
   const d = document.createElement('div'); d.className = 'phview'; d.innerHTML = `<img src="${src}" alt="單據"><button type="button" class="icon-btn" aria-label="關閉">×</button>`;
   d.addEventListener('click', () => d.remove()); document.body.appendChild(d);
@@ -2648,11 +2688,11 @@ function drawFR(rec) {
         <div class="fitems" id="fr-items">${items.map(itemRow).join('')}</div>
         <div class="fitfoot"><button type="button" class="mini add" data-act="fitadd">＋ 加一行</button><span class="hint" id="fr-isum"></span></div>
       </div>` : ''}
-      ${k.cost ? `<label class="field"><span>${k.items ? '總金額（元，預設＝項目小計）' : '金額（元）'}</span><input type="text" inputmode="numeric" id="fr-c" value="${val('cost')}" ${rec.cost != null && rec.cost !== '' && k.items && normItems(rec.items).reduce((a, it) => a + (it.cost || 0), 0) !== +rec.cost ? 'data-manual="1"' : ''}></label>` : ''}
+      ${k.cost ? `<label class="field"><span>${k.items ? '實付金額（元）' : '金額（元）'}</span><input type="text" inputmode="numeric" id="fr-c" value="${val('cost')}" ${rec.cost != null && rec.cost !== '' && k.items && normItems(rec.items).reduce((a, it) => a + (it.cost || 0), 0) !== +rec.cost ? 'data-manual="1"' : ''}>${k.items ? '<small class="hint" id="fr-paid">預設＝項目小計；有優惠就改成實付金額，費用以這個為準</small>' : ''}</label>` : ''}
       ${k.nextKm ? `<div class="field"><span>下次保養里程（km）</span><div class="fplus"><input type="text" inputmode="numeric" id="fr-nk" value="${val('nextKm')}" aria-label="下次保養里程"><button type="button" class="mini" data-act="frplus" data-f="nk" data-n="5000">+5千</button><button type="button" class="mini" data-act="frplus" data-f="nk" data-n="10000">+1萬</button></div></div>` : ''}
       ${k.nextDate ? `<div class="field"><span>${k.nextDate}</span><div class="fplus"><input type="date" id="fr-nd" value="${val('nextDate')}" aria-label="${k.nextDate}">${k.plus ? `<button type="button" class="mini" data-act="frplus" data-f="nd" data-n="${k.plus}">+${k.plus === 12 ? '1年' : k.plus + '個月'}</button>` : ''}</div></div>
       <label class="field"><span>提醒日</span><input type="date" id="fr-rm" value="${val('remind')}"><small class="hint">${rmHint}</small></label>` : ''}
-      <div class="field full"><span>單據照片</span><div class="fphotos"><span id="fr-ph">${photosHTML()}</span><label class="fup">＋ 加照片<input type="file" accept="image/*" multiple id="fr-file"></label></div></div>
+      <div class="field full"><span>單據（照片或 PDF）</span><div class="fphotos"><span id="fr-ph">${photosHTML()}</span><label class="fup">＋ 照片<br>或 PDF<input type="file" accept="image/*,application/pdf,.pdf" multiple id="fr-file"></label></div></div>
       <label class="field full"><span>備註</span><textarea id="fr-n" rows="2">${val('note')}</textarea></label>
     </div>
     ${k.nextKm ? '<p class="hint" style="margin:8px 0 0">下次保養里程、下次保養日，哪一個先到就提醒；班表上這台車也會亮紅色。</p>' : ''}
@@ -2825,6 +2865,7 @@ document.addEventListener('click', e => {
     $('#fr-terms').innerHTML = termsHTML(FR.kind); $('#fr-termlist').innerHTML = next.map(x => `<option value="${esc(x)}"></option>`).join(''); $('#ft-in')?.focus();
   }
   else if (a === 'phview') { e.preventDefault(); viewPhoto(t.getAttribute('src')); }
+  else if (a === 'phpdf') { e.preventDefault(); const p = FR && FR.photos[+t.dataset.i]; if (p) viewPdf(p); }
   else if (a === 'phdel') { FR.photos.splice(+t.dataset.i, 1); $('#fr-ph').innerHTML = photosHTML(); }
   else if (a === 'frsave') saveFR(!!t.dataset.next);
   else if (a === 'frdel') delFR(t);
@@ -2849,8 +2890,9 @@ document.addEventListener('click', e => {
 document.addEventListener('input', e => {
   if (e.target.matches('#fr-items .it-c')) itemsSum();
   if (e.target.id === 'fr-km' || e.target.id === 'fr-d') kmHint();
-  if (e.target.id === 'fr-c') { if (e.target.value.trim()) e.target.dataset.manual = '1'; else { delete e.target.dataset.manual; itemsSum(); } }
+  if (e.target.id === 'fr-c') { e.target.dataset.manual = '1'; itemsSum(); } // 打字中（包含刪光重打）不自動填回小計
 });
+document.addEventListener('focusout', e => { if (e.target.id === 'fr-c' && !e.target.value.trim()) { delete e.target.dataset.manual; itemsSum(); } });
 document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id === 'ft-in') { e.preventDefault(); document.querySelector('[data-act=ftermadd]')?.click(); } });
 document.addEventListener('change', async e => {
   if (e.target.id !== 'fr-file' || !FR) return;
@@ -3892,13 +3934,14 @@ function makeDb(B, ME) {
   async function photosSync(data, old, lib) {
     const out = [];
     for (const p of (data.photos || [])) {
-      if (p.id) { out.push({ name: p.name || '', id: p.id, lib: p.lib || lib }); continue; }
+      if (p.id) { out.push({ name: p.name || '', id: p.id, lib: p.lib || lib, ...(p.type ? { type: p.type } : {}) }); continue; }
       if (!p.src || !p.src.startsWith('data:')) continue;
       const blob = await (await fetch(p.src)).blob();
-      const fname = safeName(`${data.date || todayStr()}_${data.vehicle}_${data.kind}_${newId().slice(0, 6)}.jpg`);
-      const fid = await B.upload(lib, fname, blob);
-      PHOTO_URL.set(fid, p.src);
-      out.push({ name: p.name || fname, id: fid, lib });
+      const pdf = p.type === 'pdf';
+      const fname = safeName(`${data.date || todayStr()}_${data.vehicle}_${data.kind}_${newId().slice(0, 6)}.${pdf ? 'pdf' : 'jpg'}`);
+      const fid = await B.upload(lib, fname, pdf ? new Blob([blob], { type: 'application/pdf' }) : blob);
+      if (!pdf) PHOTO_URL.set(fid, p.src);
+      out.push({ name: p.name || fname, id: fid, lib, ...(pdf ? { type: 'pdf' } : {}) });
     }
     const keep = new Set(out.map(p => p.id));
     for (const p of (old?.photos || [])) if (p.id && !keep.has(p.id)) await B.delFile(p.lib || lib, p.id).catch(e => console.warn('刪除照片失敗', e));
