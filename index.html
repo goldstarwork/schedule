@@ -586,6 +586,12 @@ button.chip{cursor:pointer;font:inherit;font-size:14px}
 .ffacts.muted{color:var(--muted)!important}
 .dotsep{color:var(--muted);margin:0 2px}
 .fold{margin-top:10px}
+.tmhist{display:grid;gap:3px;font-size:13px;color:var(--muted)}
+.tmhist b{font-size:12px;font-weight:500;letter-spacing:.04em}
+.tmhist span{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:baseline}
+.tmhist span.cur{color:var(--ink)}
+.tmhist i{font-style:normal;font-family:var(--font-num);font-size:12px;min-width:7.5em}
+.tmhist em{font-style:normal;font-size:11px;color:var(--accent);border:1px solid color-mix(in srgb,var(--accent) 40%,var(--line));border-radius:4px;padding:0 4px}
 .tmdiag{display:grid;gap:4px;margin:0;padding:8px 10px;border-radius:8px;background:var(--warn-bg);color:var(--warn);font-size:13px}
 .tmdiag small{color:var(--muted);font-size:12px}
 .fendlink{display:inline-block;margin-left:6px;border:0;background:none;padding:0;font-size:12px;color:var(--muted);text-decoration:underline;cursor:pointer}
@@ -1976,7 +1982,7 @@ const validRec = r => {
 };
 const timeKey = (jobId, n) => jobId + '__' + n;
 // 同一格有好幾筆時（正式版的 alts），用最新而且有效的那筆
-const timeOf = (jobId, n) => { const r = S.times.get(timeKey(jobId, n)); if (!r) return null; return [r, ...(r.alts || [])].find(x => validRec(x) && canSeeRec(x)) || null; };
+const timeOf = (jobId, n) => { const r = S.times.get(timeKey(jobId, n)); if (!r) return null; return [r, ...(r.alts || [])].filter(x => validRec(x) && canSeeRec(x)).sort((a, b) => (b.at || 0) - (a.at || 0))[0] || null; }; // 本人和有權限的人都填過時，顯示最後改的那筆
 const nextDay = d => md(addDays(d, 1));
 // 時間顯示：同一天「08:30–17:00」；跨夜「22:00–11/15 02:00」
 const timeText = (r, full) => {
@@ -2019,13 +2025,21 @@ function openTime(jobId, n, slot) {
       <div class="tline">${timePick('tm-s', r.start || '', '開始')}<span class="to">到</span>${timePick('tm-e', r.end || '', '結束')}</div>
     </div>
     <p class="hint tminfo" id="tm-info"></p>
-    ${r.by ? `<p class="hint" style="margin:0">上次由 ${esc(r.by)} 填寫</p>` : ''}
+    ${timeHist(jobId, key)}
     ${timeDiag(jobId, key, n)}
     <div class="acts">${r.start ? '<button class="btn danger" data-act="tmdel">清除</button>' : ''}<span class="sp"></span><button class="btn" data-act="tmsave" id="b-tm">儲存</button></div>
   </div>`;
   sh.hidden = false;
   initWheels(sh);
   tmInfo();
+}
+// 誰填過這格：每個人只留他最後改的那次，最新的在上面（畫面顯示的就是最上面那筆）
+function timeHist(jobId, key) {
+  const raw = S.times.get(timeKey(jobId, key)); if (!raw) return '';
+  const list = [raw, ...(raw.alts || [])].filter(x => x && validRec(x) && canSeeRec(x)).sort((a, b) => (b.at || 0) - (a.at || 0));
+  if (!list.length) return '';
+  const when = t => { if (!t) return ''; const d = new Date(t); return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
+  return `<div class="tmhist"><b>填寫紀錄</b>${list.map((x, i) => `<span class="${i ? '' : 'cur'}"><i>${esc(when(x.at))}</i>${esc(x.byAuthor || x.by || '')} 填 ${esc(x.start)}–${esc(x.end)}${i ? '' : '<em>目前顯示</em>'}</span>`).join('')}</div>`;
 }
 // 有填但沒採用的時間：告訴有權限的人原因（例如填的人還沒加進團隊、沒有對應這個名字）
 function timeDiag(jobId, key, n) {
