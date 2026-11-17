@@ -1961,7 +1961,8 @@ const canFillTime = n => can('edit') || can('editTime') || (can('timeSelf') && !
 const lcs = x => String(x || '').trim().toLowerCase();
 const accOf = r => { if (!r) return null; const L = S.config.accounts || [];
   return (r.byId && L.find(x => x.id === r.byId)) || (r.byMail && L.find(x => [x.mail, x.upn].some(m => m && lcs(m) === lcs(r.byMail)))) || (r.byAuthor && L.find(x => x.name === r.byAuthor)) || null; };
-const canSeeRec = r => !!r && (can('viewTime') || can('editTime') || can('edit') || (S.me && (r.byId === S.me.id || (accOf(r) || {}).id === S.me.id)));
+// 看得到哪些時間：有「看大家／改大家／排班編輯」看全部；其他人看得到自己填的，以及自己能填的那一格（例如別人幫自己代填的、團隊負責人的團隊成員）
+const canSeeRec = r => !!r && (can('viewTime') || can('editTime') || can('edit') || (S.me && (r.byId === S.me.id || (accOf(r) || {}).id === S.me.id)) || (r.slot != null ? canFillTeam(r.name) : canFillTime(r.name)));
 // 正職的時間只採用本人或排班編輯填的（防止有人繞過 App 幫別的正職亂填）
 const leaderOf = team => (S.config.staff.find(p => p.name === team) || {}).leader || '';
 // 團隊負責人：可以幫自己團隊的每個人填時間（只限有排到這個團隊的場次）
@@ -2063,8 +2064,9 @@ async function saveTime() {
 async function delTime(t) {
   if (!t.dataset.armed) { t.dataset.armed = '1'; t.textContent = '確定清除？'; return; }
   const back = TM.slot != null ? { jobId: TM.jobId, name: TM.name } : null;
-  const ok = await write(() => S.db.doc('times/' + timeKey(TM.jobId, TM.key)).delete(), '已清除時間');
-  if (ok) { S.times.delete(timeKey(TM.jobId, TM.key)); closeEditor(); if (back) openTeam(back.jobId, back.name); }
+  window.__tmKept = '';
+  const ok = await write(() => S.db.doc('times/' + timeKey(TM.jobId, TM.key)).delete());
+  if (ok) { const kept = window.__tmKept; window.__tmKept = ''; if (!kept) S.times.delete(timeKey(TM.jobId, TM.key)); toast(kept || '已清除時間'); closeEditor(); if (back) openTeam(back.jobId, back.name); }
 }
 
 /* 權限管理頁 */
@@ -3691,7 +3693,7 @@ function graphBackend() {
       });
     },
     async spItems(k) {
-      const origin = new URL(SC.siteUrl).origin; const scopes = [origin + '/AllSites.FullControl']; // 委派權限會把使用者的權限「打折」：只有完全控制才保留「覆寫清單行為」，有權限的人才讀得到別人建的工時；沒權限的人照樣只拿到自己的
+      const origin = new URL(SC.siteUrl).origin; const scopes = [origin + '/AllSites.Read']; // 工時清單已改成「讀取所有項目」（修改仍只限自己建的），誰看得到哪些時間由程式判斷；不再需要完全控制範圍
       const sel = ['Id', 'Modified', 'Author/Title', 'Author/EMail', 'Editor/Title', ...Object.values(cols[k])].join(',');
       let url = `${SC.siteUrl.replace(/\/+$/, '')}/_api/web/lists(guid'${ids[k]}')/items?$select=${sel}&$expand=Author,Editor&$top=5000`; const rows = [];
       while (url) {
@@ -3992,8 +3994,13 @@ function makeDb(B, ME) {
   }
   async function delTime(id) {
     const rec = M.times.get(id); if (!rec) return;
-    await pool(rec.all.map(x => () => B.remove('times', x.itemId).catch(e => { if (e.status !== 404) throw e; })));
-    M.times.delete(id); emit('times');
+    // 只刪自己建的；有排班編輯、改大家時間的人可以刪全部。別人代填的那筆一般同事刪不了，會留下來
+    const all = M.myPerms.includes('edit') || M.myPerms.includes('editTime');
+    const del = rec.all.filter(x => all || x.authorId === ME.id), keep = rec.all.filter(x => !del.includes(x));
+    await pool(del.map(x => () => B.remove('times', x.itemId).catch(e => { if (e.status !== 404) throw e; })));
+    if (!keep.length) { M.times.delete(id); emit('times'); return; }
+    M.times.set(id, { all: keep, data: { ...keep[0].data, alts: keep.slice(1).map(x => x.data) } }); emit('times');
+    window.__tmKept = '你填的已清除。還有 ' + keep.map(x => x.data.byAuthor || x.data.by || '別人').join('、') + ' 代填的時間，要請他或有排班編輯的人清除。';
   }
   /* 用車里程 */
   async function setKm(id, data) {
