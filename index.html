@@ -3680,8 +3680,8 @@ function graphBackend() {
     hasCol: (k, f) => !!(cols[k] && cols[k][f]),
     async items(k) {
       if (!ids[k] && !(await ensure(k))) return [];
-      // 工時清單有「只能讀自己建的項目」：Graph 不認「覆寫清單行為」，連管理員都只拿到自己的。改用 SharePoint REST 讀，讀不到才退回 Graph
-      if (k === 'times' && spOk !== false) { try { const rows = await this.spItems(k); spOk = true; return rows; } catch (e) { console.warn('SharePoint REST 讀工時失敗，改用 Graph', e); spOk = false; spWhy = (e.status || '') + ' ' + (e.message || ''); } }
+      // 工時清單有「只能讀自己建的項目」：一般權限的讀取連管理員都只拿到自己的。改用 SharePoint REST（完全控制範圍）讀，讀不到才退回 Graph
+      if (k === 'times' && spOk !== false) { try { const rows = await this.spItems(k); if (spOk !== true) console.info('工時：用 SharePoint 讀取，共', rows.length, '筆'); spOk = true; return rows; } catch (e) { console.warn('SharePoint REST 讀工時失敗，改用 Graph', e); spOk = false; spWhy = (e.status || '') + ' ' + (e.message || ''); } }
       const sel = Object.values(cols[k]).join(',');
       const rows = await all(`${L(k)}/items?$select=id,createdBy,lastModifiedBy,lastModifiedDateTime&$expand=fields($select=${sel})&$top=999`);
       return rows.map(r => {
@@ -3691,7 +3691,7 @@ function graphBackend() {
       });
     },
     async spItems(k) {
-      const origin = new URL(SC.siteUrl).origin; const scopes = [origin + '/AllSites.Read'];
+      const origin = new URL(SC.siteUrl).origin; const scopes = [origin + '/AllSites.FullControl']; // 委派權限會把使用者的權限「打折」：只有完全控制才保留「覆寫清單行為」，有權限的人才讀得到別人建的工時；沒權限的人照樣只拿到自己的
       const sel = ['Id', 'Modified', 'Author/Title', 'Author/EMail', 'Editor/Title', ...Object.values(cols[k])].join(',');
       let url = `${SC.siteUrl.replace(/\/+$/, '')}/_api/web/lists(guid'${ids[k]}')/items?$select=${sel}&$expand=Author,Editor&$top=5000`; const rows = [];
       while (url) {
