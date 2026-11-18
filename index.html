@@ -510,7 +510,7 @@ button.chip{cursor:pointer;font:inherit;font-size:14px}
 .leadsel{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
 .leadsel select{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:3px 6px}
 .notice{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;color:var(--muted)}
-.ro .mini.add,.ro .ownly{display:none}
+.ro .dact .mini.add,.ro .ownly{display:none} /* 沒有排班編輯只藏「＋ 場次」；住宿、車輛管理視窗裡的＋按鈕照常顯示 */
 .ro .job,.ro .pg .cell-job{cursor:default}
 .ro .job:hover{background:var(--surface)}
 @media (max-width:520px){.job{grid-template-columns:70px 1fr;gap:10px;padding-inline:12px}.dlabel{min-width:0}.jlodge{grid-column:2;justify-self:start}}
@@ -4680,6 +4680,10 @@ function refresh() {
 ================ 修改紀錄（最新的在最上面） ================
 每次更新都在這裡加一段。上傳前可以先看這裡，知道這一版改了什麼。
 出問題時，把上一版 index.html 重新上傳就能還原（config.js 不用動）。
+
+2026-11-18 11:15　修正沒有排班編輯的人看不到「＋ 房間」
+  ・有「編輯住宿」但沒有「排班編輯」的人，住宿視窗的「＋ 房間」被藏起來了；車輛管理的「續保」「＋ 加一個險種」「＋ 加一行」也有同樣問題，一起修好。現在只有每天的「＋ 場次」會對沒有排班編輯的人藏起來。
+  影響：班表（住宿）和車輛管理。
 
 2026-11-18 10:55　同天兩場的提醒改用個人時間
   ・同一人同一天排兩場時，有填自己起訖時間的就用他的時間判斷，不再只看場次時間。時間沒重疊就不提醒，重疊會顯示紅色「時間重疊」。
