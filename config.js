@@ -24,7 +24,8 @@ window.SCHEDULE_CONFIG = {
     fleet: 'bac76b02-3eb2-4c7a-9319-834fd1612f42',       // 班表-車輛管理
     private: '47a5824c-7497-4ff4-a153-7b845a10e4bb',     // 車輛-私人車
     viewLodge: '939aa6d4-b498-476b-926c-7a3c4afd9097',   // 班表-查看住宿
-    lodging: '74fca78b-432b-4668-bf89-84efcc175d20'      // 班表-編輯住宿
+    lodging: '74fca78b-432b-4668-bf89-84efcc175d20',     // 班表-編輯住宿
+    notice: '33af7e08-9305-44ce-af52-d9b6437d41d1'       // 班表-一般通知
   },
   // 清單名稱
   lists: { staff: '人員', options: '車輛選項', jobs: '場次', ext: '外調車輛', days: '每日狀態', trash: '最近刪除', times: '工時', mileage: '里程紀錄', vrec: '車輛紀錄', prec: '私人車紀錄', stays: '住宿', notify: '通知紀錄' },
