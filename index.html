@@ -836,6 +836,12 @@ function pairStatus(a, b) {
   return 'check';
 }
 const RANK = { ok: 1, check: 2, clash: 3, leave: 4 };
+// 衝突檢查用的時間：這個人在這場有填自己的起訖時間就用他的，沒有才用場次時間
+function ownSpan(j, n) {
+  const r0 = S.times.get(timeKey(j.id, n));
+  const r = r0 ? [r0, ...(r0.alts || [])].filter(validRec).sort((a, b) => (b.at || 0) - (a.at || 0))[0] : null;
+  return r && r.start && r.end ? { start: r.start, end: r.end } : j;
+}
 function analyze(date) {
   const list = jobsOn(date).filter(j => !j.unattended);
   const leave = leaveOn(date);
@@ -851,7 +857,7 @@ function analyze(date) {
         js.forEach(j => mark(j.id, key, 'leave'));
       }
       for (let i = 0; i < js.length; i++) for (let k = i + 1; k < js.length; k++) {
-        const st = pairStatus(js[i], js[k]);
+        const st = kind === 'p' ? pairStatus(ownSpan(js[i], n), ownSpan(js[k], n)) : pairStatus(js[i], js[k]);
         mark(js[i].id, key, st); mark(js[k].id, key, st);
         const what = kind === 'p' ? n : `車輛 ${n}`;
         if (st === 'clash') issues.push({ lv: 'bad', t: `${what}：「${js[i].title}」和「${js[k].title}」時間重疊` });
@@ -4674,6 +4680,10 @@ function refresh() {
 ================ 修改紀錄（最新的在最上面） ================
 每次更新都在這裡加一段。上傳前可以先看這裡，知道這一版改了什麼。
 出問題時，把上一版 index.html 重新上傳就能還原（config.js 不用動）。
+
+2026-11-18 10:55　同天兩場的提醒改用個人時間
+  ・同一人同一天排兩場時，有填自己起訖時間的就用他的時間判斷，不再只看場次時間。時間沒重疊就不提醒，重疊會顯示紅色「時間重疊」。
+  影響：只有班表。
 
 2026-11-18 09:30　一般通知、權限全選
   ・新權限「發一般通知」：有勾的人上方出現「一般通知」按鈕，自己寫公告，可發到「排班」頻道（標記整個頻道或不標記）、也可私訊勾選的同事；發送前有預覽，要按兩次確認；沒發出去的草稿會留著。
