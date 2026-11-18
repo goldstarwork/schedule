@@ -408,6 +408,9 @@ button.tenttag:hover{background:var(--warn-bg);border-style:solid}
 .gnrecips.off,.nfsub.off+.gnrecips{opacity:.4;pointer-events:none}
 .gnrecips label{font-size:13px}
 .gncard textarea{min-height:130px}
+.plock{font:inherit;font-size:13px;font-weight:500;margin-left:10px;padding:3px 10px;border-radius:999px;border:1px solid var(--line);background:var(--surface-2);color:var(--muted);cursor:pointer;vertical-align:middle}
+.plock.open{border-color:var(--warn,#d97706);color:var(--warn,#d97706);background:transparent}
+.permtbl input:disabled,.permtbl select:disabled{opacity:.75;cursor:not-allowed}
 .permtbl .pall{display:block;margin:4px auto 0;font-size:11px;padding:1px 6px}
 .permtbl .pall.armed{border-color:var(--bad);color:var(--bad)}
 .nfmsg pre{margin:0;white-space:pre-wrap;font-family:var(--font-body);font-size:13px;line-height:1.6}
@@ -1789,7 +1792,7 @@ document.addEventListener('click', async e => {
   if ((S.menu || S.armed) && !e.target.closest('.smenu,[data-act=menu],[data-act=rmlist],[data-act=pdel],[data-act=pall]')) { S.menu = null; S.armed = null; if (S.view === 'set' || S.view === 'veh' || S.view === 'perm') render(); }
   const t = e.target.closest('[data-act],[data-view]');
   if (!t) { if (e.target.id === 'sheet') closeEditor(); return; }
-  if (t.dataset.view) { if (t.dataset.view === 'hotel') HT = null; S.view = t.dataset.view; try { localStorage.setItem('view', S.view); } catch (_) {} render(); return; }
+  if (t.dataset.view) { if (t.dataset.view === 'hotel') HT = null; if (t.dataset.view !== 'perm') S.permOpen = false; S.view = t.dataset.view; try { localStorage.setItem('view', S.view); } catch (_) {} render(); return; }
   const a = t.dataset.act;
   if (a === 'new') openEditor(null, t.dataset.date);
   else if (a === 'edit') { if (S.canWrite === false) return; const j = S.jobs.get(t.dataset.id); if (j) openEditor(j); } // 沒有編輯權限的人點場次不跳視窗
@@ -1940,8 +1943,9 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && e.target.id === 'ren-input') { S.renaming = null; render(); }
 });
 document.addEventListener('change', e => {
-  if (e.target.matches('[data-act=pcheck]')) { permCheck(e.target); return; }
-  if (e.target.matches('[data-act=pstaff]')) { const list = (S.config.accounts || []).map(a => a.id === e.target.dataset.aid ? { ...a, staff: e.target.value } : a); setAccounts(list); return; }
+  if (e.target.matches('[data-act=pcheck],[data-act=pstaff]') && !S.permOpen) { render(); return; }
+  if (e.target.matches('[data-act=pcheck]')) { permCheck(e.target); permTouch(); return; }
+  if (e.target.matches('[data-act=pstaff]')) { permTouch(); const list = (S.config.accounts || []).map(a => a.id === e.target.dataset.aid ? { ...a, staff: e.target.value } : a); setAccounts(list); return; }
   if (!F) return;
   if (e.target.id === 'f-un' && e.target.checked) { F.people = []; F.leaders = []; }
   if (['f-date', 'f-date2', 'f-un'].includes(e.target.id) || e.target.matches('[data-tc]')) renderPicks();
@@ -2264,13 +2268,13 @@ function renderPerm() {
   // 只列正職和行政（支援人員沒有公司帳號）；已經對應的人照樣顯示
   const staffOpts = (cur) => `<option value="">（不對應）</option>` + S.config.staff.filter(p => p.name === cur || (isActive(p) && ['正職', '行政'].includes(p.group || '正職'))).map(p => `<option ${p.name === cur ? 'selected' : ''} value="${esc(p.name)}">${esc(p.name)}・${esc(p.group || '正職')}</option>`).join('');
   return `<section class="panel permpanel">
-    <div class="ph"><h2>權限管理</h2><p>每一列是一位有公司帳號的同事，勾選他可以做的事。「對應排班人員」是他在班表上的名字，「填自己的時間」要靠這一欄知道誰是他自己。</p></div>
+    <div class="ph"><h2>權限管理 <button type="button" class="plock ${S.permOpen ? 'open' : ''}" data-act="plock">${S.permOpen ? '🔓 可以修改（按這裡鎖上）' : '🔒 已鎖定（按這裡打開才能修改）'}</button></h2><p>每一列是一位有公司帳號的同事，勾選他可以做的事。「對應排班人員」是他在班表上的名字，「填自己的時間」要靠這一欄知道誰是他自己。</p></div>
     <div class="permwrap"><table class="permtbl">
-      <thead><tr><th class="pname">同事</th><th>對應排班人員</th>${PERMS.map(p => { const all = acc.length && acc.every(a => a.perms.includes(p[0])), arm = S.armed === 'pall:' + p[0]; return `<th title="${esc(p[2])}">${esc(p[1])}<button type="button" class="mini pall ${arm ? 'armed' : ''}" data-act="pall" data-p="${p[0]}" title="${all ? '把所有人的這個權限拿掉' : '幫名單上所有人勾這個權限'}">${arm ? (all ? '確定全不選？' : '確定全選？') : (all ? '全不選' : '全選')}</button></th>`; }).join('')}</tr></thead>
+      <thead><tr><th class="pname">同事</th><th>對應排班人員</th>${PERMS.map(p => { const all = acc.length && acc.every(a => a.perms.includes(p[0])), arm = S.armed === 'pall:' + p[0]; return `<th title="${esc(p[2])}">${esc(p[1])}<button type="button" ${S.permOpen ? '' : 'disabled'} class="mini pall ${arm ? 'armed' : ''}" data-act="pall" data-p="${p[0]}" title="${all ? '把所有人的這個權限拿掉' : '幫名單上所有人勾這個權限'}">${arm ? (all ? '確定全不選？' : '確定全選？') : (all ? '全不選' : '全選')}</button></th>`; }).join('')}</tr></thead>
       <tbody>${acc.map(a => `<tr class="${a.id === S.meId ? 'meRow' : ''}">
         <th class="pname">${esc(a.name)}${a.id === S.meId ? '<small>你自己</small>' : ''}</th>
-        <td><select class="inp pstaff" data-act="pstaff" data-aid="${esc(a.id)}" aria-label="${esc(a.name)} 對應的排班人員">${staffOpts(a.staff)}</select></td>
-        ${PERMS.map(p => `<td class="pc"><input type="checkbox" data-act="pcheck" data-aid="${esc(a.id)}" data-p="${p[0]}" ${a.perms.includes(p[0]) ? 'checked' : ''} aria-label="${esc(a.name)} ${esc(p[1])}"></td>`).join('')}
+        <td><select ${S.permOpen ? '' : 'disabled'} class="inp pstaff" data-act="pstaff" data-aid="${esc(a.id)}" aria-label="${esc(a.name)} 對應的排班人員">${staffOpts(a.staff)}</select></td>
+        ${PERMS.map(p => `<td class="pc"><input type="checkbox" ${S.permOpen ? '' : 'disabled'} data-act="pcheck" data-aid="${esc(a.id)}" data-p="${p[0]}" ${a.perms.includes(p[0]) ? 'checked' : ''} aria-label="${esc(a.name)} ${esc(p[1])}"></td>`).join('')}
         
       </tr>`).join('')}</tbody>
     </table></div>
@@ -2291,7 +2295,12 @@ function permCheck(t) {
   setAccounts(list);
 }
 // 權限管理：整欄全選／全不選（按兩次確認）
+// 權限管理頁的鎖：預設鎖著，打開後 3 分鐘沒動作、或離開這一頁就自動鎖回去（避免不小心勾到）
+let PERM_T = null;
+function permTouch() { clearTimeout(PERM_T); if (S.permOpen) PERM_T = setTimeout(() => { S.permOpen = false; if (S.view === 'perm') render(); }, 180e3); }
+document.addEventListener('click', e => { const t = e.target.closest('[data-act=plock]'); if (!t) return; S.permOpen = !S.permOpen; permTouch(); render(); });
 async function permAll(p) {
+  if (!S.permOpen) return; permTouch();
   if (S.armed !== 'pall:' + p) { S.armed = 'pall:' + p; render(); setTimeout(() => { if (S.armed === 'pall:' + p) { S.armed = null; render(); } }, 5000); return; }
   S.armed = null;
   const list = (S.config.accounts || []).map(a => ({ ...a, perms: [...a.perms] }));
@@ -4819,6 +4828,10 @@ function refresh() {
 ================ 修改紀錄（最新的在最上面） ================
 每次更新都在這裡加一段。上傳前可以先看這裡，知道這一版改了什麼。
 出問題時，把上一版 index.html 重新上傳就能還原（config.js 不用動）。
+
+2026-11-18 13:45　權限管理加鎖
+  ・權限管理頁預設鎖住（勾選框、對應排班人員、全選都不能按），按「🔒 已鎖定」打開才能修改；3 分鐘沒動作或離開這一頁會自動鎖回去，避免不小心勾到。
+  影響：只有班表的權限管理頁。
 
 2026-11-18 12:40　飯店清單、住宿欄位、分頁依權限顯示
   ・新分頁「飯店清單」（只有編輯住宿看得到）：飯店名稱、地址、電話、飯店窗口與電話、備註；用過的只能停用。住宿視窗也有「飯店清單」按鈕。
