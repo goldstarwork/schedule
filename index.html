@@ -392,6 +392,12 @@ button.tenttag:hover{background:var(--warn-bg);border-style:solid}
 .nfmsg{border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--surface)}
 .nfmsg.dm{border-style:dashed}
 .nfmsg small{display:block;color:var(--muted);font-size:12px;margin-bottom:4px}
+.gnrecips{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:2px 10px;max-height:26vh;overflow:auto;padding-left:24px}
+.gnrecips.off,.nfsub.off+.gnrecips{opacity:.4;pointer-events:none}
+.gnrecips label{font-size:13px}
+.gncard textarea{min-height:130px}
+.permtbl .pall{display:block;margin:4px auto 0;font-size:11px;padding:1px 6px}
+.permtbl .pall.armed{border-color:var(--bad);color:var(--bad)}
 .nfmsg pre{margin:0;white-space:pre-wrap;font-family:var(--font-body);font-size:13px;line-height:1.6}
 .addrsug:empty{display:none}.addrsug{margin-top:4px}
 .linkbtn{border:0;background:none;padding:0;color:var(--accent);font-size:12px;font-weight:500;text-decoration:underline;cursor:pointer}
@@ -763,6 +769,7 @@ button.chip{cursor:pointer;font:inherit;font-size:14px}
       <button class="ghost" id="gotoday">今天</button>
       <select class="ghost" id="focus" aria-label="只看某人"><option value="">全部人員</option></select>
       <button class="ghost notifybtn" id="notifybtn" data-act="notify" hidden>通知更新</button>
+      <button class="ghost" id="gnbtn" data-act="gnotice" hidden>一般通知</button>
       <button class="ghost" id="trashbtn" data-act="trash" hidden>最近刪除</button>
       <button class="ghost" id="exportbtn" type="button">匯出</button>
       <button class="ghost" id="kmbtn" type="button" data-act="kmlist">用車紀錄</button>
@@ -890,7 +897,7 @@ function render() {
   if (S.focus && S.config.staff.length && !names.includes(S.focus)) S.focus = '';
   fs.innerHTML = '<option value="">全部人員</option>' + names.map(n => `<option ${n === S.focus ? 'selected' : ''}>${esc(n)}</option>`).join('');
   document.body.classList.toggle('ro', S.canWrite === false);
-  { const tb = $('#trashbtn'); if (tb) tb.hidden = !S.trash.size || S.canWrite === false; } { const eb = $('#exportbtn'); if (eb) eb.hidden = !can('export'); const kb = $('#kmbtn'); if (kb) kb.hidden = !can('km'); const pt = $('#tab-perm'); if (pt) pt.hidden = !can('admin'); } updateNotifyBtn(); ensureNotifyBase(); // 最近刪除、匯出只給有編輯權限的人
+  { const tb = $('#trashbtn'); if (tb) tb.hidden = !S.trash.size || S.canWrite === false; } { const eb = $('#exportbtn'); if (eb) eb.hidden = !can('export'); const kb = $('#kmbtn'); if (kb) kb.hidden = !can('km'); const pt = $('#tab-perm'); if (pt) pt.hidden = !can('admin'); } updateNotifyBtn(); ensureNotifyBase(); { const g = $('#gnbtn'); if (g) g.hidden = !can('notice'); } // 最近刪除、匯出只給有編輯權限的人
   const main = $('#main');
   if (!S.db) { main.innerHTML = `<div class="notice">${S.dbMsg || '正在連線排班資料…'}</div>`; return; }
   if (S.page === 'fleet') { main.innerHTML = renderFleet(); return; }
@@ -1759,7 +1766,7 @@ async function saveConfig(next) {
 
 /* ---------- events ---------- */
 document.addEventListener('click', async e => {
-  if ((S.menu || S.armed) && !e.target.closest('.smenu,[data-act=menu],[data-act=rmlist],[data-act=pdel]')) { S.menu = null; S.armed = null; if (S.view === 'set' || S.view === 'veh' || S.view === 'perm') render(); }
+  if ((S.menu || S.armed) && !e.target.closest('.smenu,[data-act=menu],[data-act=rmlist],[data-act=pdel],[data-act=pall]')) { S.menu = null; S.armed = null; if (S.view === 'set' || S.view === 'veh' || S.view === 'perm') render(); }
   const t = e.target.closest('[data-act],[data-view]');
   if (!t) { if (e.target.id === 'sheet') closeEditor(); return; }
   if (t.dataset.view) { S.view = t.dataset.view; try { localStorage.setItem('view', S.view); } catch (_) {} render(); return; }
@@ -2087,6 +2094,7 @@ const PERMS = [
   ['private', '私人車', '車輛管理頁的私人車：看、編輯，決定要不要開放排班'],
   ['viewLodge', '查看住宿', '點場次的住宿按鈕，看飯店、地址、電話、訂房代號、分房（看不到費用）'],
   ['lodging', '編輯住宿', '場次的住宿資訊：飯店、訂房、費用、分房'],
+  ['notice', '發一般通知', '上方「一般通知」按鈕：自己寫公告，發到排班頻道或私訊同事'],
   ['admin', '權限管理', '打開這一頁設定大家的權限']
 ];
 const can = p => !!(S.me && S.me.perms && S.me.perms.includes(p));
@@ -2235,7 +2243,7 @@ function renderPerm() {
   return `<section class="panel permpanel">
     <div class="ph"><h2>權限管理</h2><p>每一列是一位有公司帳號的同事，勾選他可以做的事。「對應排班人員」是他在班表上的名字，「填自己的時間」要靠這一欄知道誰是他自己。</p></div>
     <div class="permwrap"><table class="permtbl">
-      <thead><tr><th class="pname">同事</th><th>對應排班人員</th>${PERMS.map(p => `<th title="${esc(p[2])}">${esc(p[1])}</th>`).join('')}</tr></thead>
+      <thead><tr><th class="pname">同事</th><th>對應排班人員</th>${PERMS.map(p => { const all = acc.length && acc.every(a => a.perms.includes(p[0])), arm = S.armed === 'pall:' + p[0]; return `<th title="${esc(p[2])}">${esc(p[1])}<button type="button" class="mini pall ${arm ? 'armed' : ''}" data-act="pall" data-p="${p[0]}" title="${all ? '把所有人的這個權限拿掉' : '幫名單上所有人勾這個權限'}">${arm ? (all ? '確定全不選？' : '確定全選？') : (all ? '全不選' : '全選')}</button></th>`; }).join('')}</tr></thead>
       <tbody>${acc.map(a => `<tr class="${a.id === S.meId ? 'meRow' : ''}">
         <th class="pname">${esc(a.name)}${a.id === S.meId ? '<small>你自己</small>' : ''}</th>
         <td><select class="inp pstaff" data-act="pstaff" data-aid="${esc(a.id)}" aria-label="${esc(a.name)} 對應的排班人員">${staffOpts(a.staff)}</select></td>
@@ -2258,6 +2266,23 @@ function permCheck(t) {
   a.perms = t.checked ? [...new Set([...a.perms, p])] : a.perms.filter(x => x !== p);
   if (t.checked && p === 'timeSelf' && !a.staff) toast(`記得幫 ${a.name} 選「對應排班人員」，不然他找不到自己`);
   setAccounts(list);
+}
+// 權限管理：整欄全選／全不選（按兩次確認）
+async function permAll(p) {
+  if (S.armed !== 'pall:' + p) { S.armed = 'pall:' + p; render(); setTimeout(() => { if (S.armed === 'pall:' + p) { S.armed = null; render(); } }, 5000); return; }
+  S.armed = null;
+  const list = (S.config.accounts || []).map(a => ({ ...a, perms: [...a.perms] }));
+  const on = !list.every(a => a.perms.includes(p)), label = (PERMS.find(x => x[0] === p) || [p, p])[1];
+  let n = 0, kept = false;
+  for (const a of list) {
+    if (!on && p === 'admin' && a.id === S.meId) { kept = true; continue; }
+    const has = a.perms.includes(p); if (has === on) continue;
+    a.perms = on ? [...a.perms, p] : a.perms.filter(x => x !== p); n++;
+  }
+  if (!n) { render(); return; }
+  toast(`處理中，${n} 人…`);
+  const noStaff = on && p === 'timeSelf' ? list.filter(a => !a.staff).map(a => a.name) : [];
+  await setAccounts(list, on ? `已幫 ${n} 人勾選「${label}」` + (noStaff.length ? `。記得幫 ${noStaff.join('、')} 選「對應排班人員」` : '') : `已取消 ${n} 人的「${label}」` + (kept ? '（你自己的保留）' : ''));
 }
 function fillMeSelect() {
   const sel = $('#mesel');
@@ -3491,6 +3516,85 @@ document.addEventListener('click', e => {
   else if (a === 'tentok') confirmDay(t.dataset.date);
 });
 document.addEventListener('change', e => { if (NF && e.target.closest('.nfcard')) nfPreview(); });
+
+/* ---------- 一般通知（權限「發一般通知」）：自己寫公告，發到「排班」頻道或私訊同事 ---------- */
+let GN = null; // 草稿：關掉視窗再打開還在，發送後才清掉
+const gnPeople = () => (S.config.accounts || []).filter(a => a.id !== S.meId);
+function openGNotice() {
+  if (!can('notice')) return;
+  const ppl = gnPeople();
+  if (!GN) GN = { title: '', body: '', ch: true, at: 'channel', dm: false, sel: new Set(ppl.map(a => a.id)) };
+  const sh = $('#sheet');
+  sh.innerHTML = `<div class="card gncard" role="dialog" aria-modal="true" aria-labelledby="gn-h">
+    <h2 id="gn-h">一般通知<button class="icon-btn x" data-act="close" aria-label="關閉">×</button></h2>
+    <p class="hint" style="margin:0">自己寫的公告（例如系統更新、公司規定、活動提醒）。這個按鈕只有勾了「發一般通知」權限的人看得到。</p>
+    <label class="field"><span>標題（可不填）</span><input type="text" id="gn-t" value="${esc(GN.title)}" placeholder="例如：班表更新說明"></label>
+    <label class="field"><span>內容</span><textarea id="gn-b" placeholder="要通知的內容，可以換行">${esc(GN.body)}</textarea></label>
+    <div class="nfopts">
+      <label class="chk"><input type="checkbox" id="gn-ch" ${GN.ch ? 'checked' : ''}>發到「排班」頻道（貼文）</label>
+      <div class="nfsub ${GN.ch ? '' : 'off'}" id="gn-chsub"><span class="hint">標記：</span>
+        <label class="chk"><input type="radio" name="gn-at" value="channel" ${GN.at === 'channel' ? 'checked' : ''}>整個頻道（大家會收到通知）</label>
+        <label class="chk"><input type="radio" name="gn-at" value="none" ${GN.at === 'none' ? 'checked' : ''}>不標記</label></div>
+      <label class="chk"><input type="checkbox" id="gn-dm" ${GN.dm ? 'checked' : ''}>私訊同事（每人收到一則）</label>
+      <div class="nfsub ${GN.dm ? '' : 'off'}" id="gn-dmsub"><span class="hint">發給：</span><button type="button" class="mini" data-act="gnsel" data-k="all">全選</button><button type="button" class="mini" data-act="gnsel" data-k="none">全不選</button><span class="hint" id="gn-cnt"></span></div>
+      <div class="gnrecips ${GN.dm ? '' : 'off'}" id="gn-rc">${ppl.length ? ppl.map(a => `<label class="chk"><input type="checkbox" data-gid="${esc(a.id)}" ${GN.sel.has(a.id) ? 'checked' : ''}>${esc(a.name)}</label>`).join('') : '<span class="hint">名單上沒有其他同事。</span>'}</div>
+    </div>
+    <div class="nfprev" id="gn-prev"></div>
+    <div class="acts"><button type="button" class="btn sec" data-act="gnclear">清空</button><span class="sp"></span><button class="btn" data-act="gnsend" id="b-gn">發送</button></div>
+  </div>`;
+  sh.hidden = false;
+  gnPreview();
+}
+function gnRead() {
+  if (!GN || !$('#gn-b')) return;
+  GN.title = $('#gn-t').value; GN.body = $('#gn-b').value; GN.ch = $('#gn-ch').checked; GN.dm = $('#gn-dm').checked;
+  GN.at = ($('input[name="gn-at"]:checked') || {}).value || 'channel';
+  GN.sel = new Set([...document.querySelectorAll('#gn-rc input[data-gid]:checked')].map(x => x.dataset.gid));
+}
+function gnMsg() {
+  const t = GN.title.trim(), b = GN.body.trim();
+  const text = t ? `📢 ${t}\n${b}` : `📢 ${b}`;
+  const to = gnPeople().filter(a => GN.sel.has(a.id));
+  return { ch: GN.ch, at: GN.at, chBody: text, chText: text + (GN.at === 'channel' ? '\n\n@排班' : ''), mention: [], dm: GN.dm, dms: to.map(a => ({ to: a.name, acc: { id: a.id, name: a.name }, text })), empty: !b };
+}
+function gnPreview() {
+  const el = $('#gn-prev'); if (!el || !GN) return;
+  gnRead();
+  $('#gn-chsub').classList.toggle('off', !GN.ch); $('#gn-dmsub').classList.toggle('off', !GN.dm); $('#gn-rc').classList.toggle('off', !GN.dm);
+  $('#gn-cnt').textContent = `已選 ${GN.sel.size} / ${gnPeople().length} 人`;
+  const b = $('#b-gn'); delete b.dataset.armed; b.textContent = '發送';
+  const m = gnMsg();
+  b.disabled = m.empty || (!m.ch && !(m.dm && m.dms.length));
+  if (m.empty) { el.innerHTML = '<p class="hint" style="margin:0">寫好內容後，這裡會顯示預覽。</p>'; return; }
+  el.innerHTML = `<b class="nfph">預覽</b>
+    ${m.ch ? `<div class="nfmsg"><small>「排班」頻道</small><pre>${esc(m.chText)}</pre></div>` : ''}
+    ${m.dm ? (m.dms.length ? `<div class="nfmsg dm"><small>私訊給 ${m.dms.length} 人：${esc(m.dms.map(d => d.to).join('、'))}</small><pre>${esc(m.chBody)}</pre></div>` : '<p class="hint warn">沒有勾選要私訊的人。</p>') : ''}
+    ${!m.ch && !m.dm ? '<p class="hint warn">請勾選發到頻道或私訊。</p>' : ''}`;
+}
+async function gnSend(t) {
+  gnRead(); const m = gnMsg();
+  if (m.empty) { toast('請先寫內容'); $('#gn-b').focus(); return; }
+  if (!m.ch && !(m.dm && m.dms.length)) { toast('請勾選發到頻道或私訊'); return; }
+  const who = [m.ch ? '「排班」頻道' : '', m.dm && m.dms.length ? `私訊 ${m.dms.length} 人` : ''].filter(Boolean).join('＋');
+  if (!t.dataset.armed) { t.dataset.armed = '1'; t.textContent = `確定發送（${who}）？`; return; }
+  if (!window.__nfSend) { GN = null; closeEditor(); toast(`測試版不會真的發出；正式版會發到${who}`); return; }
+  t.disabled = true; t.textContent = '發送中…';
+  try {
+    const r = await window.__nfSend(m);
+    GN = null; closeEditor();
+    toast(r && r.fail && r.fail.length ? `已發送，但有 ${r.fail.length} 則私訊沒發出去：${r.fail.join('、')}` : `已發送（${who}）`);
+  } catch (e) { t.disabled = false; delete t.dataset.armed; t.textContent = '發送'; toast('發送失敗：' + ((e && (e.userMsg || e.message)) || e)); }
+}
+document.addEventListener('input', e => { if (GN && e.target.closest('.gncard')) gnPreview(); });
+document.addEventListener('change', e => { if (GN && e.target.closest('.gncard')) gnPreview(); });
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-act]'); if (!t) return; const a = t.dataset.act;
+  if (a === 'gnotice') openGNotice();
+  else if (a === 'gnsel') { document.querySelectorAll('#gn-rc input[data-gid]').forEach(x => { x.checked = t.dataset.k === 'all'; }); gnPreview(); }
+  else if (a === 'gnclear') { if (!t.dataset.armed) { t.dataset.armed = '1'; t.textContent = '確定清空？'; return; } GN = null; openGNotice(); }
+  else if (a === 'gnsend') gnSend(t);
+  else if (a === 'pall') permAll(t.dataset.p);
+});
 // 點場次名稱前的「預排」：問要不要改成確定
 function openTentPop(id) {
   const j = S.jobs.get(id); if (!j || !canNotify()) return;
@@ -3668,7 +3772,7 @@ const toBool = v => (v === null || v === undefined || v === '') ? undefined : v 
 const OPTIONAL_FIELDS = { ext: ['phone'], staff: ['email', 'leader'], options: ['serviceKm', 'serviceDate'], jobs: ['address', 'teams', 'tentative', 'lodging', 'internal', 'timeSub'], times: ['slot', 'member'], mileage: ['gap'] };
 const OPT_CATS = [['vehicles', '公司車輛'], ['extCompanies', '外調公司'], ['carTypes', '車種']];
 // 權限對應的群組（config.js 的 groups）。「排班編輯」沿用原本的 editorGroupId。
-const PERM_LABEL = { edit: '排班編輯', timeSelf: '班表-填自己時間', timeSupport: '班表-填支援時間', viewTime: '班表-看大家時間', editTime: '班表-改大家時間', km: '班表-登記里程', export: '班表-匯出', admin: '班表-權限管理', fleet: '班表-車輛管理', private: '車輛-私人車', viewLodge: '班表-查看住宿', lodging: '班表-編輯住宿' };
+const PERM_LABEL = { edit: '排班編輯', timeSelf: '班表-填自己時間', timeSupport: '班表-填支援時間', viewTime: '班表-看大家時間', editTime: '班表-改大家時間', km: '班表-登記里程', export: '班表-匯出', admin: '班表-權限管理', fleet: '班表-車輛管理', private: '車輛-私人車', viewLodge: '班表-查看住宿', lodging: '班表-編輯住宿', notice: '班表-一般通知' };
 const isBlank = v => !v || /請填/.test(v);
 const GID = (() => { const g = Object.assign({}, SC.groups || {}); if (isBlank(g.edit)) g.edit = SC.editorGroupId; for (const k of Object.keys(g)) if (isBlank(g[k])) delete g[k]; return g; })();
 const splitNames = s => String(s ?? '').split(/[;；]/).map(x => x.trim()).filter(Boolean);
@@ -4570,6 +4674,12 @@ function refresh() {
 ================ 修改紀錄（最新的在最上面） ================
 每次更新都在這裡加一段。上傳前可以先看這裡，知道這一版改了什麼。
 出問題時，把上一版 index.html 重新上傳就能還原（config.js 不用動）。
+
+2026-11-18 09:30　一般通知、權限全選
+  ・新權限「發一般通知」：有勾的人上方出現「一般通知」按鈕，自己寫公告，可發到「排班」頻道（標記整個頻道或不標記）、也可私訊勾選的同事；發送前有預覽，要按兩次確認；沒發出去的草稿會留著。
+  ・權限管理每一欄多「全選／全不選」按鈕（按兩次確認）；「權限管理」那欄全不選時保留自己。
+  ★ config.js 的 groups 要加 notice（班表-一般通知 群組），這次 config.js 一起更新。
+  影響：只有班表（車輛管理沒改）。
 
 2026-11-18 03:10　按月份、人員狀況、公司事務、公司時間
   ・新分頁「按月份」：行事曆一次看整個月，只顯示場次名稱（事務灰色、預排虛線）；點日期跳到那天，點場次直接打開。
