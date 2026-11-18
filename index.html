@@ -66,7 +66,27 @@ body.full .wrap{max-width:none}
 .day{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);margin-bottom:10px;overflow:hidden}
 .day.empty{background:transparent;border-style:dashed}
 .day.today{border-color:var(--today);box-shadow:0 0 0 1px var(--today)}
-.dhead{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:10px 14px;background:var(--surface-2);border-bottom:1px solid var(--line)}
+.dhead{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:10px 14px;background:var(--surface-2);border-bottom:1px solid var(--line);position:sticky;top:var(--stick,0px);z-index:3}
+.day{overflow:clip}
+.job.internal{padding-block:6px;background:color-mix(in srgb,var(--surface-2) 60%,var(--surface))}
+.job.internal h3{font-weight:500}
+.inttag{font-size:12px;border:1px solid var(--line);background:var(--surface-2);color:var(--muted);border-radius:4px;padding:0 6px;font-weight:500;flex:none;line-height:1.5}
+.mcal{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.mwk{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));background:var(--surface-2);border-bottom:1px solid var(--line);font-size:12px;color:var(--muted);text-align:center;padding:4px 0}
+.mwk .we,.mch .we{color:var(--bad)}
+.mgrid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:1px;background:var(--line)}
+.mc{background:var(--surface);min-height:92px;padding:4px;display:flex;flex-direction:column;gap:2px;cursor:pointer;min-width:0}
+.mc:hover{background:var(--surface-2)}
+.mc.blank{background:var(--surface-2);cursor:default}
+.mc.today{box-shadow:inset 0 0 0 2px var(--today)}
+.mch{display:flex;align-items:baseline;gap:4px;font-family:var(--font-num);font-size:13px}
+.mch small{margin-left:auto;font-family:var(--font-body);font-size:10px;color:var(--muted)}
+.mj{display:block;width:100%;text-align:left;border:1px solid transparent;background:var(--accent-soft);color:var(--ink);border-radius:4px;padding:1px 4px;font-size:12px;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mj i{font-style:normal;font-size:10px;color:var(--muted);margin-right:3px}
+.mj.tent{background:transparent;border:1px dashed var(--warn)}
+.mj.int{background:var(--surface-2);border-color:var(--line);color:var(--muted)}
+.mj.dim{opacity:.35}
+@media (max-width:560px){.mc{min-height:70px;padding:2px}.mj{font-size:10.5px;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;padding:1px 2px}.mj i{display:none}}
 .day.empty .dhead{background:transparent;border-bottom:0;padding-block:6px}
 .dlabel{display:flex;align-items:baseline;gap:8px;min-width:96px}
 .dlabel .dd{font-family:var(--font-num);font-weight:600;font-size:16px}
@@ -586,6 +606,14 @@ button.chip{cursor:pointer;font:inherit;font-size:14px}
 .ffacts.muted{color:var(--muted)!important}
 .dotsep{color:var(--muted);margin:0 2px}
 .fold{margin-top:10px}
+.leave .lv.lvme{border-color:var(--accent);color:var(--accent);background:var(--surface);cursor:pointer;font:inherit;font-size:13px}
+.leave .lv.lvme:hover{background:var(--accent-soft)}
+.leave .lv .tmd{margin-left:2px}
+.pg .cell-job.ofcjob{background:var(--surface-2);border:1px dashed color-mix(in srgb,var(--accent) 40%,var(--line));color:var(--accent)}
+.pg .cell-job.ofcjob.static{cursor:default;display:block}
+.tmnow{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.mini.nowbtn{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 40%,var(--line))}
+.jt .tsub{display:block;margin-top:2px;font-family:var(--font-body);font-weight:500;color:var(--accent);line-height:1.25;overflow-wrap:anywhere}
 .tmhist{display:grid;gap:3px;font-size:13px;color:var(--muted)}
 .tmhist b{font-size:12px;font-weight:500;letter-spacing:.04em}
 .tmhist span{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:baseline}
@@ -710,6 +738,7 @@ button.chip{cursor:pointer;font:inherit;font-size:14px}
       <div class="brand" id="brand">金星工作站・班表</div>
       <div class="tabs" role="group" aria-label="檢視">
         <button id="tab-day" data-view="day" aria-pressed="true">依日期</button>
+        <button id="tab-month" data-view="month" aria-pressed="false">按月份</button>
         <button id="tab-person" data-view="person" aria-pressed="false">依人員</button>
         <button id="tab-set" data-view="set" aria-pressed="false">人員管理</button>
         <button id="tab-veh" data-view="veh" aria-pressed="false">車輛清單</button>
@@ -773,6 +802,9 @@ S.page = new URLSearchParams(location.search).get('page') === 'fleet' ? 'fleet' 
 const jobsOn = date => [...S.jobs.values()].filter(j => j.date === date).sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || String(a.start || '99').localeCompare(String(b.start || '99')));
 const leaveOn = date => new Set(S.days.get(date)?.leave || []);
 const officeOn = date => new Set(S.days.get(date)?.office || []);
+// 行政平日預設在公司（休假就不算）；正職要在「人員狀況」勾在公司
+const adminDefault = date => { const w = parseD(date).getDay(); if (w === 0 || w === 6) return []; const lv = leaveOn(date); return activeStaff().filter(p => p.group === '行政' && !lv.has(p.name)).map(p => p.name); };
+const officeAll = date => new Set([...officeOn(date), ...adminDefault(date)]);
 /* 車輛里程：目前里程＝這台車所有用車登記中最大的里程數 */
 const kmFmt = n => n == null || n === '' || isNaN(n) ? '' : Number(n).toLocaleString('en-US');
 const kmLogs = v => [...S.km.values()].filter(r => r.vehicle === v);
@@ -835,10 +867,17 @@ function addrHTML(j) {
   const pin = '<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>';
   return `<span class="jaddr">${EXPORTING ? '' : `<a class="mapbtn" data-act="map" href="${esc(mapUrl(a))}" target="_blank" rel="noopener" title="在地圖上開啟">${pin}地圖</a>`}<span class="addr">${esc(a)}</span></span>`;
 }
+// 時間下方的說明：字數多就自動縮小（最小 9px），太長才換行
+function tsubHTML(j) {
+  const x = String(j.timeSub || '').trim(); if (!x) return '';
+  const w = [...x].reduce((a, c) => a + (/[\u2E80-\uFFFF]/.test(c) ? 1 : 0.58), 0);
+  const fs = Math.max(9, Math.min(12, Math.floor(84 / Math.max(w, 1))));
+  return `<small class="tsub" style="font-size:${fs}px">${esc(x)}</small>`;
+}
 function timeHTML(j) {
   const t = j.start ? (j.end ? `${j.start}–${isOvernight(j) ? '隔天' : ''}${j.end}` : j.start) : '';
-  if (!t) return '<div class="jt"><span class="none">—</span></div>';
-  return `<div class="jt">${esc(t)}</div>`;
+  if (!t) return `<div class="jt"><span class="none">—</span>${tsubHTML(j)}</div>`;
+  return `<div class="jt">${esc(t)}${tsubHTML(j)}</div>`;
 }
 
 /* ---------- render ---------- */
@@ -858,35 +897,68 @@ function render() {
   if (S.view === 'person') main.innerHTML = renderPerson();
   else if (S.view === 'set' || S.view === 'veh') main.innerHTML = renderSettings();
   else if (S.view === 'perm') main.innerHTML = renderPerm();
+  else if (S.view === 'month') main.innerHTML = renderMonth();
   else main.innerHTML = renderDays();
+  stickTop();
+  if (S.view === 'day' && S.goDate) { const el = document.querySelector(`.day[data-date="${S.goDate}"]`); S.goDate = ''; S.scrolled = true; if (el) { const top = el.getBoundingClientRect().top + scrollY - $('header.bar').offsetHeight - 10; scrollTo(0, top); } }
   if (S.view === 'day' && !S.scrolled && S.loaded.jobs) {
     S.scrolled = true;
     const t = document.querySelector('.day.today');
     if (t) { const top = t.getBoundingClientRect().top + scrollY - $('header.bar').offsetHeight - 10; scrollTo(0, top); }
   }
 }
+// 按月份：像行事曆一樣一次看整個月，只顯示場次名稱
+function renderMonth() {
+  const { y, m } = S.month; const startW = new Date(y, m, 1).getDay(); const n = new Date(y, m + 1, 0).getDate(); const today = todayStr();
+  let cells = '';
+  for (let i = 0; i < startW; i++) cells += '<div class="mc blank"></div>';
+  for (let d = 1; d <= n; d++) {
+    const date = ds(y, m, d), w = (startW + d - 1) % 7, list = jobsOn(date), lv = leaveOn(date).size;
+    cells += `<div class="mc ${date === today ? 'today' : ''}" data-act="mday" data-date="${date}">
+      <div class="mch"><b class="${w === 0 || w === 6 ? 'we' : ''}">${d}</b>${lv ? `<small>休 ${lv}</small>` : ''}</div>
+      ${list.map(j => { const dim = S.focus && !(j.people || []).includes(S.focus) ? 'dim' : '';
+        return `<button type="button" class="mj ${j.tentative ? 'tent' : ''} ${j.internal ? 'int' : ''} ${dim}" data-act="mjob" data-id="${esc(j.id)}" title="${esc(j.title || '')}">${j.internal ? '<i>事務</i>' : j.tentative ? '<i>預排</i>' : ''}${esc(j.title || '（未命名）')}</button>`; }).join('')}
+    </div>`;
+  }
+  const tail = (7 - (startW + n) % 7) % 7; for (let i = 0; i < tail; i++) cells += '<div class="mc blank"></div>';
+  return `<div class="mcal"><div class="mwk">${[...WD].map((x, i) => `<span class="${i === 0 || i === 6 ? 'we' : ''}">${x}</span>`).join('')}</div><div class="mgrid">${cells}</div></div>
+    <p class="hint" style="margin:8px 2px">點日期空白處看那天的詳細；點場次名稱直接打開。灰色「事務」是公司內部工作，虛線框是預排。</p>`;
+}
+// 手機往下滑時，日期那一列停在上方（扣掉上方工具列的高度；有縮放時要換算）
+function stickTop() {
+  const h = $('header.bar')?.offsetHeight || 0; const z = parseFloat(getComputedStyle($('#main')).zoom) || 1;
+  document.documentElement.style.setProperty('--stick', (h / z) + 'px');
+}
+addEventListener('resize', () => stickTop());
 function monthDates() {
   const { y, m } = S.month; const n = new Date(y, m + 1, 0).getDate();
   return Array.from({ length: n }, (_, i) => ds(y, m, i + 1));
+}
+// 日期列的「公司」：自己的名字可以點、填自己在公司的時間；別人的只是標示（有權限看大家時間的人看得到時間）
+function officeChip(n, date) {
+  const r = timeOf(OFFICE + date, n); const tm = r && !EXPORTING ? ` <small class="tmd">${esc(timeText(r))}</small>` : '';
+  const mine = !!S.me && S.me.staff === n;
+  return mine && !EXPORTING && canFillOffice(n, date)
+    ? `<button type="button" class="lv lvme" data-act="offtime" data-date="${date}" data-n="${esc(n)}" title="點一下登記你在公司的時間">${esc(n)}${tm || ' <small class="tmd">＋時間</small>'}</button>`
+    : `<span class="lv">${esc(n)}${tm}</span>`;
 }
 function renderDays(only) {
   const today = todayStr();
   let out = '';
   if (S.loaded.jobs && !monthDates().some(d => jobsOn(d).length)) out += `<p class="emptymsg">這個月還沒有場次。按日期旁的「＋ 場次」開始排。</p>`;
   for (const date of (only || monthDates())) {
-    const list = jobsOn(date); const leave = [...leaveOn(date)]; const office = [...officeOn(date)];
+    const list = jobsOn(date); const leave = [...leaveOn(date)]; const office = [...officeAll(date)];
     const d = parseD(date); const w = d.getDay();
     const { flags, issues } = analyze(date);
     const empty = !list.length && !leave.length && !office.length;
     out += `<section class="day ${empty ? 'empty' : ''} ${date === today ? 'today' : ''}" data-date="${date}">
       <div class="dhead">
         <div class="dlabel"><span class="dd">${md(date)}</span><span class="wd ${w === 0 || w === 6 ? 'we' : ''}">週${WD[w]}</span>${date === today ? '<span class="tag-today">今天</span>' : ''}</div>
-        ${office.length ? `<div class="leave office">公司 ${office.map(n => `<span class="lv">${esc(n)}</span>`).join('')}</div>` : ''}
+        ${office.length ? `<div class="leave office">公司 ${office.map(n => officeChip(n, date)).join('')}</div>` : ''}
         ${leave.length ? `<div class="leave">休假 ${leave.map(n => `<span class="lv">${esc(n)}</span>`).join('')}</div>` : ''}
         ${empty ? '<span class="emptymsg">無排程</span>' : ''}
         <div class="dact">
-          <button class="mini ownly" data-act="office" data-date="${date}">公司</button>
-          <button class="mini ownly" data-act="leave" data-date="${date}">休假</button>
+          <button class="mini ownly" data-act="att" data-date="${date}">人員狀況</button>
           <button class="mini add" data-act="new" data-date="${date}">＋ 場次</button>
         </div>
       </div>
@@ -938,10 +1010,10 @@ function jobRow(j, idx, f) {
   const ext = (j.ext || []).map((e, i) => [e, i]).filter(([e]) => extFilled(e)).map(([e, i]) => { const st = extState(e, j.date);
     return EXPORTING ? `<span class="chip ${st.cls}">${esc(st.label)}${esc(st.tail)}</span>`
       : `<button type="button" class="chip ${st.cls}" data-act="extinfo" data-tip="ext" data-id="${esc(j.id)}" data-i="${i}">${esc(st.label)}${esc(st.tail)}</button>`; }).join('');
-  return `<article class="job ${dim} ${j.tentative ? 'tent' : ''}" data-act="edit" data-id="${esc(j.id)}" tabindex="0">
+  return `<article class="job ${dim} ${j.tentative ? 'tent' : ''} ${j.internal ? 'internal' : ''}" data-act="edit" data-id="${esc(j.id)}" tabindex="0">
     ${timeHTML(j)}
     <div class="jm">
-      <h3><span class="num">${idx + 1}</span>${j.tentative && (!EXPORTING || EXPORTING.tent) ? (!EXPORTING && canNotify() ? `<button type="button" class="tenttag" data-act="tentpop" data-id="${esc(j.id)}" title="點一下可以改成確定">預排</button>` : '<span class="tenttag">預排</span>') : ''}${esc(j.title || '（未命名）')}${j.timeNote ? `<span class="jsub">${esc(j.timeNote)}</span>` : ''}${j.unattended ? '<span class="unatt">不留守</span>' : ''}${addrHTML(j)}</h3>
+      <h3><span class="num">${idx + 1}</span>${j.internal ? '<span class="inttag" title="公司內部工作，不收費">事務</span>' : ''}${j.tentative && (!EXPORTING || EXPORTING.tent) ? (!EXPORTING && canNotify() ? `<button type="button" class="tenttag" data-act="tentpop" data-id="${esc(j.id)}" title="點一下可以改成確定">預排</button>` : '<span class="tenttag">預排</span>') : ''}${esc(j.title || '（未命名）')}${j.timeNote ? `<span class="jsub">${esc(j.timeNote)}</span>` : ''}${j.unattended ? '<span class="unatt">不留守</span>' : ''}${addrHTML(j)}</h3>
       ${pReg ? `<div class="chips"><span class="k">正職</span>${pReg}</div>` : ''}
       ${pSup ? `<div class="chips"><span class="k">支援</span>${pSup}</div>` : ''}
       ${veh ? `<div class="chips"><span class="k">車輛</span>${veh}</div>` : ''}
@@ -950,6 +1022,16 @@ function jobRow(j, idx, f) {
     </div>
     ${lodgeHTML(j)}
   </article>`;
+}
+// 依人員的「公司」格：在公司（正職被勾、行政沒休假）或已經填過時間的日子才出現；能填的人點一下填時間
+function officeCell(n, d, ofc, otr) {
+  const show = ofc || otr;
+  if (!show) return '';
+  const tm = otr ? timeText(otr) : '';
+  const inner = `<span class="cj-n">公司</span>${tm ? `<span class="cj-t">${esc(tm)}</span>` : ''}`;
+  return canFillOffice(n, d) && !EXPORTING
+    ? `<button type="button" class="cell-job ofcjob" data-act="offtime" data-date="${d}" data-n="${esc(n)}" title="點一下登記在公司的時間">${inner}</button>`
+    : (ofc || otr ? `<span class="cell-job ofcjob static">${inner}</span>` : '');
 }
 function renderPerson() {
   const dates = monthDates(); const today = todayStr();
@@ -981,10 +1063,11 @@ function renderPerson() {
       let cnt = 0, cells = '';
       for (const d of dates) {
         const js = jobsOn(d).filter(j => (j.people || []).includes(n) || (j.teams || []).some(t => t.name === n));
-        const off = leaveOn(d).has(n); const ofc = officeOn(d).has(n);
-        if (js.length || ofc) cnt++;
+        const off = leaveOn(d).has(n); const ofc = officeAll(d).has(n);
+        const otr = (g === '正職' || g === '行政') ? timeOf(OFFICE + d, n) : null;
+        if (js.length || ofc || otr) cnt++;
         const fl = ana[d].flags;
-        cells += `<td class="${d === today ? 'tcol' : ''}">${off ? '<span class="off">休</span>' : ''}${ofc ? '<span class="ofc">公司</span>' : ''}${js.map(j => cell(j, n, fl)).join('')}</td>`;
+        cells += `<td class="${d === today ? 'tcol' : ''}">${off ? '<span class="off">休</span>' : ''}${(g === '正職' || g === '行政') ? officeCell(n, d, ofc, otr) : (ofc ? '<span class="ofc">公司</span>' : '')}${js.map(j => cell(j, n, fl)).join('')}</td>`;
       }
       h += `<tr><th class="name">${esc(n)}</th><td class="cnt">${cnt}</td>${cells}</tr>`;
     }
@@ -1197,6 +1280,7 @@ function openEditor(job, date) {
       </div>
       <label class="field full"><span>場次 / 內容</span><input type="text" id="f-title" value="${esc(F.title)}"></label>
       <label class="chk full tentbox"><input type="checkbox" id="f-tent" ${F.tentative ? 'checked' : ''}>預排（還沒確定；班表上標「預排」，不會列入通知）</label>
+      <label class="chk full intbox"><input type="checkbox" id="f-int" ${F.internal ? 'checked' : ''}>公司事務（載設備、整理倉庫等準備工作；不向客戶收費，之後不會帶入會計）</label>
       <label class="chk full lodgebox"><input type="checkbox" id="f-lodge" ${F.lodging ? 'checked' : ''}>需要住宿（場次右邊會出現住宿按鈕；第一天打開，這個案子的其他天會一起打開）</label>
       <label class="field full"><span>說明（顯示在場次名稱右邊）</span><input type="text" id="f-tnote" value="${esc(F.timeNote)}"></label>
       <div class="field full"><span>地址（打字會跳出以前用過的地址；填了會在場次名稱右邊顯示地址和地圖按鈕）</span><input type="text" id="f-addr" value="${esc(F.address || '')}" list="addr-hist" autocomplete="off" aria-label="地址">
@@ -1205,6 +1289,7 @@ function openEditor(job, date) {
       </div>
       <div class="field full"><span>時間（24 小時制，填起訖就能自動判斷一人兩場會不會撞）</span>
         <div class="tline">${timePick('f-start', F.start, '開始')}<span class="to">到</span>${timePick('f-end', F.end, '結束')}</div>
+        <input type="text" id="f-tsub" value="${esc(F.timeSub || '')}" placeholder="時間下方的說明（選填），例如：公司集合、疊車、8:00 到場" aria-label="時間下方的說明" style="margin-top:6px">
       </div>
     </div>
     <div class="field"><div class="fhead"><span>人員</span><label class="chk unbox"><input type="checkbox" id="f-un" ${F.unattended ? 'checked' : ''}>不留守</label></div>
@@ -1241,11 +1326,11 @@ function readForm() {
   const d2 = $('#f-date2'); d2.min = F.date;
   F.dateEnd = d2.value && d2.value > F.date ? d2.value : '';
   F.title = $('#f-title').value.trim();
-  F.start = tpVal('f-start'); F.end = tpVal('f-end'); F.timeNote = $('#f-tnote').value.trim();
+  F.start = tpVal('f-start'); F.end = tpVal('f-end'); F.timeNote = $('#f-tnote').value.trim(); F.timeSub = ($('#f-tsub')?.value || '').trim();
   F.note = $('#f-note').value.trim();
   F.address = ($('#f-addr')?.value || '').trim();
   F.unattended = $('#f-un').checked;
-  F.tentative = !!$('#f-tent')?.checked;
+  F.tentative = !!$('#f-tent')?.checked; F.internal = !!$('#f-int')?.checked;
   F.lodging = !!$('#f-lodge')?.checked;
   readExt(); readTeams();
 }
@@ -1262,6 +1347,13 @@ function timePick(id, val, label) {
     <button type="button" class="tp-x" data-act="tpclear" data-id="${id}" aria-label="清除${label}時間">×</button>
   </div>`;
 }
+// 把滾輪設成某個時間（上班／下班按鈕用）；分鐘取最接近的 5 分
+function tpSet(id, hhmm) {
+  const el = document.getElementById(id); if (!el) return; const [h, m] = hhmm.split(':');
+  for (const [k, v] of [['h', h], ['m', m]]) { const w = el.querySelector(`[data-tp=${k}]`); const i = [...w.children].findIndex(c => c.dataset.v === v); if (i < 0) continue; w.dataset.v = v; [...w.children].forEach((c, x) => c.classList.toggle('sel', x === i)); w.scrollTop = i * WI; }
+  el.classList.add('set');
+}
+const nowHHMM = () => { const d = new Date(); let h = d.getHours(), m = Math.round(d.getMinutes() / 5) * 5; if (m === 60) { m = 0; h = (h + 1) % 24; } return `${pad(h)}:${pad(m)}`; };
 function tpVal(id) {
   const el = document.getElementById(id); const h = el.querySelector('[data-tp=h]').dataset.v;
   return h && h !== '--' ? `${h}:${el.querySelector('[data-tp=m]').dataset.v || '00'}` : '';
@@ -1543,7 +1635,7 @@ async function addSupport() {
 }
 function closeEditor() { FR = null; FI = null; TR = false; KML = false; KM = null; TM = null; $('#sheet').hidden = true; $('#sheet').innerHTML = ''; F = null; }
 function jobBody(f) {
-  return { address: (f.address || '').trim(), teams: (f.teams || []).filter(t => t && t.name).map(t => ({ name: t.name, count: +t.count || 0, members: (t.members || []).slice(0, +t.count || 0).map(x => String(x || '').trim()) })), date: f.date, order: f.order ?? Date.now(), title: f.title, start: f.start, end: f.end, timeNote: f.timeNote, people: f.people, leaders: (f.leaders || []).filter(n => f.people.includes(n)), vehicles: f.vehicles, ext: (f.ext || []).filter(extFilled).map(({ manual, ...e }) => e), note: f.note, unattended: !!f.unattended, tentative: !!f.tentative, lodging: !!f.lodging };
+  return { address: (f.address || '').trim(), teams: (f.teams || []).filter(t => t && t.name).map(t => ({ name: t.name, count: +t.count || 0, members: (t.members || []).slice(0, +t.count || 0).map(x => String(x || '').trim()) })), date: f.date, order: f.order ?? Date.now(), title: f.title, start: f.start, end: f.end, timeNote: f.timeNote, timeSub: f.timeSub || '', people: f.people, leaders: (f.leaders || []).filter(n => f.people.includes(n)), vehicles: f.vehicles, ext: (f.ext || []).filter(extFilled).map(({ manual, ...e }) => e), note: f.note, unattended: !!f.unattended, tentative: !!f.tentative, lodging: !!f.lodging, internal: !!f.internal };
 }
 async function write(fn, okMsg) {
   try { await fn(); if (okMsg) toast(okMsg); return true; }
@@ -1582,7 +1674,7 @@ async function saveJob() {
       const isSelf = i === 0 && F.id;
       const body = i === 0
         ? jobBody({ ...F, date: d, order: isSelf ? F.order : nextOrder(d) })
-        : jobBody({ date: d, title: F.title, address: F.address, order: nextOrder(d), start: '', end: '', timeNote: '', people: [], leaders: [], vehicles: [], ext: [], note: '', unattended: false, tentative: !!F.tentative, lodging: !!F.lodging }); // 其他天只建場次，人和車每天不同
+        : jobBody({ date: d, title: F.title, address: F.address, order: nextOrder(d), start: '', end: '', timeNote: '', people: [], leaders: [], vehicles: [], ext: [], note: '', unattended: false, tentative: !!F.tentative, lodging: !!F.lodging, internal: !!F.internal }); // 其他天只建場次，人和車每天不同
       await (isSelf ? S.db.doc('jobs/' + F.id) : S.db.collection('jobs').doc()).set(body);
     }
   }, dates.length > 1 ? `已建立 ${md(dates[0])}–${md(dates.at(-1))} 共 ${dates.length} 天的場次，其他天的人員和車輛請各自排` : '已儲存');
@@ -1626,6 +1718,34 @@ function openLeave(date, kind = 'leave') {
     ${kind === 'office' ? '<p class="hint" style="margin:0">勾選這天留在公司的正職。</p>' : ''}
     <div class="picks" id="lv-picks"></div>
     <div class="acts"><span class="sp"></span><button class="btn" data-act="lvsave" id="b-lv">儲存</button></div>
+  </div>`;
+  sh.hidden = false; L.draw = draw; draw();
+}
+
+// 人員狀況：上面「在公司」、下面「休假」，一次選完；同一個人只能在其中一邊
+function openAtt(date) {
+  L = { date, att: true, office: [...officeOn(date)], leave: [...leaveOn(date)] };
+  const offNames = activeStaff().filter(p => ['正職', '行政'].includes(p.group || '正職')).map(p => p.name); // 行政也算正職，只是不出外場
+  const lvNames = activeStaff().filter(p => ['正職', '行政'].includes(p.group || '正職')).map(p => p.name);
+  const sh = $('#sheet');
+  const draw = () => {
+    const assigned = new Set(jobsOn(date).flatMap(j => j.unattended ? [] : (j.people || [])));
+    const wd = ![0, 6].includes(parseD(date).getDay());
+    const picks = (k, names) => [...new Set([...names, ...L[k]])].map(n => {
+      if (k === 'office' && wd && grpOfName(n) === '行政' && !L.leave.includes(n)) return `<button type="button" class="pick" aria-pressed="true" disabled title="行政平日預設在公司；休假的話在下面勾休假"><b>${esc(n)}</b><i>行政・平日預設</i></button>`;
+      const on = L[k].includes(n); const other = k === 'office' ? L.leave.includes(n) : L.office.includes(n);
+      const hint = [assigned.has(n) ? '當天有排' : '', other ? (k === 'office' ? '休假' : '在公司') : ''].filter(Boolean).join('、');
+      const bad = on && k === 'leave' && assigned.has(n);
+      return `<button type="button" class="pick ${bad ? 'leave' : ''}" data-act="attpick" data-k="${k}" data-name="${esc(n)}" aria-pressed="${on}"><b>${esc(n)}</b>${hint ? `<i>${hint}</i>` : ''}</button>`;
+    }).join('') || '<span class="hint">到「人員管理」新增人員。</span>';
+    sh.querySelector('#att-office').innerHTML = picks('office', offNames);
+    sh.querySelector('#att-leave').innerHTML = picks('leave', lvNames);
+  };
+  sh.innerHTML = `<div class="card" role="dialog" aria-modal="true" aria-labelledby="att-h">
+    <h2 id="att-h">${md(date)} 週${WD[parseD(date).getDay()]} 人員狀況<button class="icon-btn x" data-act="close" aria-label="關閉">×</button></h2>
+    <div><div class="grp" style="margin-top:0">在公司<small class="hint" style="margin-left:8px">這天在公司的正職、行政（可以在「依人員」登記自己的時間）</small></div><div class="picks" id="att-office"></div></div>
+    <div><div class="grp">休假<small class="hint" style="margin-left:8px">正職、行政</small></div><div class="picks" id="att-leave"></div></div>
+    <div class="acts"><span class="sp"></span><button class="btn" data-act="attsave" id="b-att">儲存</button></div>
   </div>`;
   sh.hidden = false; L.draw = draw; draw();
 }
@@ -1706,6 +1826,8 @@ document.addEventListener('click', async e => {
   }
   else if (a === 'time') openTime(t.dataset.id, t.dataset.n);
   else if (a === 'tmsave') saveTime();
+  else if (a === 'tmnow') { tpSet(t.dataset.f, nowHHMM()); tmInfo(); }
+  else if (a === 'offtime') openTime(OFFICE + t.dataset.date, t.dataset.n);
   else if (a === 'tmok') { TM.ok = tpVal('tm-s') + '-' + tpVal('tm-e'); const acts = t.closest('.acts'); acts.innerHTML = '<span class="sp"></span><button class="btn" data-act="tmsave" id="b-tm">儲存</button>'; saveTime(); }
   else if (a === 'tmback') openTime(TM.jobId, TM.name, TM.slot);
   else if (a === 'tmdel') delTime(t);
@@ -1726,6 +1848,15 @@ document.addEventListener('click', async e => {
   else if (a === 'ovback') { const acts = t.closest('.acts'); if (acts && OV_ACTS != null) acts.innerHTML = OV_ACTS; OV_ACTS = null; }
   else if (a === 'delcancel') { const j = S.jobs.get(F.id); if (j) openEditor(j); }
   else if (a === 'leave') openLeave(t.dataset.date, 'leave');
+  else if (a === 'att') openAtt(t.dataset.date);
+  else if (a === 'attpick') { const n = t.dataset.name, k = t.dataset.k, o = k === 'office' ? 'leave' : 'office'; if (L[k].includes(n)) L[k] = L[k].filter(x => x !== n); else { L[k] = [...L[k], n]; L[o] = L[o].filter(x => x !== n); } L.draw(); }
+  else if (a === 'attsave') {
+    $('#b-att').disabled = true; const d = L.date;
+    const ok = await write(() => S.db.doc('days/' + d).set({ leave: L.leave, office: L.office }), '已更新人員狀況');
+    if (ok) { closeEditor(); L = null; } else $('#b-att').disabled = false;
+  }
+  else if (a === 'mday') { S.view = 'day'; S.goDate = t.dataset.date; try { localStorage.setItem('view', 'day'); } catch (_) {} render(); }
+  else if (a === 'mjob') { const j = S.jobs.get(t.dataset.id); if (!j) return; if (S.canWrite === false) { S.view = 'day'; S.goDate = j.date; render(); } else openEditor(j); }
   else if (a === 'office') openLeave(t.dataset.date, 'office');
   else if (a === 'lvpick') { const n = t.dataset.name; L.leave = L.leave.includes(n) ? L.leave.filter(x => x !== n) : [...L.leave, n]; L.draw(); }
   else if (a === 'lvsave') {
@@ -1964,6 +2095,13 @@ const isTeam = n => S.config.staff.some(p => p.name === n && p.group === '團隊
 const GLABEL = { '正職': '正職', '行政': '行政', '支援': '支援・個人', '團隊': '支援・團隊' };
 const teamText = t => `${t.name} ${t.count || 0}人`;
 const teamNames = t => (t.members || []).filter(Boolean);
+// 公司時間：不綁場次，綁「那一天的公司」（工時清單 JobKey＝office:日期）。行政沒休假的日子、正職被勾成在公司的日子可以填；不強制
+const OFFICE = 'office:';
+const isOfficeId = id => String(id || '').startsWith(OFFICE);
+const officeJob = d => ({ id: OFFICE + d, date: d, title: '公司', office: true });
+const grpOfName = n => { const p = S.config.staff.find(x => x.name === n); return p ? (p.group || '正職') : ''; };
+const officeEligible = (n, d) => officeAll(d).has(n) && !leaveOn(d).has(n);
+const canFillOffice = (n, d) => (can('edit') || can('editTime') || (can('timeSelf') && !!S.me && S.me.staff === n)) && (officeEligible(n, d) || !!timeOf(OFFICE + d, n));
 const canFillTime = n => can('edit') || can('editTime') || (can('timeSelf') && !!S.me.staff && S.me.staff === n) || (can('timeSupport') && isSupport(n));
 // 跟正式版 SharePoint 的規則一樣：沒有「看大家的時間」的人，只看得到自己建立的紀錄
 // 填寫人是誰：先用帳號代碼比對，對不到再用信箱、姓名比對（SharePoint 回傳的建立者代碼有時跟群組名單不一樣）
@@ -2016,16 +2154,18 @@ let TM = null, TMT = null;
 document.getElementById('sheet').addEventListener('scroll', () => { if (!TM) return; clearTimeout(TMT); TMT = setTimeout(tmInfo, 160); }, true);
 function openTime(jobId, n, slot) {
   const hasSlot = slot != null && !isNaN(slot);
-  const j = S.jobs.get(jobId); if (!j || !(hasSlot ? canFillTeam(n) : canFillTime(n))) return; const key = hasSlot ? n + '#' + slot : n;
+  const j = S.jobs.get(jobId) || (isOfficeId(jobId) ? officeJob(jobId.slice(OFFICE.length)) : null);
+  if (!j || !(j.office ? canFillOffice(n, j.date) : hasSlot ? canFillTeam(n) : canFillTime(n))) return; const key = hasSlot ? n + '#' + slot : n;
   const r = timeOf(jobId, key) || {};
   const tm = hasSlot ? ((j.teams || []).find(t => t.name === n) || {}) : null; const member = hasSlot ? ((tm.members || [])[slot] || '') : '';
   TM = { jobId, name: n, key, slot: hasSlot ? slot : null, member, date: j.date, ok: '' };
   const sh = $('#sheet');
   sh.innerHTML = `<div class="card" role="dialog" aria-modal="true" aria-labelledby="tm-h">
     <h2 id="tm-h">${hasSlot ? `${esc(member || '第 ' + (slot + 1) + ' 位')}（${esc(n)}）` : esc(n)} 的工作時間<button class="icon-btn x" data-act="close" aria-label="關閉">×</button></h2>
-    <p class="hint" style="margin:0">${md(j.date)} 週${WD[parseD(j.date).getDay()]}「${esc(j.title || '')}」${isSupport(n) ? '・支援' : ''}</p>
+    <p class="hint" style="margin:0">${md(j.date)} 週${WD[parseD(j.date).getDay()]}${j.office ? '・在公司（不綁場次，只顯示在「依人員」）' : `「${esc(j.title || '')}」`}${isSupport(n) ? '・支援' : ''}</p>
     <div class="field"><span>時間（24 小時制，結束比開始早就是隔天）</span>
       <div class="tline">${timePick('tm-s', r.start || '', '開始')}<span class="to">到</span>${timePick('tm-e', r.end || '', '結束')}</div>
+      ${j.date === todayStr() ? '<div class="tmnow"><button type="button" class="mini nowbtn" data-act="tmnow" data-f="tm-s">上班（填現在時間）</button><button type="button" class="mini nowbtn" data-act="tmnow" data-f="tm-e">下班（填現在時間）</button></div>' : ''}
     </div>
     <p class="hint tminfo" id="tm-info"></p>
     ${timeHist(jobId, key)}
@@ -3504,7 +3644,7 @@ const OPTIONAL_LISTS = ['trash', 'times', 'mileage', 'vrec', 'prec', 'stays', 'n
 const FIELD_DEFS = {
   staff: { name: ['Title', '姓名'], group: ['Group', '組別'], order: ['SortOrder', '排序'], active: ['Active', '啟用'], email: ['Email', '電子郵件'], leader: ['Leader', '負責人'] },
   options: { name: ['Title', '名稱'], cat: ['Category', '類別'], order: ['SortOrder', '排序'], serviceKm: ['ServiceKm', '保養里程'], serviceDate: ['ServiceDate', '下次保養日'] },
-  jobs: { title: ['Title', '場次名稱'], key: ['JobKey', '場次代碼'], date: ['JobDate', '日期'], start: ['StartTime', '開始時間'], end: ['EndTime', '結束時間'], timeNote: ['TimeNote', '時間說明'], people: ['Staff', '人員'], leaders: ['Leaders', '帶班'], vehicles: ['Vehicles', '車輛'], unattended: ['Unattended', '不留守'], note: ['Note', '備註'], order: ['SortOrder', '排序'], address: ['Address', '地址'], teams: ['Teams', '團隊'] , tentative: ['Tentative', '預排'], lodging: ['Lodging', '住宿'] },
+  jobs: { title: ['Title', '場次名稱'], key: ['JobKey', '場次代碼'], date: ['JobDate', '日期'], start: ['StartTime', '開始時間'], end: ['EndTime', '結束時間'], timeNote: ['TimeNote', '時間說明'], people: ['Staff', '人員'], leaders: ['Leaders', '帶班'], vehicles: ['Vehicles', '車輛'], unattended: ['Unattended', '不留守'], note: ['Note', '備註'], order: ['SortOrder', '排序'], address: ['Address', '地址'], teams: ['Teams', '團隊'] , tentative: ['Tentative', '預排'], lodging: ['Lodging', '住宿'], internal: ['Internal', '公司事務'], timeSub: ['TimeSub', '時間下方說明'] },
   ext: { company: ['Title', '公司'], key: ['JobKey', '場次代碼'], date: ['JobDate', '日期'], type: ['CarType', '車種'], plate: ['Plate', '車號'], driver: ['Driver', '司機姓名'], phone: ['Phone', '電話'], ok: ['Confirmed', '已確認'] },
   days: { key: ['Title', '日期代碼'], date: ['DayDate', '日期'], leave: ['Leave', '休假'], office: ['Office', '公司'] },
   trash: { title: ['Title', '場次名稱'], data: ['Data', '資料'] },
@@ -3522,10 +3662,10 @@ const FIELD_DEFS = {
 };
 const DATE_KEYS = { jobs: ['date'], ext: ['date'], days: ['date'], times: ['date'], mileage: ['date'], options: ['serviceDate'], vrec: ['date'], prec: ['date'], stays: ['checkIn', 'checkOut'] };
 // 是/否欄位：匯入時若被設成數字或文字（1/0、是/否），讀寫時自動轉換
-const BOOL_KEYS = { staff: ['active'], jobs: ['unattended', 'tentative', 'lodging'], ext: ['ok'] };
+const BOOL_KEYS = { staff: ['active'], jobs: ['unattended', 'tentative', 'lodging', 'internal'], ext: ['ok'] };
 const toBool = v => (v === null || v === undefined || v === '') ? undefined : v === true || v === 1 || /^(1|true|yes|y|是)$/i.test(String(v).trim());
 // 清單沒有這欄也能用，只是那項資料不會存
-const OPTIONAL_FIELDS = { ext: ['phone'], staff: ['email', 'leader'], options: ['serviceKm', 'serviceDate'], jobs: ['address', 'teams', 'tentative', 'lodging'], times: ['slot', 'member'], mileage: ['gap'] };
+const OPTIONAL_FIELDS = { ext: ['phone'], staff: ['email', 'leader'], options: ['serviceKm', 'serviceDate'], jobs: ['address', 'teams', 'tentative', 'lodging', 'internal', 'timeSub'], times: ['slot', 'member'], mileage: ['gap'] };
 const OPT_CATS = [['vehicles', '公司車輛'], ['extCompanies', '外調公司'], ['carTypes', '車種']];
 // 權限對應的群組（config.js 的 groups）。「排班編輯」沿用原本的 editorGroupId。
 const PERM_LABEL = { edit: '排班編輯', timeSelf: '班表-填自己時間', timeSupport: '班表-填支援時間', viewTime: '班表-看大家時間', editTime: '班表-改大家時間', km: '班表-登記里程', export: '班表-匯出', admin: '班表-權限管理', fleet: '班表-車輛管理', private: '車輛-私人車', viewLodge: '班表-查看住宿', lodging: '班表-編輯住宿' };
@@ -3843,7 +3983,7 @@ function makeDb(B, ME) {
   const textOf = s => { s = String(s ?? ''); return /^\s*</.test(s) ? new DOMParser().parseFromString(s, 'text/html').body.textContent : s; };
   const parseTeams = s => { try { const a = JSON.parse(textOf(s) || '[]'); return Array.isArray(a) ? a.filter(t => t && t.name).map(t => ({ name: String(t.name), count: +t.count || 0, members: (t.members || []).map(x => String(x || '')) })) : []; } catch (_) { return []; } };
   const extOf = r => ({ company: r.f.company || '', type: r.f.type || '', plate: r.f.plate || '', driver: r.f.driver || '', phone: r.f.phone || '', ok: !!r.f.ok });
-  const jobOf = (f, exts) => ({ tentative: !!f.tentative, lodging: !!f.lodging, date: f.date || '', order: f.order ?? 0, title: f.title || '', start: f.start || '', end: f.end || '', timeNote: f.timeNote || '', address: f.address || '', teams: parseTeams(f.teams), people: splitNames(f.people), leaders: splitNames(f.leaders), vehicles: splitNames(f.vehicles), ext: (exts || []).map(e => ({ ...e.v })), note: f.note || '', unattended: !!f.unattended });
+  const jobOf = (f, exts) => ({ tentative: !!f.tentative, lodging: !!f.lodging, internal: !!f.internal, timeSub: f.timeSub || '', date: f.date || '', order: f.order ?? 0, title: f.title || '', start: f.start || '', end: f.end || '', timeNote: f.timeNote || '', address: f.address || '', teams: parseTeams(f.teams), people: splitNames(f.people), leaders: splitNames(f.leaders), vehicles: splitNames(f.vehicles), ext: (exts || []).map(e => ({ ...e.v })), note: f.note || '', unattended: !!f.unattended });
   const byOrder = (a, b) => (a.order ?? 9999) - (b.order ?? 9999);
   const num = v => (v === null || v === undefined || v === '' || isNaN(+v)) ? null : +v;
   // 帳號對應的排班人員：人員清單的 Email 欄 = 公司帳號
@@ -3991,7 +4131,9 @@ function makeDb(B, ME) {
   async function setJob(id, data) {
     const rec = M.jobs.get(id);
     const teams = (data.teams || []).filter(t => t && t.name);
-    const f = { tentative: !!data.tentative, lodging: !!data.lodging, title: data.title || '', key: id, date: data.date || '', start: data.start || '', end: data.end || '', timeNote: data.timeNote || '', address: data.address || '', teams: teams.length ? JSON.stringify(teams) : '', people: joinNames(data.people), leaders: joinNames(data.leaders), vehicles: joinNames(data.vehicles), unattended: !!data.unattended, note: data.note || '', order: data.order ?? 0 };
+    const f = { tentative: !!data.tentative, lodging: !!data.lodging, internal: !!data.internal, timeSub: data.timeSub || '', title: data.title || '', key: id, date: data.date || '', start: data.start || '', end: data.end || '', timeNote: data.timeNote || '', address: data.address || '', teams: teams.length ? JSON.stringify(teams) : '', people: joinNames(data.people), leaders: joinNames(data.leaders), vehicles: joinNames(data.vehicles), unattended: !!data.unattended, note: data.note || '', order: data.order ?? 0 };
+    if (f.internal && !B.hasCol('jobs', 'internal')) throw userErr('「場次」清單還沒有 Internal 欄位，「公司事務」存不進去。請照設定紀錄新增欄位（是/否）。');
+    if (f.timeSub && !B.hasCol('jobs', 'timeSub')) throw userErr('「場次」清單還沒有 TimeSub 欄位，「時間下方的說明」存不進去。請照設定紀錄新增欄位（單行文字）。');
     if (teams.length && !B.hasCol('jobs', 'teams')) throw userErr('「場次」清單還沒有 Teams 欄位，團隊存不進去。請管理員照設定紀錄新增欄位。');
     let itemId = rec?.itemId;
     if (itemId) await B.patch('jobs', itemId, f); else itemId = await B.create('jobs', f);
@@ -4428,6 +4570,16 @@ function refresh() {
 ================ 修改紀錄（最新的在最上面） ================
 每次更新都在這裡加一段。上傳前可以先看這裡，知道這一版改了什麼。
 出問題時，把上一版 index.html 重新上傳就能還原（config.js 不用動）。
+
+2026-11-18 03:10　按月份、人員狀況、公司事務、公司時間
+  ・新分頁「按月份」：行事曆一次看整個月，只顯示場次名稱（事務灰色、預排虛線）；點日期跳到那天，點場次直接打開。
+  ・依日期往下滑時，日期那一列會停在畫面上方。
+  ・「公司」「休假」合成一個「人員狀況」按鈕：上面在公司、下面休假，正職和行政都列；行政平日預設在公司。
+  ・場次可勾「公司事務」（載設備等準備工作，不收費、之後不帶入會計），班表上標灰色「事務」。
+  ・場次時間下面多一個說明欄（字多自動縮小）。
+  ・在公司的人可以登記自己的時間（依日期點自己的名字、或在依人員點「公司」），有上班／下班按鈕；別人的只看得到名字。
+  ★ 要先在 SharePoint「場次」清單新增兩欄：Internal（是/否，預設否）、TimeSub（單行文字）。沒加的話其他功能照常，只是勾公司事務或填時間下方說明時會提示存不進去。
+  影響：只有班表（車輛管理沒改）。
 
 2026-11-18 01:20　載入加速
   ・場次、外調車、休假、工時、住宿只先讀「當月往前 3 個月」（例：11 月讀 8 月 1 日以後）；往前翻到更早的月份時自動補讀。
