@@ -2347,7 +2347,8 @@ function openKmForm(rec) {
       ${KM.kind === 'misc' ? `<label class="field"><span>車輛</span><select class="inp" id="km-v">${vs.map(v => `<option ${v === v0 ? 'selected' : ''}>${esc(v)}</option>`).join('')}</select></label>
       <label class="field"><span>日期</span><input type="date" id="km-d" value="${esc(KM.date)}"></label>
       <label class="field"><span>開始時間</span><input type="time" id="km-ts" value="${esc(rec.tStart || '')}"></label>
-      <label class="field"><span>結束時間</span><input type="time" id="km-te" value="${esc(rec.tEnd || '')}"></label>` : ''}
+      <label class="field"><span>結束時間（比開始早就是隔天）</span><input type="time" id="km-te" value="${esc(rec.tEnd || '')}"></label>
+      <p class="hint full" id="km-ton" style="margin:0"></p>` : ''}
       <label class="field"><span>起始里程（km）</span><input type="text" inputmode="numeric" id="km-s" value="${esc(startVal)}"></label>
       <label class="field"><span>完成里程（km）</span><input type="text" inputmode="numeric" id="km-e" value="${esc(rec.end ?? '')}"></label>
       <label class="field"><span>駕駛</span><select class="inp" id="km-dr"><option value="">（不填）</option>${names.map(n => `<option ${n === rec.driver ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select></label>
@@ -2357,7 +2358,7 @@ function openKmForm(rec) {
     <div class="acts">${KM.id ? '<button class="btn danger" data-act="kmdel">刪除</button>' : ''}<span class="sp"></span>${KM.back ? '<button class="btn sec" data-act="kmback">返回紀錄</button>' : ''}<button class="btn" data-act="kmsave" id="b-km">儲存</button></div>
   </div>`;
   sh.hidden = false;
-  kmInfo();
+  kmInfo(); kmOnInfo();
   $('#km-v')?.addEventListener('change', () => { if (!KM.id) { const o = odo($('#km-v').value); $('#km-s').value = o ?? ''; } kmInfo(); });
   ['km-s', 'km-e'].forEach(id => $('#' + id).addEventListener('input', kmInfo));
   setTimeout(() => (KM && KM.kind === 'job' && !KM.id ? $('#km-e') : null)?.focus(), 30);
@@ -2405,6 +2406,17 @@ async function saveKm() {
   if (!rec.date) { toast('請選日期'); return; }
   if (rec.start == null) { toast('請填起始里程'); $('#km-s').focus(); return; }
   if (rec.end != null && rec.end < rec.start) { toast('完成里程不能小於起始里程'); $('#km-e').focus(); return; }
+  // 事務用車：結束比開始早＝跨夜到隔天，先確認一次
+  if (misc && rec.tStart && rec.tEnd) {
+    if (rec.tStart === rec.tEnd) { toast('開始和結束時間不能一樣'); $('#km-te').focus(); return; }
+    const ov = `${rec.date}|${rec.tStart}|${rec.tEnd}`;
+    if (rec.tEnd < rec.tStart && KM.onOk !== ov) {
+      const acts = $('#b-km').closest('.acts'); KM.acts = acts.innerHTML;
+      acts.innerHTML = `<span class="delq ovq">結束 ${esc(rec.tEnd)} 比開始 ${esc(rec.tStart)} 早，會記成<b>跨夜到 ${nextDay(rec.date)} ${esc(rec.tEnd)}</b>。確定嗎？</span><span class="sp"></span>
+        <button class="btn sec" data-act="kmonback">改時間</button><button class="btn" data-act="kmonok" data-ov="${esc(ov)}">確定跨夜，儲存</button>`;
+      return;
+    }
+  }
   // 跟上一次的里程差太多：先停下來請登記的人確認
   const g = kmGap(rec.vehicle, rec.date, rec.start, KM.id);
   if (g && KM.gapOk !== `${rec.vehicle}|${rec.date}|${rec.start}`) {
@@ -2417,6 +2429,22 @@ async function saveKm() {
   const ok = await write(() => (KM.id ? S.db.doc('mileage/' + KM.id) : S.db.collection('mileage').doc()).set(rec), '已登記里程');
   if (ok) { if (back) openKmList(); else closeEditor(); } else if ($('#b-km')) $('#b-km').disabled = false;
 }
+// 事務用車時間：即時顯示是不是跨夜
+function kmOnInfo() {
+  const el = $('#km-ton'); if (!el) return; const s = $('#km-ts')?.value, e = $('#km-te')?.value, d = $('#km-d')?.value;
+  if (!s || !e) { el.textContent = ''; return; }
+  if (s === e) { el.innerHTML = '<span class="bad">開始和結束時間不能一樣</span>'; return; }
+  const on = e < s, mins = (toMin(e) + (on ? 1440 : 0)) - toMin(s);
+  el.innerHTML = `${d ? md(d) + ' ' : ''}${esc(s)} – ${on ? `<b class="warn">${d ? nextDay(d) : ''}（隔天）</b> ` : ''}${esc(e)}・共 ${Math.floor(mins / 60)} 小時${mins % 60 ? ' ' + (mins % 60) + ' 分' : ''}`;
+}
+document.addEventListener('input', e => { if (KM && ['km-ts', 'km-te', 'km-d'].includes(e.target.id)) kmOnInfo(); });
+document.addEventListener('change', e => { if (KM && ['km-ts', 'km-te', 'km-d'].includes(e.target.id)) kmOnInfo(); });
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-act=kmonok],[data-act=kmonback]'); if (!t || !KM) return;
+  const acts = t.closest('.acts');
+  if (t.dataset.act === 'kmonok') { KM.onOk = t.dataset.ov; acts.innerHTML = KM.acts; saveKm(); }
+  else { acts.innerHTML = KM.acts; $('#km-te')?.focus(); }
+});
 async function delKm(t) {
   if (!t.dataset.armed) { t.dataset.armed = '1'; t.textContent = '確定刪除？'; return; }
   const back = KM.back;
@@ -2441,7 +2469,7 @@ function openKmList() {
       const j = r.jobId ? S.jobs.get(r.jobId) : null; const d = dist(r);
       const what = j ? j.title : (r.note || (r.kind === 'job' ? '（場次已刪除）' : ''));
       return `<button type="button" class="kmrow ${isDue(r.vehicle) ? 'due' : ''}" data-act="kmedit" data-kid="${esc(r.id)}">
-        <span class="kd">${md(r.date)}${r.tStart ? ' ' + esc(r.tStart) : ''}</span>
+        <span class="kd">${md(r.date)}${r.tStart ? ' ' + esc(r.tStart) : ''}${r.tStart && r.tEnd ? '–' + (r.tEnd < r.tStart ? '隔天 ' : '') + esc(r.tEnd) : ''}</span>
         <b class="kv">${esc(r.vehicle)}</b>
         <span class="kt">${r.kind === 'misc' ? '<i class="ktag">事務</i>' : ''}${esc(what)}${r.driver ? '・' + esc(r.driver) : ''}</span>
         <span class="kn">${kmFmt(r.start)} → ${r.end != null ? kmFmt(r.end) : '未填'}${d != null ? `　<b>${kmFmt(d)} km</b>` : ''}${r.gap ? `<small class="kmgapt">⚠ 跟上次${r.gapType === 'back' ? '倒退' : '相差'} ${kmFmt(r.gap)} km，登記的人已確認</small>` : ''}</span>
@@ -4828,6 +4856,10 @@ function refresh() {
 ================ 修改紀錄（最新的在最上面） ================
 每次更新都在這裡加一段。上傳前可以先看這裡，知道這一版改了什麼。
 出問題時，把上一版 index.html 重新上傳就能還原（config.js 不用動）。
+
+2026-11-19 23:20　事務用車可以跨夜
+  ・事務用車登記的結束時間比開始早，就記成隔天（例如 22:30 到隔天 01:15），存檔前會確認一次；時間下方即時顯示「隔天」和共幾小時。用車紀錄列表顯示「22:30–隔天 01:15」。
+  影響：班表的用車紀錄（車輛管理沒改）。
 
 2026-11-18 13:45　權限管理加鎖
   ・權限管理頁預設鎖住（勾選框、對應排班人員、全選都不能按），按「🔒 已鎖定」打開才能修改；3 分鐘沒動作或離開這一頁會自動鎖回去，避免不小心勾到。
