@@ -2165,7 +2165,7 @@ const timeText = (r, full) => {
   if (!r || !r.start) return '';
   const on = r.end && toMin(r.end) < toMin(r.start);
   if (full) return `${md(r.date)} ${r.start} – ${r.end ? (on ? nextDay(r.date) + ' ' : md(r.date) + ' ') + r.end : '（未填結束）'}`;
-  return `${r.start}–${r.end ? (on ? nextDay(r.date) + ' ' : '') + r.end : ''}`;
+  return `${r.start}–${r.end ? (on ? nextDay(r.date) + ' ' : '') + r.end : '未填'}`;
 };
 function defaultAccounts() {
   return [
@@ -2217,7 +2217,7 @@ function timeHist(jobId, key) {
   const list = [raw, ...(raw.alts || [])].filter(x => x && validRec(x) && canSeeRec(x)).sort((a, b) => (b.at || 0) - (a.at || 0));
   if (!list.length) return '';
   const when = t => { if (!t) return ''; const d = new Date(t); return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
-  return `<div class="tmhist"><b>填寫紀錄</b>${list.map((x, i) => `<span class="${i ? '' : 'cur'}"><i>${esc(when(x.at))}</i>${esc(x.byAuthor || x.by || '')} 填 ${esc(x.start)}–${esc(x.end)}${i ? '' : '<em>目前顯示</em>'}</span>`).join('')}</div>`;
+  return `<div class="tmhist"><b>填寫紀錄</b>${list.map((x, i) => `<span class="${i ? '' : 'cur'}"><i>${esc(when(x.at))}</i>${esc(x.byAuthor || x.by || '')} 填 ${esc(x.start)}–${esc(x.end || '未填')}${i ? '' : '<em>目前顯示</em>'}</span>`).join('')}</div>`;
 }
 // 有填但沒採用的時間：告訴有權限的人原因（例如填的人還沒加進團隊、沒有對應這個名字）
 function timeDiag(jobId, key, n) {
@@ -2232,7 +2232,8 @@ function timeDiag(jobId, key, n) {
 }
 function tmInfo() {
   const el = $('#tm-info'); if (!el || !TM) return; const s = tpVal('tm-s'), e = tpVal('tm-e');
-  if (!s || !e) { el.textContent = ''; return; }
+  if (!s) { el.textContent = ''; return; }
+  if (!e) { el.textContent = `${md(TM.date)} ${s} 開始・結束時間可以先不填，下班再回來按「下班」或選時間`; return; }
   if (s === e) { el.innerHTML = '<span class="bad">開始和結束時間不能一樣</span>'; return; }
   const on = toMin(e) < toMin(s); const mins = (toMin(e) + (on ? 1440 : 0)) - toMin(s);
   el.innerHTML = `${md(TM.date)} ${esc(s)} – ${on ? '<b class="warn">' + nextDay(TM.date) + '（隔天）</b>' : md(TM.date)} ${esc(e)}・共 ${Math.floor(mins / 60)} 小時${mins % 60 ? ' ' + (mins % 60) + ' 分' : ''}`;
@@ -2240,15 +2241,15 @@ function tmInfo() {
 async function saveTime() {
   const s = tpVal('tm-s'), e = tpVal('tm-e');
   if (!s) { toast('請選開始時間'); return; }
-  if (!e) { toast('請選結束時間'); return; }
+  // 結束時間可以先空著（例如剛上班打卡），下班再回來填
   if (s === e) { toast('開始和結束時間不能一樣'); return; }
-  if (toMin(e) < toMin(s) && TM.ok !== s + '-' + e) {
+  if (e && toMin(e) < toMin(s) && TM.ok !== s + '-' + e) {
     const acts = $('#b-tm').closest('.acts');
     acts.innerHTML = `<span class="delq ovq">結束 ${esc(e)} 比開始 ${esc(s)} 早，會記成<b>跨夜到 ${nextDay(TM.date)} ${esc(e)}</b>。確定嗎？</span><span class="sp"></span>
       <button class="btn sec" data-act="tmback">改時間</button><button class="btn" data-act="tmok">確定跨夜，儲存</button>`;
     return;
   }
-  const rec = { jobId: TM.jobId, date: TM.date, name: TM.name, ...(TM.slot != null ? { slot: TM.slot, member: TM.member } : {}), start: s, end: e, by: S.me ? S.me.name : '', byId: S.me ? S.me.id : '', at: Date.now() };
+  const rec = { jobId: TM.jobId, date: TM.date, name: TM.name, ...(TM.slot != null ? { slot: TM.slot, member: TM.member } : {}), start: s, end: e || '', by: S.me ? S.me.name : '', byId: S.me ? S.me.id : '', at: Date.now() };
   const back = TM.slot != null ? { jobId: TM.jobId, name: TM.name } : null;
   const ok = await write(() => S.db.doc('times/' + timeKey(TM.jobId, TM.key)).set(rec), `已儲存 ${TM.member || TM.name} 的時間`);
   if (ok) { S.times.set(timeKey(rec.jobId, TM.key), rec); closeEditor(); if (back) openTeam(back.jobId, back.name); }
@@ -4856,6 +4857,10 @@ function refresh() {
 ================ 修改紀錄（最新的在最上面） ================
 每次更新都在這裡加一段。上傳前可以先看這裡，知道這一版改了什麼。
 出問題時，把上一版 index.html 重新上傳就能還原（config.js 不用動）。
+
+2026-11-23 00:50　上班打卡可以先不填下班時間
+  ・填時間（公司時間、場次時間都一樣）可以只填開始時間就儲存，結束時間下班再回來按「下班」或選時間。班表上顯示「08:30–未填」。
+  影響：只有班表。
 
 2026-11-19 23:20　事務用車可以跨夜
   ・事務用車登記的結束時間比開始早，就記成隔天（例如 22:30 到隔天 01:15），存檔前會確認一次；時間下方即時顯示「隔天」和共幾小時。用車紀錄列表顯示「22:30–隔天 01:15」。
