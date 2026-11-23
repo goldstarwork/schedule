@@ -339,6 +339,18 @@ textarea{width:100%;resize:vertical;min-height:56px}
 .pick[aria-pressed="true"].check{background:var(--warn-bg);border-color:var(--warn);color:var(--warn)}
 .chk{display:inline-flex;gap:6px;align-items:center;font-size:14px}
 .acts{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+/* 彈出視窗共用規則（2026-11-24）：儲存、取消固定在視窗下面；按外面晃一下；放棄前先問 */
+.card>.acts{position:sticky;bottom:calc(-16px - env(safe-area-inset-bottom,0px));margin:12px 0 calc(-16px - env(safe-area-inset-bottom,0px));padding:10px 0 calc(16px + env(safe-area-inset-bottom,0px));background:var(--surface);border-top:1px solid var(--line);z-index:3}
+.card{overscroll-behavior:contain}
+.card.shake{animation:dshake .32s}
+@keyframes dshake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(7px)}60%{transform:translateX(-5px)}80%{transform:translateX(3px)}}
+@media (prefers-reduced-motion:reduce){.card.shake{animation:none;outline:2px solid var(--accent)}}
+.dlgq{position:fixed;inset:0;z-index:30;display:grid;place-items:center;background:rgb(10 14 13 / .35);padding:16px}
+.dlgq .box{background:var(--surface);border-radius:14px;padding:18px;max-width:340px;width:100%;box-shadow:0 10px 30px rgb(0 0 0 / .25)}
+.dlgq p{margin:0 0 14px;font-size:15px;line-height:1.5}
+.dlgq .row{display:flex;gap:8px;justify-content:flex-end}
+.draftq{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:10px 0 0;padding:8px 10px;border-radius:10px;background:var(--warn-bg,#fff6e0);color:var(--ink);font-size:13px}
+.draftq .sp{flex:1}
 .acts .sp{flex:1}
 .delq{font-size:14px;color:var(--bad);flex-basis:100%}
 .delq.ovq{color:var(--warn)}
@@ -1294,8 +1306,9 @@ function addrSuggest() {
   const prev = t && !cur ? [...S.jobs.values()].filter(j => j.id !== F.id && (j.title || '').trim() === t && (j.address || '').trim()).sort((a, b) => (b.date || '').localeCompare(a.date || ''))[0] : null;
   el.innerHTML = prev ? `以前「${esc(t)}」（${md(prev.date)}）的地址：${esc(prev.address)}　<button type="button" class="linkbtn" data-act="addrapply" data-v="${esc(prev.address)}">套用</button>` : '';
 }
-function openEditor(job, date) {
-  F = job ? JSON.parse(JSON.stringify(job)) : { id: null, date, title: '', start: '', end: '', timeNote: '', people: [], vehicles: [], ext: [], note: '', unattended: false, tentative: true }; // 新場次預設是預排
+function openEditor(job, date, draft) {
+  if (!draft) DLG.id = ''; // 從草稿接著填時保留原本的樣子，關掉時才會問要不要放棄
+  F = draft ? JSON.parse(JSON.stringify(draft)) : job ? JSON.parse(JSON.stringify(job)) : { id: null, date, title: '', start: '', end: '', timeNote: '', people: [], vehicles: [], ext: [], note: '', unattended: false, tentative: true }; // 新場次預設是預排
   { // 舊資料：團隊被當成「人」勾在人員裡，打開時轉成團隊（存檔後就修正了）
     const tn = new Set(S.config.staff.filter(p => p.group === '團隊').map(p => p.name)); const old = (F.people || []).filter(n => tn.has(n));
     if (old.length) { F.teams = [...(F.teams || [])]; for (const n of old) if (!F.teams.some(t => t.name === n)) F.teams.push({ name: n, count: 1, members: leaderOf(n) ? [leaderOf(n)] : [] }); F.people = F.people.filter(n => !tn.has(n)); F.leaders = (F.leaders || []).filter(n => !tn.has(n)); }
@@ -1305,6 +1318,7 @@ function openEditor(job, date) {
   const sh = $('#sheet');
   sh.innerHTML = `<div class="card" role="dialog" aria-modal="true" aria-labelledby="ed-h">
     <h2 id="ed-h">${job ? '編輯場次' : '新增場次'}<button class="icon-btn x" data-act="close" aria-label="關閉">×</button></h2>
+    ${(() => { if (draft || ro) return ''; const d = draftGet(F); if (!d) return ''; const t = new Date(d.at); return `<div class="draftq"><span>有 ${t.getMonth() + 1}/${t.getDate()} ${pad(t.getHours())}:${pad(t.getMinutes())} 沒送出的內容${d.F.title ? `（${esc(d.F.title)}）` : ''}，要接著填嗎？</span><span class="sp"></span><button type="button" class="btn sm sec" data-act="draftdrop">不用了</button><button type="button" class="btn sm" data-act="draftuse">接著填</button></div>`; })()}
     <div class="fgrid">
       <div class="field full"><span>${job ? '日期（填「到」會在之後每一天建立同名場次，只有場次名稱，人員和車輛要各自排）' : '日期（多天的案子選起訖，每天會建立同名場次；人員和車輛只排在第一天）'}</span>
         <div class="drange"><input type="date" id="f-date" value="${esc(F.date)}" aria-label="開始日期"><span>到</span><input type="date" id="f-date2" value="" min="${esc(F.date)}" aria-label="結束日期"><span class="hint" id="f-days"></span></div>
@@ -1349,10 +1363,12 @@ function openEditor(job, date) {
   if (ro) sh.querySelectorAll('.wheel').forEach(w => w.style.pointerEvents = 'none');
   renderExt();
   renderPicks();
+  if (draft && F.dateEnd) { $('#f-date2').value = F.dateEnd; }
   if (ro) sh.querySelectorAll('input,select').forEach(i => i.disabled = true);
   setTimeout(() => (job ? null : $('#f-title'))?.focus(), 30);
 }
 function readForm() {
+  if (!$('#f-date')) return;
   F.date = $('#f-date').value || F.date;
   const d2 = $('#f-date2'); d2.min = F.date;
   F.dateEnd = d2.value && d2.value > F.date ? d2.value : '';
@@ -1664,7 +1680,87 @@ async function addSupport() {
   }
   if (F) renderPicks();
 }
-function closeEditor() { FR = null; FI = null; TR = false; KML = false; KM = null; TM = null; $('#sheet').hidden = true; $('#sheet').innerHTML = ''; F = null; }
+function closeEditor() { if (F) draftDel(F); FR = null; FI = null; TR = false; KML = false; KM = null; TM = null; $('#sheet').hidden = true; $('#sheet').innerHTML = ''; F = null; DLG.id = ''; DLG.base = ''; }
+/* ---------- 彈出視窗共用規則（總覽「所有程式共用的畫面規則：彈出視窗」，2026-11-24）----------
+   1 按外面不關（只有沒有輸入欄位的視窗照舊關）、2 ✕／取消／Esc 效果一樣、3 有沒存的內容先問、
+   5 關分頁前提醒、6 新增／編輯場次自動存草稿。之後搬 Azure 改用 common/dialog.js。 */
+const DLG = { id: '', base: '', pass: false };
+const dlgCard = () => $('#sheet:not([hidden]) > .card');
+const dlgHasFields = c => !!c && [...c.querySelectorAll('input,textarea,select')].some(x => !x.disabled && x.type !== 'hidden');
+function dlgSig() {
+  const c = dlgCard(); if (!c) return '';
+  const v = [...c.querySelectorAll('input,textarea,select')].map(x => x.type === 'checkbox' || x.type === 'radio' ? (x.checked ? 1 : 0) : x.type === 'file' ? '' : x.value);
+  const w = [...c.querySelectorAll('[data-tp]')].map(x => x.dataset.v || '');
+  let st = ''; try { st = JSON.stringify([F, FR ? [(FR.photos || []).length, FR.items] : null, FI ? (FI.photos || []).length : null, LS ? LS.rooms : null]); } catch (_) {}
+  return JSON.stringify([v, w]) + st;
+}
+const dlgDirty = () => { const c = dlgCard(); return !!c && !c.classList.contains('gncard') && !!DLG.base && dlgSig() !== DLG.base; }; // 一般通知本來就會留草稿，關掉不用問
+// 換了一個視窗（標題 id 不同）才重新記「打開時的樣子」；同一個視窗重畫（例如加一行）不算重來
+new MutationObserver(() => queueMicrotask(() => {
+  const c = dlgCard(); if (!c) { DLG.id = ''; DLG.base = ''; return; }
+  const id = c.getAttribute('aria-labelledby') || c.querySelector('h2')?.textContent || '';
+  if (id !== DLG.id) { DLG.id = id; DLG.base = dlgSig(); }
+  // 有輸入欄位、有儲存鈕、卻沒有「取消」的視窗，自動補一個「取消」
+  const acts = c.querySelector(':scope > .acts');
+  if (acts && acts.querySelector('[id^="b-"]') && !acts.querySelector('[data-act=close],[data-act=stayback],[data-act=htback],[data-act=kmback]') && dlgHasFields(c)) {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'btn sec'; b.dataset.act = 'close'; b.textContent = '取消';
+    const first = acts.querySelector('[id^="b-"]'); acts.insertBefore(b, first);
+  }
+})).observe($('#sheet'), { childList: true, subtree: true });
+function dlgAsk(onDrop) {
+  if ($('.dlgq')) return;
+  const q = document.createElement('div'); q.className = 'dlgq'; q.setAttribute('role', 'alertdialog'); q.setAttribute('aria-modal', 'true');
+  q.innerHTML = `<div class="box"><p>要放棄還沒存的內容嗎？</p><div class="row"><button type="button" class="btn sec" data-q="keep">繼續填</button><button type="button" class="btn danger" data-q="drop">放棄</button></div></div>`;
+  q.addEventListener('click', e => {
+    const b = e.target.closest('[data-q]'); if (!b) { q.querySelector('[data-q=keep]').focus(); return; }
+    q.remove(); if (b.dataset.q === 'drop') { DLG.base = ''; onDrop(); }
+  });
+  document.body.appendChild(q); q.querySelector('[data-q=keep]').focus();
+}
+function dlgShake() { const c = dlgCard(); if (!c) return; c.classList.remove('shake'); void c.offsetWidth; c.classList.add('shake'); }
+// ✕、取消、返回：有沒存的內容先問
+document.addEventListener('click', e => {
+  const t = e.target.closest('#sheet [data-act=close],#sheet [data-act=stayback],#sheet [data-act=htback],#sheet [data-act=kmback]');
+  if (!t || DLG.pass || !dlgDirty()) return;
+  e.preventDefault(); e.stopImmediatePropagation();
+  dlgAsk(() => { DLG.pass = true; try { t.click(); } finally { DLG.pass = false; } });
+}, true);
+// 按視窗外面：有輸入欄位的視窗不關，晃一下
+document.addEventListener('click', e => {
+  if (e.target.id !== 'sheet') return;
+  const c = dlgCard(); if (dlgHasFields(c)) { e.stopImmediatePropagation(); dlgShake(); }
+}, true);
+// Esc＝按 ✕
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  if ($('.dlgq')) { e.preventDefault(); e.stopImmediatePropagation(); $('.dlgq [data-q=keep]').click(); return; }
+  const c = dlgCard(); if (!c || ['f-newsup', 'f-newteam'].includes(e.target.id)) return;
+  e.preventDefault(); e.stopImmediatePropagation();
+  const x = c.querySelector('h2 [data-act=close],h2 [data-act=stayback],h2 [data-act=htback],h2 [data-act=kmback]') || c.querySelector('[data-act=close],[data-act=stayback],[data-act=htback],[data-act=kmback]');
+  if (x) x.click(); else closeEditor();
+}, true);
+// 關分頁、重新整理前提醒
+window.addEventListener('beforeunload', e => { if (dlgDirty()) { e.preventDefault(); e.returnValue = ''; } });
+// 新增／編輯場次的草稿（只存在這台裝置；存好、取消、放棄都會清掉；7 天沒動自動丟掉）
+const draftKey = f => 'gw-draft:job:' + (f && f.id ? f.id : 'new');
+function draftDel(f) { try { localStorage.removeItem(draftKey(f)); } catch (_) {} }
+function draftGet(f) {
+  try { const d = JSON.parse(localStorage.getItem(draftKey(f)) || 'null'); if (!d) return null; if (Date.now() - d.at > 7 * 864e5) { draftDel(f); return null; } return d; } catch (_) { return null; }
+}
+let DRAFT_T = null;
+function draftSave() {
+  clearTimeout(DRAFT_T);
+  DRAFT_T = setTimeout(() => { if (!F || !$('#f-title') || !dlgDirty()) return; try { readForm(); localStorage.setItem(draftKey(F), JSON.stringify({ at: Date.now(), F })); } catch (_) {} }, 600);
+}
+document.addEventListener('input', e => { if (F && e.target.closest('#sheet')) draftSave(); });
+document.addEventListener('change', e => { if (F && e.target.closest('#sheet')) draftSave(); });
+document.addEventListener('click', e => { if (F && e.target.closest('#sheet .card')) draftSave(); });
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-act=draftuse],[data-act=draftdrop]'); if (!t || !F) return;
+  const d = draftGet(F);
+  if (t.dataset.act === 'draftdrop' || !d) { draftDel(F); t.closest('.draftq')?.remove(); return; }
+  const job = F.id ? S.jobs.get(F.id) : null; openEditor(job || null, d.F.date, d.F);
+});
 function jobBody(f) {
   return { address: (f.address || '').trim(), teams: (f.teams || []).filter(t => t && t.name).map(t => ({ name: t.name, count: +t.count || 0, members: (t.members || []).slice(0, +t.count || 0).map(x => String(x || '').trim()) })), date: f.date, order: f.order ?? Date.now(), title: f.title, start: f.start, end: f.end, timeNote: f.timeNote, timeSub: f.timeSub || '', people: f.people, leaders: (f.leaders || []).filter(n => f.people.includes(n)), vehicles: f.vehicles, ext: (f.ext || []).filter(extFilled).map(({ manual, ...e }) => e), note: f.note, unattended: !!f.unattended, tentative: !!f.tentative, lodging: !!f.lodging, internal: !!f.internal };
 }
@@ -1792,7 +1888,7 @@ async function saveConfig(next) {
 document.addEventListener('click', async e => {
   if ((S.menu || S.armed) && !e.target.closest('.smenu,[data-act=menu],[data-act=rmlist],[data-act=pdel],[data-act=pall]')) { S.menu = null; S.armed = null; if (S.view === 'set' || S.view === 'veh' || S.view === 'perm') render(); }
   const t = e.target.closest('[data-act],[data-view]');
-  if (!t) { if (e.target.id === 'sheet') closeEditor(); return; }
+  if (!t) { if (e.target.id === 'sheet') closeEditor(); return; } // 有輸入欄位的視窗，按外面已在上面攔下來（晃一下）
   if (t.dataset.view) { if (t.dataset.view === 'hotel') HT = null; if (t.dataset.view !== 'perm') S.permOpen = false; S.view = t.dataset.view; try { localStorage.setItem('view', S.view); } catch (_) {} render(); return; }
   const a = t.dataset.act;
   if (a === 'new') openEditor(null, t.dataset.date);
@@ -1929,7 +2025,7 @@ document.addEventListener('click', async e => {
   }
 });
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && !$('#sheet').hidden && e.target.id !== 'f-newsup' && e.target.id !== 'f-newteam') closeEditor();
+  // Esc 改由彈出視窗共用規則處理（等於按 ✕）
   if (e.key === 'Enter' && e.target.matches('.job')) e.target.click();
   if (e.target.id === 'ls-input' && e.key === 'Enter') { e.preventDefault(); document.querySelector('[data-act=lssave]')?.click(); }
   if (e.target.id === 'ls-input' && e.key === 'Escape') { S.editing = null; render(); }
@@ -4858,6 +4954,13 @@ function refresh() {
 ================ 修改紀錄（最新的在最上面） ================
 每次更新都在這裡加一段。上傳前可以先看這裡，知道這一版改了什麼。
 出問題時，把上一版 index.html 重新上傳就能還原（config.js 不用動）。
+
+2026-11-24 00:40　彈出視窗：按外面不會關、沒存的內容先問
+  ・有輸入欄位的視窗，按到外面只會晃一下，不會關；看照片、住宿列表這種沒有欄位的照舊按外面就關。
+  ・✕、取消、Esc 效果一樣；每個有儲存鈕的視窗都有「取消」。有改過內容時先問「要放棄還沒存的內容嗎？」（繼續填／放棄）。
+  ・手機上視窗內可以捲動，儲存、取消固定在下面。有沒存的內容時，關分頁或重新整理會先提醒。
+  ・新增／編輯場次自動存草稿（只在這台裝置），再打開會問要不要接著填；存好、取消、放棄都會清掉，7 天自動丟。
+  影響：班表和車輛管理所有彈出視窗。
 
 2026-11-23 23:55　私人車開放排班時可以登記里程
   ・私人車按了「開放排班」後，排在場次上的那台車可以點一下登記用車里程（跟公司車一樣），事務用車也選得到。車輛管理的私人車頁面會顯示「最近用車」。關閉排班後就不能再登記。
