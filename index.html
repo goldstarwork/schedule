@@ -1014,10 +1014,11 @@ function jobRow(j, idx, f) {
   };
   const vChip = n => {
     const st = f['v:' + n]; const company = (S.config.vehicles || []).includes(n) && !((S.config.vehicleInfo || {})[n] || {}).private;
-    const r = company ? jobKm(j.id, n) : null; const due = company && isDue(n);
+    const lent = !company && isLent(n); // 私人車開放排班時也可以登記用車里程（2026-11-23）
+    const r = company || lent ? jobKm(j.id, n) : null; const due = company && isDue(n);
     const km = r ? (r.start != null && r.end != null ? ` <small class="kmd">${kmFmt(r.end - r.start)}km</small>` : ' <small class="kmd">已登記</small>') : '';
-    const cls = `chip v ${st && st !== 'ok' ? st : ''} ${due ? 'due' : ''} ${company ? 'kmable' : ''}`;
-    return company && can('km') && !EXPORTING
+    const cls = `chip v ${st && st !== 'ok' ? st : ''} ${due ? 'due' : ''} ${company || lent ? 'kmable' : ''}`;
+    return (company || lent) && can('km') && !EXPORTING
       ? `<button type="button" class="${cls}" data-act="km" data-id="${esc(j.id)}" data-v="${esc(n)}" title="${due ? '該保養了・' : ''}點一下登記用車里程">${esc(n)}${km}</button>`
       : `<span class="${cls}" ${due ? 'title="該保養了"' : ''}>${esc(n)}${km}</span>`;
   };
@@ -2335,7 +2336,7 @@ function openKmForm(rec) {
   KML = false;
   KM = { id: rec.id || null, kind: rec.kind || 'misc', jobId: rec.jobId || null, vehicle: rec.vehicle || '', date: rec.date || todayStr(), back: !!rec.back };
   const j = KM.jobId ? S.jobs.get(KM.jobId) : null;
-  const vs = [...new Set([...companyCars(), ...(KM.vehicle ? [KM.vehicle] : [])])];
+  const vs = [...new Set([...companyCars(), ...(S.config.vehicles || []).filter(isLent), ...(KM.vehicle ? [KM.vehicle] : [])])];
   const v0 = KM.vehicle || vs[0] || '';
   const names = j ? [...(j.people || [])] : S.config.staff.map(p => p.name);
   if (rec.driver && !names.includes(rec.driver)) names.push(rec.driver);
@@ -2704,7 +2705,7 @@ function renderFleetCar(v) {
     <section class="panel">
       ${rt ? `<div class="fretired"><span><b>此車已於 ${fmtD(rt.date)} ${esc(rt.type)}</b>${rt.price ? '・' + money(rt.price) : ''}${rt.to ? '・' + esc(rt.to) : ''}</span>${rt.note ? `<small>${esc(rt.note)}</small>` : ''}<small>排班已經不能選這台車，以前的紀錄都保留。</small><button type="button" class="mini" data-act="frestore" data-v="${esc(v)}">恢復使用</button></div>` : ''}
       <div class="fhead2"><h2>${esc(v)}</h2>${plateTag(v)}${isPriv(v) ? '<span class="fc-privtag">私人車</span>' : ''}<button type="button" class="mini fedit" data-act="fiedit">修改車號與資料</button></div>
-      ${isPriv(v) && !rt ? `<div class="fpriv"><span>${isLent(v) ? '<b>目前開放排班</b>：排班時可以選這台車（不用登記用車里程）。用完記得關閉。' : '平常不會出現在排班。需要支援公司時，按「開放排班」。'}</span><button type="button" class="btn sm ${isLent(v) ? 'sec' : ''}" data-act="fplend">${isLent(v) ? '關閉排班' : '開放排班'}</button></div>` : ''}
+      ${isPriv(v) && !rt ? `<div class="fpriv"><span>${isLent(v) ? '<b>目前開放排班</b>：排班時可以選這台車，也可以在場次上登記用車里程。用完記得關閉。' : '平常不會出現在排班。需要支援公司時，按「開放排班」。'}</span><button type="button" class="btn sm ${isLent(v) ? 'sec' : ''}" data-act="fplend">${isLent(v) ? '關閉排班' : '開放排班'}</button></div>` : ''}
       ${facts.length ? `<p class="ffacts">${facts.map(esc).join('<span class="dotsep">・</span>')}</p>` : '<p class="ffacts muted">還沒有填廠牌型號、購買日期等資料。</p>'}
       ${i.note ? `<p class="ffacts muted">${esc(i.note)}</p>` : ''}
       ${al.length ? `<ul class="issues falerts">${al.map(a => `<li class="${a.lv === 'bad' ? 'bad' : 'check'}"><span class="dot"></span><span>${esc(a.t)}</span></li>`).join('')}</ul>` : ''}
@@ -2725,7 +2726,7 @@ function renderFleetCar(v) {
       </div>
       <div class="fside">
         ${costBlock(v)}
-        ${isPriv(v) ? '' : tripPanel}
+        ${isPriv(v) && !trips.length ? '' : tripPanel}
       </div>
     </div>
   </div>`;
@@ -4857,6 +4858,10 @@ function refresh() {
 ================ 修改紀錄（最新的在最上面） ================
 每次更新都在這裡加一段。上傳前可以先看這裡，知道這一版改了什麼。
 出問題時，把上一版 index.html 重新上傳就能還原（config.js 不用動）。
+
+2026-11-23 23:55　私人車開放排班時可以登記里程
+  ・私人車按了「開放排班」後，排在場次上的那台車可以點一下登記用車里程（跟公司車一樣），事務用車也選得到。車輛管理的私人車頁面會顯示「最近用車」。關閉排班後就不能再登記。
+  影響：班表的用車里程、車輛管理的私人車頁面。
 
 2026-11-23 00:50　上班打卡可以先不填下班時間
   ・填時間（公司時間、場次時間都一樣）可以只填開始時間就儲存，結束時間下班再回來按「下班」或選時間。班表上顯示「08:30–未填」。
